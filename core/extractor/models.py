@@ -162,10 +162,13 @@ class PageAssets(BaseModel):
     scripts: List[AssetInfo] = Field(default_factory=list)
     stylesheets: List[AssetInfo] = Field(default_factory=list)
     fonts: List[AssetInfo] = Field(default_factory=list)
+    # <video>/<source> media urls (lazy `data-src` already resolved to `url`).
+    videos: List[AssetInfo] = Field(default_factory=list)
     total_images: int = 0
     total_scripts: int = 0
     total_stylesheets: int = 0
     total_fonts: int = 0
+    total_videos: int = 0
 
 
 class StyleSummary(BaseModel):
@@ -260,6 +263,7 @@ class DownloadedResources(BaseModel):
     fonts: List[ResourceContent] = Field(default_factory=list)
     scripts: List[ResourceContent] = Field(default_factory=list)
     stylesheets: List[ResourceContent] = Field(default_factory=list)
+    videos: List[ResourceContent] = Field(default_factory=list)
 
 
 # ==================== Candidate blocks (rule-based, NOT a judgement) ====================
@@ -384,6 +388,8 @@ class ExtractOptions(BaseModel):
     max_images: int = 40
     max_fonts: int = 12
     max_scripts: int = 0  # default off; bundled JS is rarely useful for a clone
+    max_videos: int = 8
+    max_video_size: int = 25 * 1024 * 1024  # 25 MB cap per downloaded video
 
     class Config:
         populate_by_name = True

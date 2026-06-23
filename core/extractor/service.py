@@ -340,15 +340,18 @@ class ExtractorService:
         scripts = dedupe(data["scripts"])
         stylesheets = dedupe(data["stylesheets"])
         fonts = dedupe(data["fonts"])
+        videos = dedupe(data.get("videos") or [])
         return PageAssets(
             images=images,
             scripts=scripts,
             stylesheets=stylesheets,
             fonts=fonts,
+            videos=videos,
             total_images=len(images),
             total_scripts=len(scripts),
             total_stylesheets=len(stylesheets),
             total_fonts=len(fonts),
+            total_videos=len(videos),
         )
 
     async def _extract_css_data(self, page: Page, timeout_s: float = 25.0) -> CSSData:
@@ -587,6 +590,15 @@ class ExtractorService:
             res = await self._download_one(page, a.url, base_url, max_size=500 * 1024)
             if res:
                 out.scripts.append(res)
+        for a in assets.videos[: opts.max_videos]:
+            res = await self._download_one(
+                page, a.url, base_url, max_size=opts.max_video_size
+            )
+            if res:
+                # Force the video classification regardless of CDN content-type
+                # quirks so codegen / the video recognizer can find the media.
+                res.type = "video"
+                out.videos.append(res)
         return out
 
     async def _download_one(
@@ -626,6 +638,8 @@ class ExtractorService:
             rtype = "other"
             if "image" in ctype:
                 rtype = "image"
+            elif "video" in ctype or url.endswith((".mp4", ".webm", ".ogv", ".mov", ".m4v")):
+                rtype = "video"
             elif "font" in ctype or url.endswith((".woff", ".woff2", ".ttf", ".eot", ".otf")):
                 rtype = "font"
             elif "javascript" in ctype or url.endswith(".js"):

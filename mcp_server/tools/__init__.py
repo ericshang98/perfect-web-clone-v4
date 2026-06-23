@@ -1,4 +1,4 @@
-"""Deterministic MCP tool implementations for Perfect Web Clone v3.
+"""Deterministic MCP tool implementations for Perfect Web Clone v4.
 
 Each module here groups a set of pure, no-LLM tool functions that
 :mod:`mcp_server.server` registers on the shared ``FastMCP`` instance:
@@ -12,8 +12,13 @@ Each module here groups a set of pure, no-LLM tool functions that
 * :mod:`mcp_server.tools.build_deploy` — ``assemble_project`` / ``build_project`` /
   ``get_build_errors`` / ``diagnose`` / ``deploy`` (assembly, build gate, three-layer
   error detection, optional Cloudflare Pages deploy).
+* :mod:`mcp_server.tools.verify`       — ``verify_links`` / ``verify_assets``
+  (deterministic fidelity gates over the generated clone).
+* :mod:`mcp_server.tools.pipeline`     — ``build_ir`` / ``run_recognizers`` /
+  ``generate_code`` / ``check_fingerprints`` / ``check_weight`` / ``score_fidelity`` /
+  ``compare_to_baseline`` (the v4 IR pipeline + R1/R3/R4/R5 acceptance gates).
 
 THE IRON RULE: no module here calls an LLM / Anthropic / OpenAI / any model API.
 """
 
-__all__ = ["extraction", "sandbox", "build_deploy"]
+__all__ = ["extraction", "sandbox", "build_deploy", "verify", "pipeline"]

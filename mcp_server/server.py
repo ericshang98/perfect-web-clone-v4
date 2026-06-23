@@ -1,9 +1,9 @@
-"""Perfect Web Clone v3 — MCP server entry point.
+"""Perfect Web Clone v4 — MCP server entry point.
 
-Creates the single ``FastMCP`` server named ``"pwc3"`` and registers every
+Creates the single ``FastMCP`` server named ``"pwc4"`` and registers every
 deterministic tool from :mod:`mcp_server.tools` (extraction, sandbox,
-build/deploy), then serves them over **stdio** so Claude Code can connect via
-``.mcp.json``.
+build/deploy, fidelity gates, and the v4 pipeline), then serves them over
+**stdio** so Claude Code can connect via ``.mcp.json``.
 
 Run it with::
 
@@ -18,7 +18,7 @@ deploy. ALL reasoning — writing React code, judging whether the clone looks li
 the original, deciding what to fix — happens in Claude Code, the brain. This
 server is only the wiring that exposes the hands and eyes.
 
-Registered tools (17 total)
+Registered tools (24 total)
 ---------------------------
 Extraction / chunking (``tools.extraction``):
     * ``extract_page``        — Playwright render a URL → ``source_id`` + summary.
@@ -46,18 +46,27 @@ Fidelity gates (``tools.verify``):
       REAL links (no fabricated ``#`` / ``javascript:`` placeholders).
     * ``verify_assets``       — deterministic check that each section uses the
       DOWNLOADED local assets instead of hotlinking the live origin.
+
+v4 pipeline (``tools.pipeline``):
+    * ``build_ir``            — DOM + computed styles → normalized semantic IR.
+    * ``run_recognizers``     — apply the recognizer registry to an IR document.
+    * ``generate_code``       — IR → clean React/Tailwind (no inline CSS dumps).
+    * ``check_fingerprints``  — R1 gate: scan dist for Shopify fingerprints.
+    * ``check_weight``        — R3 gate: measure dist transfer size vs budget.
+    * ``score_fidelity``      — R4 gate: SSIM score + worst-region localization.
+    * ``compare_to_baseline`` — R5 gate: new output strictly better than baseline.
 """
 
 from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-from mcp_server.tools import build_deploy, extraction, sandbox, verify
+from mcp_server.tools import build_deploy, extraction, pipeline, sandbox, verify
 
 # --------------------------------------------------------------------------- #
 # The single shared FastMCP instance. Tools attach to this object.
 # --------------------------------------------------------------------------- #
-mcp = FastMCP("pwc3")
+mcp = FastMCP("pwc4")
 
 
 def register_tools(server: FastMCP) -> list[str]:
@@ -120,6 +129,20 @@ def register_tools(server: FastMCP) -> list[str]:
         server.tool()(fn)
         registered.append(fn.__name__)
 
+    # 5) v4 pipeline — IR build / recognizers / codegen + the R1/R3/R4/R5 gates.
+    pipeline_tools = (
+        pipeline.build_ir,
+        pipeline.run_recognizers,
+        pipeline.generate_code,
+        pipeline.check_fingerprints,
+        pipeline.check_weight,
+        pipeline.score_fidelity,
+        pipeline.compare_to_baseline,
+    )
+    for fn in pipeline_tools:
+        server.tool()(fn)
+        registered.append(fn.__name__)
+
     return registered
 
 
@@ -132,8 +155,8 @@ def main() -> None:
     """Console-script / module entry point: serve the tools over stdio.
 
     Wired by both ``python -m mcp_server.server`` (see ``__main__`` below) and the
-    ``pwc3-mcp`` console script in ``pyproject.toml``. Claude Code connects to this
-    process over stdio per ``.mcp.json``.
+    console script in ``pyproject.toml``. Claude Code connects to this process
+    over stdio per ``.mcp.json``.
     """
     mcp.run(transport="stdio")
 

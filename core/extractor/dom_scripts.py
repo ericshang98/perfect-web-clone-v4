@@ -146,9 +146,26 @@ DOM_TREE_JS = r"""(params) => {
 # ---- Assets ------------------------------------------------------------------
 
 ASSETS_JS = r"""() => {
-    const result = { images: [], scripts: [], stylesheets: [], fonts: [] };
+    const result = { images: [], scripts: [], stylesheets: [], fonts: [], videos: [] };
     document.querySelectorAll('img').forEach(img => {
         if (img.src) result.images.push({ url: img.src, type: 'image' });
+    });
+    // Self-hosted <video> media. Resolve lazy data-src and absolutize via .src
+    // (the element's resolved URL) when available, else the raw attribute.
+    const lazyKeys = ['data-src', 'data-lazy-src', 'data-video-src', 'data-mp4'];
+    const pushVideo = (el) => {
+        let u = el.currentSrc || el.src || el.getAttribute('src') || '';
+        if (!u) {
+            for (const k of lazyKeys) {
+                const v = el.getAttribute && el.getAttribute(k);
+                if (v) { u = v; break; }
+            }
+        }
+        if (u && !u.startsWith('blob:')) result.videos.push({ url: u, type: 'video' });
+    };
+    document.querySelectorAll('video').forEach(v => {
+        pushVideo(v);
+        v.querySelectorAll('source').forEach(s => pushVideo(s));
     });
     document.querySelectorAll('*').forEach(el => {
         const bg = window.getComputedStyle(el).backgroundImage;
