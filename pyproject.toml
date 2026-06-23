@@ -1,0 +1,38 @@
+[project]
+name = "perfect-web-clone-v4"
+version = "0.1.0"
+description = "Perfect Web Clone v3 — a deterministic MCP toolbelt for web cloning, driven entirely by Claude Code as the brain."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "Perfect Web Clone" }]
+
+dependencies = [
+    "mcp>=1.2.0",
+    "pydantic>=2.5.0",
+    "playwright>=1.44.0",
+    "beautifulsoup4>=4.12.0",
+    "httpx>=0.27.0",
+    "pillow>=10.3.0",
+    "lxml>=5.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0",
+]
+
+[project.scripts]
+pwc3-mcp = "mcp_server.server:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mcp_server", "core"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100

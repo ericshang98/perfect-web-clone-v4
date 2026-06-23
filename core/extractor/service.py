@@ -1,0 +1,646 @@
+"""
+Deterministic Playwright extraction service.
+
+Drives a headless Chromium to render a URL and read out everything a cloner
+needs: DOM tree, computed styles, CSS rules/animations/variables, assets, dual
+(light/dark) theme data, rule-based candidate blocks, and screenshots.
+
+LLM-free by construction. The only "intelligence" is rules and geometry; all
+judgement (sectioning, "does it look like the original") is left to Claude Code.
+
+Ported and trimmed from v2's `PlaywrightExtractorService`, dropping: the phased
+polling API, the in-tool component analyzer's judgement output, and tech-stack
+heuristics that v3 doesn't act on.
+"""
+
+from __future__ import annotations
+
+import asyncio
+import base64
+import logging
+import re
+from datetime import datetime
+from typing import Optional
+from urllib.parse import urljoin, urlparse
+
+from playwright.async_api import (
+    Browser,
+    Page,
+    Playwright,
+    TimeoutError as PlaywrightTimeout,
+    async_playwright,
+)
+
+from . import dom_scripts as js
+from . import robustness
+from .models import (
+    AssetInfo,
+    CSSAnimation,
+    CSSData,
+    CSSKeyframe,
+    CSSTransitionInfo,
+    CSSVariable,
+    DomBlock,
+    DownloadedResources,
+    ElementInfo,
+    ElementRect,
+    ElementStyles,
+    ExtractionResult,
+    ExtractOptions,
+    PageAssets,
+    PageMetadata,
+    PseudoElementStyle,
+    ResourceContent,
+    StyleSummary,
+    StylesheetContent,
+    ThemedData,
+    ThemeMode,
+    ThemeSupport,
+)
+from . import theme as theme_mod
+
+logger = logging.getLogger(__name__)
+
+
+def _resolve_next_image(url: str, base_url: str = "") -> Optional[str]:
+    """Resolve a Next.js image-proxy URL (`/_next/image?url=<encoded>&w=&q=`) to
+    the real underlying image URL. Returns None if `url` isn't a Next proxy."""
+    try:
+        from urllib.parse import parse_qs, unquote, urlparse as _up
+        p = _up(url)
+        if not p.path.endswith("/_next/image"):
+            return None
+        q = parse_qs(p.query).get("url", [None])[0]
+        if not q:
+            return None
+        real = unquote(q)
+        if real.startswith("//"):
+            real = "https:" + real
+        elif real.startswith("/") and base_url:
+            real = urljoin(base_url, real)
+        return real
+    except Exception:  # noqa: BLE001
+        return None
+
+
+_NEXT_IMG_RE = re.compile(r'/_next/image\?url=([^&"\'\s)]+)(?:&(?:amp;)?[a-z]+=\d+)*')
+
+
+def _rewrite_next_images(html: str, base_url: str = "") -> str:
+    """Rewrite every `/_next/image?url=X&w=..&q=..` occurrence in serialized HTML
+    to the real decoded image URL X, so img src/srcset point at real CDN assets
+    that the downloader + localizer can match (instead of the proxy path that
+    collapses to a single extension-less file)."""
+    from urllib.parse import unquote
+    def _sub(m: "re.Match") -> str:
+        real = unquote(m.group(1))
+        if real.startswith("//"):
+            real = "https:" + real
+        elif real.startswith("/") and base_url:
+            real = urljoin(base_url, real)
+        return real
+    return _NEXT_IMG_RE.sub(_sub, html)
+
+
+class ExtractorService:
+    """Owns a long-lived browser; each `extract()` runs in a fresh page."""
+
+    def __init__(self) -> None:
+        self._browser: Optional[Browser] = None
+        self._playwright: Optional[Playwright] = None
+
+    async def _ensure_browser(self) -> Browser:
+        if self._browser is None:
+            self._playwright = await async_playwright().start()
+            self._browser = await self._playwright.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-setuid-sandbox",
+                    "--disable-dev-shm-usage",
+                    "--disable-gpu",
+                ],
+            )
+        return self._browser
+
+    async def close(self) -> None:
+        if self._browser:
+            await self._browser.close()
+            self._browser = None
+        if self._playwright:
+            await self._playwright.stop()
+            self._playwright = None
+
+    # ------------------------------------------------------------------ main
+
+    async def extract(self, url: str, options: Optional[ExtractOptions] = None) -> ExtractionResult:
+        opts = options or ExtractOptions()
+        start = datetime.now()
+        try:
+            browser = await self._ensure_browser()
+            page = await browser.new_page(
+                viewport={"width": opts.viewport_width, "height": opts.viewport_height}
+            )
+            try:
+                response = await page.goto(url, wait_until="load", timeout=opts.nav_timeout_ms)
+                # Dead-source guard: never clone an HTTP error / "site down" page.
+                status = response.status if response else None
+                if robustness.is_error_status(status):
+                    return ExtractionResult(
+                        success=False,
+                        message=f"source returned HTTP {status}",
+                        error=(
+                            f"The target URL returned HTTP {status} (the source site is "
+                            f"down or blocking). Nothing was cloned. Try again once the "
+                            f"site is reachable."
+                        ),
+                    )
+                await asyncio.sleep(opts.settle_ms / 1000)
+                if opts.wait_for_selector:
+                    try:
+                        await page.wait_for_selector(opts.wait_for_selector, timeout=15000)
+                    except PlaywrightTimeout:
+                        logger.debug("wait_for_selector timed out: %s", opts.wait_for_selector)
+
+                load_ms = int((datetime.now() - start).total_seconds() * 1000)
+                await self._scroll_to_load_lazy(page)
+
+                # Clear auto-opened overlays (cart drawers, "cart reserved" urgency
+                # popups, newsletter/cookie modals) BEFORE any capture. Crawling
+                # with one open pollutes the DOM/computed styles and freezes the
+                # overlay into the clone. Best-effort; re-settle afterwards.
+                try:
+                    dismissed = await page.evaluate(js.DISMISS_OVERLAYS_JS)
+                    logger.info("overlay dismissal: %s", dismissed)
+                    await asyncio.sleep(0.4)
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("overlay dismissal failed: %s", e)
+
+                # Theme detection (restores original state before continuing).
+                theme_detection = None
+                current = ThemeMode.LIGHT
+                if opts.detect_theme:
+                    theme_detection = await theme_mod.detect_theme_support(page)
+                    current = theme_detection.current_mode
+
+                # Render in the "primary" theme for the canonical pass.
+                primary = "light" if current == ThemeMode.LIGHT else "dark"
+                await theme_mod.apply_theme(page, primary)
+
+                eval_s = opts.eval_timeout_ms / 1000
+                metadata = await self._extract_metadata(page, url, load_ms)
+                dom_tree = await self._extract_dom_tree(
+                    page, opts.max_depth, opts.include_hidden, timeout_s=eval_s
+                )
+                assets = await self._extract_assets(page, timeout_s=eval_s)
+                # Freeze the at-rest rendered state into inline styles BEFORE
+                # serializing, so the static clone reproduces what the live page
+                # looked like (closed overlays stay closed, JS-laid-out columns
+                # keep their size) without shipping the source JS. Best-effort:
+                # a failure here must never abort extraction.
+                try:
+                    baked = await page.evaluate(js.REST_STATE_BAKE_JS)
+                    logger.info("rest-state bake: %s", baked)
+                except Exception as e:  # noqa: BLE001
+                    logger.warning("rest-state bake failed: %s", e)
+                raw_html = await page.content()
+                # Resolve Next.js image-proxy srcs to real CDN urls so they match
+                # downloaded assets (otherwise they stay broken /_next/image refs).
+                raw_html = _rewrite_next_images(raw_html, url)
+                style_summary = self._compute_style_summary(dom_tree) if dom_tree else None
+
+                screenshot_b64 = (
+                    await self._screenshot(page) if opts.include_screenshot else None
+                )
+                full_b64 = (
+                    await self._screenshot(page) if opts.full_page_screenshot else None
+                )
+
+                css_data = await self._extract_css_data(page, timeout_s=eval_s) if opts.extract_css else None
+                blocks = await self._extract_blocks(page) if opts.extract_blocks else []
+
+                downloaded = None
+                if opts.download_resources and assets:
+                    downloaded = await self._download_resources(page, assets, url, opts)
+
+                embeds = []
+                if opts.capture_embeds:
+                    embeds = await self._capture_embeds(page, url)
+
+                # Dual-theme capture if the page genuinely supports both.
+                light_data: Optional[ThemedData] = None
+                dark_data: Optional[ThemedData] = None
+                has_both = bool(
+                    theme_detection and theme_detection.support == ThemeSupport.BOTH
+                )
+                if has_both:
+                    light_data = await self._capture_themed(page, ThemeMode.LIGHT, url, opts)
+                    dark_data = await self._capture_themed(page, ThemeMode.DARK, url, opts)
+                    # primary screenshots reflect light unless page is dark-first
+                    if light_data and light_data.screenshot_b64:
+                        screenshot_b64 = light_data.screenshot_b64
+                        full_b64 = light_data.full_b64 or full_b64
+
+                return ExtractionResult(
+                    success=True,
+                    message="extracted",
+                    metadata=metadata,
+                    dom_tree=dom_tree,
+                    style_summary=style_summary,
+                    assets=assets,
+                    raw_html=raw_html,
+                    css_data=css_data,
+                    downloaded_resources=downloaded,
+                    embeds=embeds,
+                    blocks=blocks,
+                    theme_detection=theme_detection,
+                    current_theme=current,
+                    light_mode_data=light_data,
+                    dark_mode_data=dark_data,
+                    # transient base64 carried on the result for the caller to persist
+                    screenshot_b64=screenshot_b64,
+                    full_b64=full_b64,
+                )
+            finally:
+                await page.close()
+        except PlaywrightTimeout as e:
+            logger.error("navigation timeout: %s", e)
+            return ExtractionResult(success=False, message="navigation timeout", error=str(e))
+        except Exception as e:  # noqa: BLE001
+            logger.error("extraction failed: %s", e, exc_info=True)
+            return ExtractionResult(success=False, message="extraction failed", error=str(e))
+
+    # ------------------------------------------------------------ extractors
+
+    async def _extract_metadata(self, page: Page, url: str, load_ms: int) -> PageMetadata:
+        info = await page.evaluate(js.METADATA_JS)
+        return PageMetadata(
+            url=url,
+            title=info["title"],
+            viewport_width=info["viewportWidth"],
+            viewport_height=info["viewportHeight"],
+            page_width=info["pageWidth"],
+            page_height=info["pageHeight"],
+            total_elements=info["totalElements"],
+            max_depth=info["maxDepth"],
+            load_time_ms=load_ms,
+        )
+
+    async def _extract_dom_tree(
+        self, page: Page, max_depth: int, include_hidden: bool, timeout_s: float = 25.0
+    ) -> Optional[ElementInfo]:
+        data = await robustness.eval_budgeted(
+            page.evaluate(js.DOM_TREE_JS, {"maxDepth": max_depth, "includeHidden": include_hidden}),
+            timeout_s, fallback=None, label="dom_tree",
+        )
+        return self._parse_element(data)
+
+    def _parse_element(self, data: Optional[dict]) -> Optional[ElementInfo]:
+        if not data:
+            return None
+        children = []
+        for child in data.get("children", []):
+            parsed = self._parse_element(child)
+            if parsed:
+                children.append(parsed)
+        return ElementInfo(
+            tag=data["tag"],
+            id=data.get("id"),
+            classes=data.get("classes", []),
+            rect=ElementRect(**data["rect"]),
+            styles=ElementStyles(**data.get("styles", {})),
+            text_content=data.get("text_content"),
+            inner_html_length=data.get("inner_html_length", 0),
+            raw_html_length=data.get("raw_html_length", data.get("inner_html_length", 0)),
+            attributes=data.get("attributes", {}),
+            is_visible=data.get("is_visible", True),
+            is_interactive=data.get("is_interactive", False),
+            children=children,
+            children_count=data.get("children_count", 0),
+            xpath=data.get("xpath"),
+            selector=data.get("selector"),
+        )
+
+    async def _extract_assets(self, page: Page, timeout_s: float = 25.0) -> PageAssets:
+        data = await robustness.eval_budgeted(
+            page.evaluate(js.ASSETS_JS), timeout_s, fallback=None, label="assets"
+        )
+        if not data:
+            return PageAssets()
+
+        def dedupe(items):
+            seen, out = set(), []
+            for it in items:
+                if it["url"] not in seen:
+                    seen.add(it["url"])
+                    out.append(AssetInfo(**it))
+            return out
+
+        images = dedupe(data["images"])
+        scripts = dedupe(data["scripts"])
+        stylesheets = dedupe(data["stylesheets"])
+        fonts = dedupe(data["fonts"])
+        return PageAssets(
+            images=images,
+            scripts=scripts,
+            stylesheets=stylesheets,
+            fonts=fonts,
+            total_images=len(images),
+            total_scripts=len(scripts),
+            total_stylesheets=len(stylesheets),
+            total_fonts=len(fonts),
+        )
+
+    async def _extract_css_data(self, page: Page, timeout_s: float = 25.0) -> CSSData:
+        data = await robustness.eval_budgeted(
+            page.evaluate(js.CSS_DATA_JS), timeout_s, fallback=None, label="css_data"
+        )
+        if not data:
+            return CSSData()
+
+        stylesheets = [
+            StylesheetContent(url=s["url"], content=s["content"], is_inline=s["is_inline"])
+            for s in data.get("stylesheets", [])
+        ]
+        for href in await page.evaluate(js.EXTERNAL_STYLESHEETS_JS):
+            try:
+                resp = await page.request.get(href)
+                if resp.ok:
+                    stylesheets.append(
+                        StylesheetContent(url=href, content=await resp.text(), is_inline=False)
+                    )
+            except Exception:  # noqa: BLE001
+                logger.debug("failed to fetch stylesheet %s", href)
+
+        animations = []
+        for a in data.get("animations", []):
+            kfs = []
+            for kf in a.get("keyframes", []):
+                styles = {}
+                if isinstance(kf.get("styles"), str):
+                    for part in kf["styles"].split(";"):
+                        if ":" in part:
+                            k, v = part.split(":", 1)
+                            styles[k.strip()] = v.strip()
+                kfs.append(CSSKeyframe(offset=kf["offset"], styles=styles))
+            animations.append(
+                CSSAnimation(name=a["name"], keyframes=kfs, source_stylesheet=a.get("source_stylesheet"))
+            )
+
+        transitions, seen = [], set()
+        for t in data.get("transitions", []):
+            key = f"{t['selector']}_{t['property']}"
+            if key not in seen:
+                seen.add(key)
+                transitions.append(
+                    CSSTransitionInfo(
+                        property=t["property"],
+                        duration=t["duration"],
+                        timing_function=t["timing_function"],
+                        delay=t["delay"],
+                    )
+                )
+
+        variables = [CSSVariable(**v) for v in data.get("variables", [])]
+        pseudo = [
+            PseudoElementStyle(
+                selector=p["selector"], pseudo=p["pseudo"],
+                styles=p.get("styles", {}), content=p.get("content"),
+            )
+            for p in data.get("pseudo_elements", [])
+        ]
+
+        return CSSData(
+            stylesheets=stylesheets,
+            animations=animations,
+            transitions=transitions[:50],
+            variables=variables,
+            pseudo_elements=pseudo[:100],
+            media_queries=data.get("media_queries", {}),
+        )
+
+    async def _extract_blocks(self, page: Page) -> list[DomBlock]:
+        raw = await page.evaluate(
+            js.BLOCKS_JS, {"minHeight": 40, "maxBlocks": 60}
+        )
+        return [
+            DomBlock(
+                index=b["index"],
+                selector=b["selector"],
+                xpath=b.get("xpath"),
+                tag=b["tag"],
+                rect=ElementRect(**b["rect"]),
+                text_preview=b.get("text_preview", ""),
+                heading_texts=b.get("heading_texts", []),
+                est_tokens=b.get("est_tokens", 0),
+                child_count=b.get("child_count", 0),
+            )
+            for b in raw
+        ]
+
+    # ----------------------------------------------------------- theme passes
+
+    async def _capture_themed(
+        self, page: Page, theme: ThemeMode, url: str, opts: ExtractOptions
+    ) -> ThemedData:
+        try:
+            await theme_mod.apply_theme(page, theme)
+            shot = await self._screenshot(page) if opts.include_screenshot else None
+            full = await self._screenshot(page) if opts.full_page_screenshot else None
+            assets = await self._extract_assets(page)
+            css = await self._extract_css_data(page) if opts.extract_css else None
+            # screenshot_b64 / full_b64 are transient (excluded from persistence).
+            return ThemedData(
+                css_data=css, assets=assets, screenshot_b64=shot, full_b64=full
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.error("themed capture failed (%s): %s", theme, e)
+            return ThemedData()
+
+    # ----------------------------------------------------------------- utils
+
+    async def _scroll_to_load_lazy(
+        self, page: Page, max_scrolls: int = 50, delay: float = 0.3
+    ) -> None:
+        try:
+            dims = await page.evaluate(js.SCROLL_DIMENSIONS_JS)
+            vh = dims["viewportHeight"]
+            last_h = dims["scrollHeight"]
+            pos = 0
+            count = 0
+            while count < max_scrolls:
+                pos += vh
+                await page.evaluate(f"window.scrollTo(0, {pos})")
+                await asyncio.sleep(delay)
+                new_h = await page.evaluate("document.body.scrollHeight")
+                count += 1
+                if pos >= new_h:
+                    if new_h > last_h:
+                        last_h = new_h
+                    else:
+                        break
+                last_h = new_h
+            await page.evaluate("window.scrollTo(0, 0)")
+            await asyncio.sleep(0.5)
+        except Exception as e:  # noqa: BLE001
+            logger.warning("lazy scroll failed: %s", e)
+            try:
+                await page.evaluate("window.scrollTo(0, 0)")
+            except Exception:  # noqa: BLE001
+                pass
+
+    async def _screenshot(self, page: Page) -> str:
+        data = await page.screenshot(type="png", full_page=True)
+        return base64.b64encode(data).decode("utf-8")
+
+    async def _capture_embeds(self, page: Page, base_url: str) -> list:
+        """Screenshot each cross-origin widget iframe while it renders.
+
+        We are on the page's authorized origin, so third-party widgets (Loox
+        reviews, chat, maps) load here even though they would refuse to in a
+        clone. Capturing them now lets the clone show a faithful static snapshot
+        instead of a "refused to connect" frame. Best-effort: any frame that
+        can't be shot is skipped.
+        """
+        page_host = (urlparse(base_url).hostname or "").lower().lstrip("www.")
+        out: list = []
+        try:
+            frames = await page.query_selector_all("iframe")
+        except Exception:  # noqa: BLE001
+            return out
+        for i, el in enumerate(frames):
+            try:
+                src = (await el.get_attribute("src")) or ""
+                if not src or src.startswith(("data:", "about:", "javascript:", "#")):
+                    continue
+                norm = "https:" + src if src.startswith("//") else src
+                host = (urlparse(norm).hostname or "").lower().lstrip("www.")
+                if not host or host == page_host:
+                    continue  # same-origin / relative → real local content, keep it
+                await el.scroll_into_view_if_needed(timeout=3000)
+                box = await el.bounding_box()
+                if not box or box["width"] < 2 or box["height"] < 2:
+                    continue
+                shot = await el.screenshot(type="png", timeout=10000)
+                out.append({
+                    "src": src,
+                    "id": (await el.get_attribute("id")) or f"embed-{i}",
+                    "title": (await el.get_attribute("title")) or "",
+                    "width": str(int(box["width"])),
+                    "height": str(int(box["height"])),
+                    "image_b64": base64.b64encode(shot).decode("utf-8"),
+                })
+            except Exception:  # noqa: BLE001 — one bad frame must not fail extraction
+                continue
+        return out
+
+    def _compute_style_summary(self, dom_tree: ElementInfo) -> StyleSummary:
+        summary = StyleSummary()
+
+        def add(d: dict, key: Optional[str]) -> None:
+            if key:
+                d[key] = d.get(key, 0) + 1
+
+        def traverse(el: ElementInfo) -> None:
+            s = el.styles
+            add(summary.colors, s.color)
+            add(summary.background_colors, s.background_color)
+            add(summary.font_families, s.font_family)
+            add(summary.font_sizes, s.font_size)
+            add(summary.margins, s.margin)
+            add(summary.paddings, s.padding)
+            add(summary.display_types, s.display)
+            add(summary.position_types, s.position)
+            for child in el.children:
+                traverse(child)
+
+        traverse(dom_tree)
+
+        def top(d: dict, limit: int = 20) -> dict:
+            return dict(sorted(d.items(), key=lambda kv: kv[1], reverse=True)[:limit])
+
+        summary.colors = top(summary.colors)
+        summary.background_colors = top(summary.background_colors)
+        summary.font_families = top(summary.font_families)
+        summary.font_sizes = top(summary.font_sizes)
+        summary.margins = top(summary.margins)
+        summary.paddings = top(summary.paddings)
+        summary.display_types = top(summary.display_types)
+        summary.position_types = top(summary.position_types)
+        return summary
+
+    # ------------------------------------------------------- resource download
+
+    async def _download_resources(
+        self, page: Page, assets: PageAssets, base_url: str, opts: ExtractOptions
+    ) -> DownloadedResources:
+        out = DownloadedResources()
+        for a in assets.images[: opts.max_images]:
+            res = await self._download_one(page, a.url, base_url)
+            if res:
+                out.images.append(res)
+        for a in assets.fonts[: opts.max_fonts]:
+            res = await self._download_one(page, a.url, base_url)
+            if res:
+                out.fonts.append(res)
+        for a in assets.scripts[: opts.max_scripts]:
+            res = await self._download_one(page, a.url, base_url, max_size=500 * 1024)
+            if res:
+                out.scripts.append(res)
+        return out
+
+    async def _download_one(
+        self, page: Page, url: str, base_url: str, max_size: int = 2 * 1024 * 1024
+    ) -> Optional[ResourceContent]:
+        try:
+            if not url.startswith(("http://", "https://", "data:")):
+                url = urljoin(base_url, url)
+            # Next.js image proxy: /_next/image?url=<encoded real url>&w=..&q=..
+            # The real CDN image is in the `url` param. Resolve it so the saved
+            # filename + manifest key use the REAL url (otherwise every proxied
+            # image collapses to a single extension-less "image.img" and collides).
+            real = _resolve_next_image(url, base_url)
+            name_src = real or url
+            if url.startswith("data:"):
+                m = re.match(r"data:([^;,]+)?(?:;base64)?,(.+)", url)
+                if m:
+                    mime = m.group(1) or "application/octet-stream"
+                    content = m.group(2)
+                    return ResourceContent(
+                        url=url[:50] + "...",
+                        type=mime.split("/")[0],
+                        content=content,
+                        size=len(content),
+                        mime_type=mime,
+                        filename=None,
+                    )
+                return None
+
+            resp = await page.request.get(url)
+            if not resp.ok:
+                return None
+            body = await resp.body()
+            if len(body) > max_size:
+                return None
+            ctype = resp.headers.get("content-type", "")
+            rtype = "other"
+            if "image" in ctype:
+                rtype = "image"
+            elif "font" in ctype or url.endswith((".woff", ".woff2", ".ttf", ".eot", ".otf")):
+                rtype = "font"
+            elif "javascript" in ctype or url.endswith(".js"):
+                rtype = "script"
+            elif "css" in ctype or url.endswith(".css"):
+                rtype = "stylesheet"
+            filename = urlparse(name_src).path.split("/")[-1] or "unknown"
+            return ResourceContent(
+                url=name_src,  # key the manifest on the REAL url (matches rewritten HTML)
+                type=rtype,
+                content=base64.b64encode(body).decode("utf-8"),
+                size=len(body),
+                mime_type=ctype,
+                filename=filename,
+            )
+        except Exception as e:  # noqa: BLE001
+            logger.debug("download failed %s: %s", url, e)
+            return None
