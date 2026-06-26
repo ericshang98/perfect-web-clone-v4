@@ -5,6 +5,20 @@
 > simultaneous requirements: **cleanest-possible code** AND **pixel-perfect visual fidelity**,
 > produced by an **automated, paste-a-URL tool** across any product/landing page.
 
+> **★ North star.** Every requirement must first become a **deterministic, evidence-backed
+> gate**, then be satisfied — never by "looks close enough." The guiding philosophy (four
+> pillars), the delivery contract, the decision log, and the live roadmap are consolidated in
+> **`docs/delivery-strategy.md`** — read it first; this file is the deeper architecture behind it.
+
+> **⚠ Default-route pivot (2026-06-26).** The **delivery path is the subagent-by-section route**
+> (extract → plan sections by real `#main` children → assemble shell → per-section subagents author
+> clean JSX → build → gates), per `skill/SKILL.md`. The **IR→codegen layers (1–3) below are
+> demoted to experimental** R&D: on real pages the multi-MB DOM cannot transit MCP context and
+> codegen currently emits empty shells. **Everything else in this document still holds** — the
+> feasibility argument (§1), the requirement→gate mapping (§2), and the Layer-4 gate-driven
+> self-heal loop are unchanged; only the *candidate-generation* mechanism changed from
+> deterministic codegen to subagent authoring. See the decision log in `docs/delivery-strategy.md`.
+
 ---
 
 ## 0. Why v4 exists
@@ -104,6 +118,13 @@ These gates are the contract. "Done" = all gates green on the agreed reference U
 
 ## 3. The layered pipeline
 
+> **Current delivery mapping (2026-06-26):** Layers 1–3 (IR → recognizers → codegen) are the
+> *intended* design but are **demoted to experimental**. In the shipping pipeline their job —
+> turning captured section data into clean components — is done by **per-section subagents**
+> (one subagent per real `#main` child, authoring clean JSX + local CSS over a deduped global
+> cleaned stylesheet). Layer 0 (capture) and Layer 4 (gate-driven self-heal) are unchanged and
+> remain the backbone. See `skill/SKILL.md` for the operational route.
+
 ```
 Layer 0  CAPTURE (ground truth)                          [evolves core/extractor]
    • Playwright renders at every breakpoint (1440 / 768 / 375)
@@ -184,6 +205,13 @@ the seven-phase skill spine) is **inherited from v3 unchanged**.
 ---
 
 ## 5. The Semantic IR (Layer 1) — the keystone
+
+> **Experimental (2026-06-26).** This IR is the long-term design but is **not on the shipping
+> path** — the multi-MB real-page DOM cannot transit MCP context to `build_ir`, and
+> `generate_code` currently emits empty shells. It is retained as R&D toward a fully
+> deterministic codegen; today the per-section subagents play the role described here (produce
+> clean components in our vocabulary). The section below is the target design, not current
+> behavior.
 
 The IR is the **single stable contract**; every other layer reads/writes it, so each is swappable.
 
