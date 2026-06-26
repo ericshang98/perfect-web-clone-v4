@@ -125,6 +125,41 @@ def normalize_assets(raw: dict, base_url: str = "") -> dict:
     }
 
 
+_CSS_URL_REF = re.compile(r"""url\(\s*['"]?([^'")]+?)['"]?\s*\)""", re.IGNORECASE)
+_IMG_EXT = re.compile(r"\.(?:jpe?g|png|webp|avif|svg|gif)(?:[?#]|$)", re.IGNORECASE)
+
+
+def harvest_css_image_urls(css: str, base_url: str = "") -> list[str]:
+    """Recover image URLs referenced via ``url(...)`` in a stylesheet.
+
+    The injected theme CSS references background images / icons via ``url(...)``;
+    if those assets aren't in the download set they hotlink the source CDN (the
+    19 ``cdn/shop`` residuals). This harvests the image ``url(...)`` refs (fonts
+    are excluded — handled separately) so they can be downloaded and localized.
+    ``{width}`` substituted; protocol-/root-relative absolutized; deduped. Pure.
+    """
+    if not css:
+        return []
+    out: list[str] = []
+    seen: set[str] = set()
+    for raw in _CSS_URL_REF.findall(css):
+        u = _subst_width(raw.strip())
+        if not u or u.startswith(("data:", "blob:")) or "{" in u:
+            continue
+        if not _IMG_EXT.search(u):  # only image assets (skip .woff/.ttf fonts, etc.)
+            continue
+        if u.startswith("//"):
+            u = "https:" + u
+        elif u.startswith("/"):
+            if not base_url:
+                continue
+            u = urljoin(base_url, u)
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+    return out
+
+
 def harvest_html_image_urls(html: str, base_url: str = "") -> list[str]:
     """Recover content-image URLs present in raw HTML but absent from the rendered DOM.
 

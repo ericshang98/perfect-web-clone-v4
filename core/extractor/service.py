@@ -222,6 +222,12 @@ class ExtractorService:
                 css_data = await self._extract_css_data(page, timeout_s=eval_s) if opts.extract_css else None
                 blocks = await self._extract_blocks(page) if opts.extract_blocks else []
 
+                # Add images referenced only in CSS url(...) (theme bg-images, icons)
+                # to the download set, so the injected theme CSS resolves locally
+                # instead of hotlinking the source CDN.
+                if css_data and assets:
+                    self._merge_css_image_assets(css_data, assets)
+
                 downloaded = None
                 if opts.download_resources and assets:
                     downloaded = await self._download_resources(page, assets, url, opts)
@@ -377,6 +383,23 @@ class ExtractorService:
             total_fonts=len(fonts),
             total_videos=len(videos),
         )
+
+    def _merge_css_image_assets(self, css_data: "CSSData", assets: "PageAssets") -> None:
+        """Append image URLs referenced in CSS ``url(...)`` to ``assets.images``.
+
+        Deduped against URLs already collected. Pure URL work via asset_urls; the
+        actual download happens later in _download_resources (subject to caps).
+        """
+        from core.extractor import asset_urls
+
+        base = getattr(self, "_asset_base_url", "") or ""
+        existing = {a.url for a in assets.images}
+        for sheet in css_data.stylesheets or []:
+            for u in asset_urls.harvest_css_image_urls(sheet.content or "", base_url=base):
+                if u not in existing:
+                    existing.add(u)
+                    assets.images.append(AssetInfo(url=u, type="image"))
+        assets.total_images = len(assets.images)
 
     async def _extract_css_data(self, page: Page, timeout_s: float = 25.0) -> CSSData:
         data = await robustness.eval_budgeted(

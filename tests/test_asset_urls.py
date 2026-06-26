@@ -67,6 +67,23 @@ def test_normalize_assets_expands_images_and_fonts():
     assert all(i["type"] == "image" for i in norm["images"])
 
 
+def test_harvest_css_image_urls_finds_bg_and_skips_fonts_and_data():
+    css = (
+        ".a{background:url(https://cdn/shop/files/bg_{width}x.jpg?v=2)}"
+        ".b{background:url('//cdn/icons/i.svg')}"
+        ".c{background:url(/theme/hero.png)}"
+        "@font-face{src:url(https://cdn/fonts/f.woff2)}"          # font, not an image
+        ".d{background:url(data:image/gif;base64,AAA)}"            # data uri skipped
+    )
+    out = asset_urls.harvest_css_image_urls(css, base_url="https://site.com/")
+    assert "https://cdn/shop/files/bg_1200x.jpg?v=2" in out   # {width} substituted
+    assert "https://cdn/icons/i.svg" in out                   # protocol-relative
+    assert "https://site.com/theme/hero.png" in out           # root-relative joined
+    assert not any("f.woff2" in u for u in out)               # fonts excluded
+    assert not any(u.startswith("data:") for u in out)        # data uri excluded
+    assert len(out) == len(set(out))                          # deduped
+
+
 def test_harvest_html_image_urls_finds_noscript_relative_template_and_json():
     html = (
         '<img src="data:image/gif;base64,AAA">'
