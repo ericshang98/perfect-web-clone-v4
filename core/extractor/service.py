@@ -212,6 +212,19 @@ class ExtractorService:
                 raw_html = _rewrite_next_images(raw_html, url)
                 style_summary = self._compute_style_summary(dom_tree) if dom_tree else None
 
+                # Pre-capture prep so the REFERENCE raster is valid: re-dismiss
+                # timer-driven popups (e.g. a delayed newsletter overlay) and force
+                # above-fold images to paint. A defective baseline (popup over a
+                # black hero) would make the fidelity gate punish a correct clone.
+                try:
+                    await page.evaluate(js.DISMISS_OVERLAYS_JS)
+                    await robustness.eval_budgeted(
+                        page.evaluate(js.FORCE_LOAD_IMAGES_JS), 8.0, fallback=None, label="force_imgs"
+                    )
+                    await asyncio.sleep(0.4)
+                except Exception as e:  # noqa: BLE001 — prep is best-effort.
+                    logger.warning("pre-capture prep failed: %s", e)
+
                 screenshot_b64 = (
                     await self._screenshot(page) if opts.include_screenshot else None
                 )

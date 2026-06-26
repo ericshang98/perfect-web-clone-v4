@@ -283,6 +283,23 @@ CSS_DATA_JS = r"""() => {
     return result;
 }"""
 
+FORCE_LOAD_IMAGES_JS = r"""() => {
+  // Force above-fold / lazy images to actually paint before the reference shot,
+  // so the baseline isn't a black hero (which makes the fidelity gate penalize a
+  // CORRECT clone that DOES show the hero). Promote placeholder src to data-src,
+  // mark eager, and await decode (bounded by the caller's eval budget).
+  const imgs = Array.from(document.querySelectorAll('img'));
+  imgs.forEach(img => {
+    try {
+      img.loading = 'eager';
+      const ds = img.getAttribute('data-src') || img.getAttribute('data-lazy-src') || '';
+      if (ds && (!img.currentSrc || (img.getAttribute('src') || '').startsWith('data:'))) img.src = ds;
+    } catch (e) {}
+  });
+  return Promise.all(imgs.map(img => (img.decode ? img.decode().catch(() => {}) : Promise.resolve()))).then(() => imgs.length);
+}"""
+
+
 EXTERNAL_STYLESHEETS_JS = r"""() => {
     return Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
         .map(link => link.href).filter(href => href);
