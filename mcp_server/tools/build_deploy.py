@@ -107,6 +107,16 @@ def _load_source_data(source_id: str, storage_root: Optional[Path] = None) -> Di
     if raw_html is not None:
         data["raw_html"] = raw_html
 
+    # The captured CSSData (full theme stylesheets) is trimmed out of the manifest
+    # and persisted in css.json. Load it so _render_index_css can inject the
+    # ordered theme cascade (P0). Best-effort: missing css is non-fatal.
+    try:
+        css = store.read_css()
+        if css is not None:
+            data["css"] = css.model_dump(mode="json")
+    except Exception:  # noqa: BLE001 — CSS injection is best-effort.
+        pass
+
     return data
 
 
@@ -197,18 +207,27 @@ def _render_app_jsx(template: Dict[str, Any]) -> str:
     )
 
 
-def _render_index_css(source_data: Dict[str, Any]) -> str:
+def _render_index_css(
+    source_data: Dict[str, Any],
+    *,
+    downloaded: Optional[Dict[str, Any]] = None,
+    source_url: str = "",
+    asset_map: Optional[Dict[str, str]] = None,
+) -> str:
     """Render src/index.css (deterministic).
 
-    Always the three Tailwind layers. If the extraction surfaced root CSS custom
-    properties (design tokens), inline them under a :root block so section
-    components can reference the original variable names. No LLM, no judgement —
-    just a verbatim passthrough of any extracted ``css_variables``.
+    The three Tailwind layers, then any extracted root CSS custom properties
+    (design tokens), then — the P0 fix — the **full captured theme stylesheet**,
+    in capture order, localized + de-fingerprinted. Injecting the complete ordered
+    cascade (instead of a per-section ``css_rules`` union) is what stops
+    context-dependent rules (``:hover`` / ``--withAlternateImage`` / footer-only)
+    from being silently dropped. The theme CSS comes AFTER the Tailwind base layer
+    so it wins for injected real HTML. No LLM, no judgement.
     """
     base = "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
 
-    root_vars: Dict[str, str] = {}
     css = source_data.get("css")
+    root_vars: Dict[str, str] = {}
     if isinstance(css, dict):
         cv = css.get("css_variables") or css.get("variables")
         if isinstance(cv, dict):
@@ -220,15 +239,27 @@ def _render_index_css(source_data: Dict[str, Any]) -> str:
                     name = f"--{name}"
                 root_vars[name] = str(v)
 
-    if not root_vars:
-        return base
+    out = base
+    if root_vars:
+        lines = ["", "/* Design tokens copied verbatim from the extracted page. */", ":root {"]
+        for name, value in root_vars.items():
+            lines.append(f"  {name}: {value};")
+        lines.append("}")
+        lines.append("")
+        out += "\n".join(lines)
 
-    lines = ["", "/* Design tokens copied verbatim from the extracted page. */", ":root {"]
-    for name, value in root_vars.items():
-        lines.append(f"  {name}: {value};")
-    lines.append("}")
-    lines.append("")
-    return base + "\n".join(lines)
+    # P0: inject the full ordered, cleaned theme stylesheet.
+    sheets = css.get("stylesheets") if isinstance(css, dict) else None
+    if sheets:
+        from core.asset_localizer import build_asset_map
+        from core.codegen.global_css import build_global_css
+
+        amap = asset_map if asset_map is not None else build_asset_map(downloaded)
+        theme_css = build_global_css(sheets, source_url=source_url, asset_map=amap)
+        if theme_css:
+            out += "\n\n/* captured theme styles — ordered, localized, de-fingerprinted (P0) */\n"
+            out += theme_css + "\n"
+    return out
 
 
 def _build_error_dicts(errors) -> List[Dict[str, Any]]:
@@ -322,7 +353,11 @@ async def assemble_project(source_id: str) -> Dict[str, Any]:
     sb = await _require_sandbox()
 
     app_jsx = _render_app_jsx(template)
-    index_css = _render_index_css(source_data)
+    index_css = _render_index_css(
+        source_data,
+        downloaded=source_data.get("downloaded_resources"),
+        source_url=plan.get("source_url") or template.get("source_url") or "",
+    )
 
     # Only shared/assembly-owned files are written here. Assert that invariant
     # so a future edit can't accidentally let assembly clobber a section dir.
