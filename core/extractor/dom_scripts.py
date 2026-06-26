@@ -147,8 +147,16 @@ DOM_TREE_JS = r"""(params) => {
 
 ASSETS_JS = r"""() => {
     const result = { images: [], scripts: [], stylesheets: [], fonts: [], videos: [] };
-    document.querySelectorAll('img').forEach(img => {
-        if (img.src) result.images.push({ url: img.src, type: 'image' });
+    const imgAttr = (el, name) => el.getAttribute(name) || '';
+    document.querySelectorAll('img, source[srcset], source[data-srcset]').forEach(el => {
+        result.images.push({
+            type: 'image',
+            src: el.currentSrc || el.getAttribute('src') || '',
+            srcset: imgAttr(el, 'srcset'),
+            dataSrc: imgAttr(el, 'data-src') || imgAttr(el, 'data-lazy-src') || imgAttr(el, 'data-original'),
+            dataSrcset: imgAttr(el, 'data-srcset') || imgAttr(el, 'data-lazy-srcset'),
+            dataImageUrl: imgAttr(el, 'data-image-url') || imgAttr(el, 'data-bg') || imgAttr(el, 'data-background')
+        });
     });
     // Self-hosted <video> media. Resolve lazy data-src and absolutize via .src
     // (the element's resolved URL) when available, else the raw attribute.
@@ -171,7 +179,7 @@ ASSETS_JS = r"""() => {
         const bg = window.getComputedStyle(el).backgroundImage;
         if (bg && bg !== 'none' && bg.includes('url(')) {
             const m = bg.match(/url\(["']?([^"')]+)["']?\)/);
-            if (m && m[1]) result.images.push({ url: m[1], type: 'background-image' });
+            if (m && m[1]) result.images.push({ type: 'background-image', bg: m[1] });
         }
     });
     document.querySelectorAll('script[src]').forEach(s => result.scripts.push({ url: s.src, type: 'script' }));
@@ -182,7 +190,7 @@ ASSETS_JS = r"""() => {
                 if (rule instanceof CSSFontFaceRule) {
                     const src = rule.style.getPropertyValue('src');
                     const m = src.match(/url\(["']?([^"')]+)["']?\)/);
-                    if (m && m[1]) result.fonts.push({ url: m[1], type: 'font' });
+                    if (m && m[1]) result.fonts.push({ url: m[1], type: 'font', sheetHref: sheet.href || '' });
                 }
             }
         } catch (e) {}
