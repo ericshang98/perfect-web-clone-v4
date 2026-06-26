@@ -19,12 +19,71 @@ from core.visual_diff import _SSIM_SIZE, ssim_region_scores, ssim_score
 DEFAULT_THRESHOLD = 0.97
 
 
-def score(ref_png: str, cand_png: str) -> float:
+# Masked area above this fraction of the page is flagged loudly — you must never
+# be able to mask away a real fidelity miss and silently "pass".
+MASK_AREA_CAP = 0.15
+
+# Band resolution for masked scoring (fine enough to follow a mask y-range).
+_MASK_ROWS = 32
+
+
+def _band_masked(b0: float, b1: float, mask_regions: list[dict]) -> bool:
+    """True if band ``[b0,b1)`` (normalized) overlaps any mask region."""
+    for m in mask_regions:
+        if not (b1 <= m.get("y0", 0.0) or b0 >= m.get("y1", 0.0)):
+            return True
+    return False
+
+
+def masked_fraction(mask_regions: list[dict] | None, rows: int = _MASK_ROWS) -> float:
+    """Fraction of the page height covered by ``mask_regions`` (band-quantized)."""
+    if not mask_regions:
+        return 0.0
+    band_h = 1.0 / rows
+    n = sum(1 for i in range(rows) if _band_masked(i * band_h, (i + 1) * band_h, mask_regions))
+    return n / rows
+
+
+def score(ref_png: str, cand_png: str, mask_regions: list[dict] | None = None) -> float:
     """Structural-similarity score between the reference and candidate rasters.
 
     Returns 1.0 for identical images, lower for divergent ones (clamped 0..1).
+    ``mask_regions`` is an optional list of ``{"y0","y1"}`` normalized [0,1]
+    y-ranges to EXCLUDE — e.g. a known third-party overlay (Klaviyo popup) baked
+    into the reference only. When given, the score is the mean SSIM over the
+    UNMASKED horizontal bands. With no mask, returns the exact global SSIM.
     """
-    return ssim_score(ref_png, cand_png)
+    if not mask_regions:
+        return ssim_score(ref_png, cand_png)
+    bands = ssim_region_scores(ref_png, cand_png, rows=_MASK_ROWS)
+    band_h = 1.0 / _MASK_ROWS
+    kept = [s for i, s in enumerate(bands) if not _band_masked(i * band_h, (i + 1) * band_h, mask_regions)]
+    if not kept:
+        return 0.0
+    return sum(kept) / len(kept)
+
+
+def score_report(
+    ref_png: str,
+    cand_png: str,
+    threshold: float = DEFAULT_THRESHOLD,
+    mask_regions: list[dict] | None = None,
+) -> dict:
+    """Score + provenance: the masked regions and area fraction are always logged.
+
+    ``mask_oversized`` is True when the masked area exceeds ``MASK_AREA_CAP`` — a
+    loud flag so masking can never silently hide a real miss.
+    """
+    s = score(ref_png, cand_png, mask_regions)
+    frac = masked_fraction(mask_regions)
+    return {
+        "score": s,
+        "threshold": threshold,
+        "ok": s >= threshold,
+        "masked_regions": mask_regions or [],
+        "masked_fraction": frac,
+        "mask_oversized": frac > MASK_AREA_CAP,
+    }
 
 
 def passes(ref_png: str, cand_png: str, threshold: float = DEFAULT_THRESHOLD) -> bool:
