@@ -51,3 +51,17 @@ def test_font_relative_falls_back_to_page_url():
 def test_font_data_uri_and_empty_return_none():
     assert asset_urls.absolutize_font_url("data:font/woff2;base64,AA", "https://x/t.css") is None
     assert asset_urls.absolutize_font_url("", "https://x/t.css") is None
+
+
+def test_normalize_assets_expands_images_and_fonts():
+    raw = {
+        "images": [
+            {"src": "data:image/gif;base64,A", "dataSrc": "https://cdn/p_{width}x.jpg"},
+            {"src": "https://cdn/logo.svg"},
+        ],
+        "fonts": [{"url": "panolight.woff2", "sheetHref": "https://site.com/t/assets/x.css"}],
+    }
+    norm = asset_urls.normalize_assets(raw, base_url="https://site.com/")
+    assert [i["url"] for i in norm["images"]] == ["https://cdn/p_1200x.jpg", "https://cdn/logo.svg"]
+    assert [f["url"] for f in norm["fonts"]] == ["https://site.com/t/assets/panolight.woff2"]
+    assert all(i["type"] == "image" for i in norm["images"])

@@ -79,3 +79,35 @@ def absolutize_font_url(raw: str, sheet_href: str | None, page_url: str = "") ->
     if not base:
         return None
     return urljoin(base, u)
+
+
+def normalize_assets(raw: dict, base_url: str = "") -> dict:
+    """Expand a raw ASSETS_JS payload into deduped {url,type} lists.
+
+    Input ``raw`` keys: images (list of attr dicts), fonts (list of
+    {url, sheetHref}), plus scripts/stylesheets/videos passed through. Output
+    mirrors the structure with concrete, absolute, deduped URLs.
+    """
+    img_seen: set[str] = set()
+    images = []
+    for it in raw.get("images") or []:
+        for u in expand_image_urls(it, base_url):
+            if u not in img_seen:
+                img_seen.add(u)
+                images.append({"url": u, "type": it.get("type") or "image"})
+
+    font_seen: set[str] = set()
+    fonts = []
+    for it in raw.get("fonts") or []:
+        u = absolutize_font_url(it.get("url", ""), it.get("sheetHref"), base_url)
+        if u and u not in font_seen:
+            font_seen.add(u)
+            fonts.append({"url": u, "type": "font"})
+
+    return {
+        "images": images,
+        "fonts": fonts,
+        "scripts": raw.get("scripts") or [],
+        "stylesheets": raw.get("stylesheets") or [],
+        "videos": raw.get("videos") or [],
+    }
