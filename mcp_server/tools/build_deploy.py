@@ -207,22 +207,23 @@ def _render_app_jsx(template: Dict[str, Any]) -> str:
     )
 
 
-def _render_index_css(
-    source_data: Dict[str, Any],
-    *,
-    downloaded: Optional[Dict[str, Any]] = None,
-    source_url: str = "",
-    asset_map: Optional[Dict[str, str]] = None,
-) -> str:
-    """Render src/index.css (deterministic).
+# Appended last to the theme stylesheet: neutralize the page-level visibility
+# gates a theme's JS would normally clear (``body{opacity:0}`` until ``.loaded``,
+# ``html.loading`` etc.). Without the theme JS the faithful CSS would otherwise
+# leave the static clone blank. Safe + global: the settled page is always visible.
+_REST_STATE_OVERRIDE = (
+    "\n\n/* rest-state overrides — show the page's settled (post-JS) state */\n"
+    "html,body{opacity:1!important;visibility:visible!important}\n"
+    "[class*=\"loading\" i],[class*=\"no-js\" i]{opacity:1!important;visibility:visible!important}\n"
+)
 
-    The three Tailwind layers, then any extracted root CSS custom properties
-    (design tokens), then — the P0 fix — the **full captured theme stylesheet**,
-    in capture order, localized + de-fingerprinted. Injecting the complete ordered
-    cascade (instead of a per-section ``css_rules`` union) is what stops
-    context-dependent rules (``:hover`` / ``--withAlternateImage`` / footer-only)
-    from being silently dropped. The theme CSS comes AFTER the Tailwind base layer
-    so it wins for injected real HTML. No LLM, no judgement.
+
+def _render_index_css(source_data: Dict[str, Any]) -> str:
+    """Render src/index.css (deterministic): the Tailwind layers + extracted root
+    CSS custom properties. The full theme stylesheet is emitted SEPARATELY as a
+    static ``public/theme.css`` (see ``_render_theme_css``) so it is NOT piped
+    through PostCSS — real themes carry typos (e.g. ``!importnat``) that browsers
+    ignore but PostCSS rejects. No LLM, no judgement.
     """
     base = "@tailwind base;\n@tailwind components;\n@tailwind utilities;\n"
 
@@ -239,27 +240,43 @@ def _render_index_css(
                     name = f"--{name}"
                 root_vars[name] = str(v)
 
-    out = base
-    if root_vars:
-        lines = ["", "/* Design tokens copied verbatim from the extracted page. */", ":root {"]
-        for name, value in root_vars.items():
-            lines.append(f"  {name}: {value};")
-        lines.append("}")
-        lines.append("")
-        out += "\n".join(lines)
+    if not root_vars:
+        return base
+    lines = ["", "/* Design tokens copied verbatim from the extracted page. */", ":root {"]
+    for name, value in root_vars.items():
+        lines.append(f"  {name}: {value};")
+    lines.append("}")
+    lines.append("")
+    return base + "\n".join(lines)
 
-    # P0: inject the full ordered, cleaned theme stylesheet.
+
+def _render_theme_css(
+    source_data: Dict[str, Any],
+    *,
+    downloaded: Optional[Dict[str, Any]] = None,
+    source_url: str = "",
+    asset_map: Optional[Dict[str, str]] = None,
+) -> str:
+    """Render public/theme.css — the full captured theme stylesheet (P0).
+
+    The complete stylesheets in CAPTURE ORDER (cascade preserved — stops
+    context-dependent rules like ``:hover`` / ``--withAlternateImage`` / footer-only
+    being silently dropped), localized + de-fingerprinted, plus the rest-state
+    overrides. Served verbatim from ``public/`` (NOT through PostCSS). Returns ""
+    when the source carried no stylesheets.
+    """
+    css = source_data.get("css")
     sheets = css.get("stylesheets") if isinstance(css, dict) else None
-    if sheets:
-        from core.asset_localizer import build_asset_map
-        from core.codegen.global_css import build_global_css
+    if not sheets:
+        return ""
+    from core.asset_localizer import build_asset_map
+    from core.codegen.global_css import build_global_css
 
-        amap = asset_map if asset_map is not None else build_asset_map(downloaded)
-        theme_css = build_global_css(sheets, source_url=source_url, asset_map=amap)
-        if theme_css:
-            out += "\n\n/* captured theme styles — ordered, localized, de-fingerprinted (P0) */\n"
-            out += theme_css + "\n"
-    return out
+    amap = asset_map if asset_map is not None else build_asset_map(downloaded)
+    theme_css = build_global_css(sheets, source_url=source_url, asset_map=amap)
+    if not theme_css:
+        return ""
+    return theme_css + _REST_STATE_OVERRIDE
 
 
 def _build_error_dicts(errors) -> List[Dict[str, Any]]:
@@ -353,7 +370,8 @@ async def assemble_project(source_id: str) -> Dict[str, Any]:
     sb = await _require_sandbox()
 
     app_jsx = _render_app_jsx(template)
-    index_css = _render_index_css(
+    index_css = _render_index_css(source_data)
+    theme_css = _render_theme_css(
         source_data,
         downloaded=source_data.get("downloaded_resources"),
         source_url=plan.get("source_url") or template.get("source_url") or "",
@@ -370,6 +388,20 @@ async def assemble_project(source_id: str) -> Dict[str, Any]:
         assert contracts.is_shared_path(path), f"{path} is not a shared file"
         await sb.write_file(path, content)
         written.append(path)
+
+    # P0: emit the full theme stylesheet as a STATIC public/theme.css (Vite serves
+    # public/ verbatim — no PostCSS, so real-theme typos like `!importnat` survive
+    # exactly as the browser tolerates them) and <link> it from index.html.
+    if theme_css:
+        await sb.write_file("public/theme.css", theme_css)
+        written.append("public/theme.css")
+        index_html = await sb.read_file("index.html") or ""
+        if "theme.css" not in index_html and "</head>" in index_html:
+            index_html = index_html.replace(
+                "</head>", '    <link rel="stylesheet" href="/theme.css" />\n  </head>', 1
+            )
+            await sb.write_file("index.html", index_html)
+            written.append("index.html")
 
     # Ship the downloaded assets into public/ so localized /assets/... paths
     # resolve and the clone is self-contained (no hotlinking the live origin).

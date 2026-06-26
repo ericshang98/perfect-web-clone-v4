@@ -1,13 +1,14 @@
-"""P0 wiring — _render_index_css must inject the ordered, cleaned theme CSS.
+"""P0 wiring — the theme CSS is emitted as a SEPARATE static stylesheet.
 
-This is the seam that fixes the cascade-blind union: assemble_project's index.css
-now carries the full captured theme stylesheet (ordered, localized, de-fingerprinted)
-after the Tailwind layers, so injected real HTML renders with the real cascade."""
-from mcp_server.tools.build_deploy import _render_index_css
+index.css stays Tailwind+tokens (PostCSS-processed). The full ordered theme CSS
+goes to public/theme.css (served verbatim, NOT through PostCSS — real themes carry
+typos like `!importnat` that browsers ignore but PostCSS rejects), plus rest-state
+overrides so a faithful-CSS clone isn't left blank by JS-gated visibility."""
+from mcp_server.tools.build_deploy import _render_index_css, _render_theme_css
 
 
-def test_injects_ordered_cleaned_theme_css():
-    source_data = {
+def _source():
+    return {
         "css": {
             "stylesheets": [
                 {"url": "1.css", "content": ".Footer{background:#000}", "is_inline": False},
@@ -16,20 +17,27 @@ def test_injects_ordered_cleaned_theme_css():
             "css_variables": {"--brand": "#123"},
         }
     }
+
+
+def test_index_css_is_tailwind_plus_tokens_only_no_theme():
+    out = _render_index_css(_source())
+    assert "@tailwind base" in out
+    assert "--brand: #123" in out          # root tokens still copied
+    assert ".Footer" not in out            # theme CSS is NOT in index.css anymore
+
+
+def test_theme_css_has_ordered_cleaned_rules_and_rest_state_override():
     amap = {"https://store.com/cdn/shop/f.png": "/assets/f.png"}
-    out = _render_index_css(source_data, source_url="https://store.com", asset_map=amap)
-
-    assert "@tailwind base" in out                 # tailwind layers kept
-    assert "--brand: #123" in out                  # root vars still copied
-    assert ".Footer{background:#000}" in out       # real theme rule injected
-    assert "/assets/f.png" in out                  # url() localized
-    assert "shopify" not in out.lower()            # de-fingerprinted (R1)
-    assert "store.com" not in out                  # source domain stripped
-    # theme CSS comes AFTER the tailwind base layer so it wins for injected HTML
-    assert out.index("@tailwind base") < out.index(".Footer")
+    out = _render_theme_css(_source(), source_url="https://store.com", asset_map=amap)
+    assert ".Footer{background:#000}" in out   # real theme rule, ordered
+    assert "/assets/f.png" in out              # url() localized
+    assert "shopify" not in out.lower()        # de-fingerprinted (R1)
+    assert "store.com" not in out              # source domain stripped
+    # rest-state override appended LAST so it wins (page not left blank by JS gates)
+    assert "opacity:1!important" in out
+    assert out.index(".Footer") < out.index("opacity:1!important")
 
 
-def test_no_css_falls_back_to_tailwind_only():
-    out = _render_index_css({})
-    assert out.strip().startswith("@tailwind base")
-    assert "/* captured theme" not in out  # nothing injected when no stylesheets
+def test_theme_css_empty_when_no_stylesheets():
+    assert _render_theme_css({}) == ""
+    assert _render_theme_css({"css": {"stylesheets": []}}) == ""
