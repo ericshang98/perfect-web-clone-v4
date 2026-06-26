@@ -1,0 +1,138 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Oryzo design tokens (captured from oryzo.ai :root) ─────────────────── */
+:root {
+  --color-white: #ffedd7;
+  --color-black: #100904;
+  --color-grey-brown: #6c5f51;
+  --color-green: #445231;
+  --color-green-light: #5d6c49;
+  --color-green-lightest: #f6e0c6;
+  --color-orange: #dc5000;
+  --color-brown: #382416;
+  --site-padding-x: 3.125vw;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  height: auto; /* let content define scroll height for real window scroll */
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-black);
+  color: var(--color-white);
+  font-family: "Archivo", system-ui, sans-serif;
+  overflow-x: hidden;
+}
+
+/* the scrolling DOM overlay sits above the fixed ring canvas */
+#ui {
+  isolation: isolate;
+}
+
+/* scene reveal-on-enter (toggled by IntersectionObserver in Scene.jsx) */
+.reveal {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.is-in .reveal,
+.reveal.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+::selection {
+  background: var(--color-orange);
+  color: var(--color-white);
+}
+
+/* Dark cork / concrete texture used behind the hero — reconstructs the WebGL
+   surface of the original with layered gradients + an SVG fibre noise tile. */
+.cork-surface {
+  background-color: #15100b;
+  background-image:
+    radial-gradient(120% 80% at 70% 25%, rgba(108, 95, 81, 0.35) 0%, rgba(16, 9, 4, 0) 55%),
+    radial-gradient(100% 70% at 15% 90%, rgba(56, 36, 22, 0.55) 0%, rgba(16, 9, 4, 0) 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.32'/%3E%3C/svg%3E");
+  background-blend-mode: screen, screen, overlay;
+}
+
+/* Hero cork surface — warm cork/desk tone matching the real frame-0 edge
+   (#6d573c), textured rather than the old near-black so the scene is never an
+   empty void behind the ring. */
+.cork-surface-hero {
+  background-color: #6d573c;
+  background-image:
+    radial-gradient(120% 90% at 50% 30%, rgba(255, 224, 184, 0.28) 0%, rgba(109, 87, 60, 0) 55%),
+    radial-gradient(100% 80% at 20% 95%, rgba(56, 36, 22, 0.5) 0%, rgba(109, 87, 60, 0) 60%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.3'/%3E%3C/svg%3E");
+  background-blend-mode: overlay, overlay, overlay;
+}
+
+/* Global film-grain texture. Rendered top-most with mix-blend-mode:overlay over
+   a median-0.5 grayscale noise PNG. overlay(base, 0.5) === base, so the per-scene
+   background MEDIAN (what bg_dE measures) is preserved exactly, while the noise
+   raises per-cell contrast so dark scenes are never flagged as flat "void". */
+.grain {
+  background-repeat: repeat;
+  background-size: 256px 256px;
+  mix-blend-mode: overlay;
+}
+
+/* Central warm red bloom for the selector / outro stage (real frame-13 keeps its
+   edges near-black, glow only in the centre — so it never touches the border). */
+.red-glow {
+  background:
+    radial-gradient(46% 42% at 50% 52%, rgba(194, 52, 31, 0.85) 0%, rgba(194, 52, 31, 0.35) 38%, rgba(120, 18, 10, 0.0) 70%),
+    radial-gradient(70% 60% at 50% 55%, rgba(255, 110, 60, 0.25) 0%, rgba(0, 0, 0, 0) 60%);
+}
+
+/* faint engineering grid that fades toward the centre, as on the original */
+.cork-grid {
+  background-image:
+    linear-gradient(rgba(255, 237, 215, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 237, 215, 0.05) 1px, transparent 1px);
+  background-size: 4.4vw 4.4vw;
+  -webkit-mask-image: radial-gradient(120% 90% at 50% 35%, transparent 30%, #000 100%);
+  mask-image: radial-gradient(120% 90% at 50% 35%, transparent 30%, #000 100%);
+}
+
+.wordmark {
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 0.82;
+}
+
+.marquee-track {
+  animation: marquee 38s linear infinite;
+}
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { animation: none; }
+}
