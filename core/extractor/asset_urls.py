@@ -57,3 +57,25 @@ def expand_image_urls(img: dict, base_url: str = "") -> list[str]:
             seen.add(u)
             out.append(u)
     return out
+
+
+def absolutize_font_url(raw: str, sheet_href: str | None, page_url: str = "") -> str | None:
+    """Resolve a @font-face url() that may be relative to its stylesheet.
+
+    Theme fonts are declared ``url("panolight.woff2")`` relative to the theme
+    CSS file; resolving against ``sheet_href`` (preferred) or ``page_url`` gives
+    a downloadable absolute URL. Returns None for data: URIs / empty input.
+    """
+    if not raw:
+        return None
+    u = raw.strip().strip('"\'')
+    if not u or u.startswith("data:"):
+        return None
+    if u.startswith(("http://", "https://")):
+        return u
+    if u.startswith("//"):
+        return "https:" + u
+    base = sheet_href or page_url
+    if not base:
+        return None
+    return urljoin(base, u)

@@ -32,3 +32,22 @@ def test_dedupes_and_skips_data_blob_and_unsubstituted_templates():
         {"src": "https://x/a.png", "dataSrc": "https://x/a.png", "srcset": "blob:xyz 1x, {bad} 2x"}
     )
     assert out == ["https://x/a.png"]
+
+
+def test_font_absolute_url_unchanged():
+    assert asset_urls.absolutize_font_url("https://x/f.woff2", None) == "https://x/f.woff2"
+
+
+def test_font_relative_resolved_against_sheet_href():
+    out = asset_urls.absolutize_font_url("panolight.woff2", "https://site.com/cdn/t/3/assets/theme.css")
+    assert out == "https://site.com/cdn/t/3/assets/panolight.woff2"
+
+
+def test_font_relative_falls_back_to_page_url():
+    out = asset_urls.absolutize_font_url("f.woff2", None, page_url="https://site.com/")
+    assert out == "https://site.com/f.woff2"
+
+
+def test_font_data_uri_and_empty_return_none():
+    assert asset_urls.absolutize_font_url("data:font/woff2;base64,AA", "https://x/t.css") is None
+    assert asset_urls.absolutize_font_url("", "https://x/t.css") is None
