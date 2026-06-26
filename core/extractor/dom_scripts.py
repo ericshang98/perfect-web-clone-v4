@@ -551,13 +551,27 @@ DISMISS_OVERLAYS_JS = r"""() => {
   ['no-scroll','overflow-hidden','modal-open','scroll-lock'].forEach(c=>{document.documentElement.classList.remove(c);document.body.classList.remove(c);});
   // Last resort: visually remove still-open newsletter/promo dialogs so they
   // don't bake into the reference raster. Never removes <a>-navigating content.
-  document.querySelectorAll('[role="dialog"],[aria-modal="true"],[class*="newsletter" i],[class*="popup" i],[id*="popup" i]').forEach(el => {
+  const overlaySel = '[role="dialog"],[aria-modal="true"],[class*="newsletter" i],'
+    + '[class*="popup" i],[id*="popup" i],[class*="klaviyo" i],[class*="kl-" i],'
+    + '[class*="modal" i],[class*="needsclick" i],iframe[class*="klaviyo" i],'
+    + 'iframe[id*="popup" i],iframe[src*="klaviyo" i],iframe[src*="privy" i],'
+    + 'iframe[src*="optimonk" i],iframe[src*="mailmunch" i]';
+  document.querySelectorAll(overlaySel).forEach(el => {
     const r = el.getBoundingClientRect();
     const cs = getComputedStyle(el);
     const onTop = (cs.position === 'fixed' || cs.position === 'absolute') && parseInt(cs.zIndex || '0', 10) >= 100;
     if (onTop && r.width > 200 && r.height > 120 && !el.querySelector('header,nav')) {
       el.style.setProperty('display', 'none', 'important'); closed++;
     }
+  });
+  // Geometric catch-all for class-less third-party overlay iframes (e.g. Klaviyo
+  // forms in an <iframe>): a fixed/absolute, high-z, sizeable iframe is never
+  // inline page content — hide it so it can't bake into the reference raster.
+  document.querySelectorAll('iframe').forEach(f => {
+    const r = f.getBoundingClientRect();
+    const cs = getComputedStyle(f);
+    const onTop = (cs.position === 'fixed' || cs.position === 'absolute') && parseInt(cs.zIndex || '0', 10) >= 100;
+    if (onTop && r.width > 200 && r.height > 120) { f.style.setProperty('display', 'none', 'important'); closed++; }
   });
   return { closed };
 }"""
