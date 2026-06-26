@@ -504,7 +504,10 @@ DISMISS_OVERLAYS_JS = r"""() => {
   const CLOSE_SEL = [
     '[aria-label*="close" i]','[aria-label*="dismiss" i]','[title*="close" i]',
     'button[class*="close" i]','[class*="modal__close" i]','[class*="drawer__close" i]',
-    '[class*="popup-close" i]','[class*="close-button" i]','.mfp-close','.fancybox-close'
+    '[class*="popup-close" i]','[class*="close-button" i]','.mfp-close','.fancybox-close',
+    '[class*="newsletter" i] [class*="close" i]','[class*="Popup" i] [class*="close" i]',
+    '[data-action*="close" i]','[class*="needsclick" i][class*="close" i]','.klaviyo-close-form',
+    'div[role="dialog"] button','[aria-modal="true"] button[class*="close" i]'
   ];
   document.querySelectorAll(CLOSE_SEL.join(',')).forEach(el=>{
     if (el.tagName === 'A' || el.closest('a[href]')) return;       // never navigate
@@ -529,5 +532,15 @@ DISMISS_OVERLAYS_JS = r"""() => {
   // Unlock scroll the popups may have frozen.
   document.documentElement.style.overflow=''; document.body.style.overflow='';
   ['no-scroll','overflow-hidden','modal-open','scroll-lock'].forEach(c=>{document.documentElement.classList.remove(c);document.body.classList.remove(c);});
+  // Last resort: visually remove still-open newsletter/promo dialogs so they
+  // don't bake into the reference raster. Never removes <a>-navigating content.
+  document.querySelectorAll('[role="dialog"],[aria-modal="true"],[class*="newsletter" i],[class*="popup" i],[id*="popup" i]').forEach(el => {
+    const r = el.getBoundingClientRect();
+    const cs = getComputedStyle(el);
+    const onTop = (cs.position === 'fixed' || cs.position === 'absolute') && parseInt(cs.zIndex || '0', 10) >= 100;
+    if (onTop && r.width > 200 && r.height > 120 && !el.querySelector('header,nav')) {
+      el.style.setProperty('display', 'none', 'important'); closed++;
+    }
+  });
   return { closed };
 }"""
