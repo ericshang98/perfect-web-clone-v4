@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Pagerie 复刻 — 工具流程与诊断报告</title>
+<style>
+  :root{--ink:#1a1a1a;--mut:#6b6b6b;--line:#e6e6e6;--bg:#fafafa;--card:#fff;
+        --ok:#1a7f4b;--bad:#c0392b;--warn:#b9770e;--accent:#3a5bd9;--code:#f4f4f6;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.7;font-size:15px}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 100px}
+  h1{font-size:30px;margin:0 0 6px;letter-spacing:.5px}
+  h2{font-size:21px;margin:46px 0 14px;padding-bottom:8px;border-bottom:2px solid var(--ink)}
+  h3{font-size:16px;margin:24px 0 8px}
+  .sub{color:var(--mut);margin:0 0 4px}
+  .meta{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 8px}
+  .tag{background:#fff;border:1px solid var(--line);border-radius:999px;padding:3px 12px;font-size:13px;color:var(--mut)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:20px 22px;margin:14px 0;
+        box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;background:#fff}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f3f3f5;font-weight:600}
+  code{background:var(--code);padding:1px 6px;border-radius:5px;font-size:13px;font-family:SFMono-Regular,Menlo,monospace}
+  pre{background:#1e1e22;color:#eaeaea;padding:16px;border-radius:10px;overflow:auto;font-size:13px;line-height:1.5}
+  .ok{color:var(--ok);font-weight:600}.bad{color:var(--bad);font-weight:600}.warn{color:var(--warn);font-weight:600}
+  .flow{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;margin:14px 0}
+  .step{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);
+        border-radius:8px;padding:12px 14px}
+  .step b{display:block;font-size:13px;color:var(--accent);margin-bottom:4px}
+  .step small{color:var(--mut);font-size:12.5px}
+  .arrow{align-self:center;color:var(--mut);font-size:20px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:14px 0}
+  .imgbox{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+  .imgbox img{width:100%;display:block}
+  .imgcap{padding:8px 12px;font-size:13px;color:var(--mut);border-top:1px solid var(--line);background:#fafafa}
+  .big{max-height:760px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+  .big img{width:100%;display:block}
+  .kpi{display:flex;gap:14px;flex-wrap:wrap;margin:14px 0}
+  .kpi .b{flex:1;min-width:150px;background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px 16px;text-align:center}
+  .kpi .n{font-size:26px;font-weight:700}
+  .kpi .l{font-size:12.5px;color:var(--mut)}
+  ul{margin:8px 0 8px 2px;padding-left:20px}li{margin:4px 0}
+  .note{background:#fff8ec;border:1px solid #f0d9a8;border-radius:10px;padding:14px 16px;margin:14px 0}
+  .danger{background:#fdeceb;border:1px solid #f1c0bc}
+  .good{background:#eaf7ef;border:1px solid #b8e2c8}
+  hr{border:0;border-top:1px solid var(--line);margin:30px 0}
+  .small{font-size:13px;color:var(--mut)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="sub">PERFECT WEB CLONE v4 · 工具运行过程 + 诚实诊断</p>
+  <h1>Pagerie.com 复刻 — 流程与问题报告</h1>
+  <div class="meta">
+    <span class="tag">目标：https://www.pagerie.com</span>
+    <span class="tag">日期：2026-06-26</span>
+    <span class="tag">source_id：www.pagerie.com-1782450120-9b6f51</span>
+    <span class="tag">交付物：showcase/products/pagerie/</span>
+    <span class="tag">本地预览：http://localhost:5191/</span>
+  </div>
+
+  <div class="note danger">
+    <b>一句话结论：</b>这次复刻效果差，根因不在"拼装/转码"，而在<b>第 0 层抓取没抓全</b>——
+    页面实际引用 <b>107 张</b>商品/资源图，抓取器只下载了 <b>21 张</b>（&lt;1/5）；品牌字体、视频 iframe 也没抓下来；
+    订阅弹窗没关掉就截了图。你的直觉是对的：<b>工作流本应先把原图全部复制下来</b>（之后再"洗稿"换图），
+    这一步这次严重缺失。下面把"设计中的流程""我实际跑的流程""抓到的数据""为什么差""怎么修"逐条摆清楚。
+  </div>
+
+  <h2>① V4 设计中的复刻流程（架构文档 docs/architecture.md 的设定）</h2>
+  <p>V4 的设计是<b>五层流水线</b>，工具全是确定性 Python（不调用大模型），Claude Code 只在第 4 层做"按差异修组件"的判断：</p>
+  <div class="flow">
+    <div class="step"><b>Layer 0 · 抓取</b><small>Playwright 在 1440/768/375 渲染；抓 DOM+计算样式+几何+<b>资源+字体</b>；抓每个断点×状态的参考截图；<b>触发懒加载、下载视频/iframe、关闭浮层</b></small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Layer 1 · 语义 IR</b><small>把 DOM+计算样式归一成框架无关组件树 + 设计令牌（颜色/间距/字体/圆角/阴影），去重、去 Shopify 类名。"干净"在这里诞生</small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Layer 2 · 识别器</b><small>sticky / footer / 评论 / 视频 / 轮播 识别，把哑结构换成智能组件</small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Layer 3 · 干净生成</b><small>从 IR 生成 Vite+React+Tailwind，按构造即干净，无内联 CSS、无 original.css</small></div>
+    <div class="arrow">→</div>
+    <div class="step"><b>Layer 4 · 校验自愈</b><small>渲染→SSIM 对比参考图→定位最差区域→CC 修该组件→重测，直到门禁全绿</small></div>
+  </div>
+  <p class="small">关键点：<b>第 0 层就应该把所有原图、字体、视频原样抓全并本地化</b>（standalone）。换成新图（"洗稿"）是<b>之后</b>的独立步骤，不属于复刻本身。</p>
+
+  <h2>② 我这次实际跑的流程</h2>
+  <p>注意：设计里的 <b>Layer 1–3（IR→识别器→生成）目前是空壳</b>（generate_code 产出空 div；blob 工具无法把 2.2MB DOM 经 MCP 传输）。所以我走的是 V4 里<b>唯一能出效果的"分段 + 逐段子 Agent"路径</b>（继承自 v3 的骨架）：</p>
+  <div class="card">
+    <table>
+      <tr><th>步骤</th><th>工具 / 动作</th><th>结果</th></tr>
+      <tr><td>0 抓取</td><td><code>extract_page</code>（settle 9s，全页截图，download_resources=true）</td><td class="ok">✓ 但抓取不全（见③）</td></tr>
+      <tr><td>1 分段</td><td><code>get_section_plan</code></td><td>13 段</td></tr>
+      <tr><td>2 建壳</td><td><code>assemble_project</code>（建沙箱+写 App.jsx/index.css+拷 33 资源）</td><td class="ok">✓</td></tr>
+      <tr><td>3 逐段复刻</td><td><b>13 个子 Agent 并发</b>，每个 <code>get_section_data</code> 查询本段真实 HTML+CSS+图+链接 → 转干净 JSX</td><td class="ok">✓ 是按 section 分别 query 的</td></tr>
+      <tr><td>4 组装构建</td><td><code>build_project</code>（npm build）</td><td class="ok">✓ exit 0</td></tr>
+      <tr><td>5 校验</td><td>指纹 / 体积 / SSIM 门禁</td><td class="warn">指纹✓ 体积✓(代码) SSIM✗</td></tr>
+      <tr><td>6 修复</td><td>去指纹、手动补下 20 张图、中和伪造视频区块</td><td class="warn">部分</td></tr>
+    </table>
+  </div>
+  <p class="small">回答你的三个问题：<b>是</b>，用了 Playwright 爬虫（<code>extract_page</code>）；<b>是</b>，分 13 个 section 分别 query（<code>get_section_data</code>）；<b>但</b>底层抓取没抓全，所以 section 查询拿到的图片数据大量为 <code>local_url=null</code>。</p>
+
+  <h2>③ 实际抓到的数据（"爬虫"产出）</h2>
+  <div class="card">
+    <h3>结构化数据文件（确实做了全面的数据抓取）</h3>
+    <table>
+      <tr><th>文件</th><th>大小</th><th>内容</th></tr>
+      <tr><td><code>dom.json</code></td><td>2.19 MB</td><td>完整 DOM + 计算样式 + 盒模型几何</td></tr>
+      <tr><td><code>css.json</code></td><td>718 KB</td><td>29 张样式表 + 73 动画 + 50 过渡 + 媒体查询</td></tr>
+      <tr><td><code>sections_full.json</code></td><td>443 KB</td><td>13 段各自的真实 HTML + 清洗后 CSS + 图/链接</td></tr>
+      <tr><td><code>raw.html</code> / <code>manifest.json</code></td><td>332 KB / 768 KB</td><td>原始 HTML / 资源清单</td></tr>
+      <tr><td>截图</td><td>—</td><td>1440 全页参考图（ground truth）</td></tr>
+    </table>
+    <h3 style="color:var(--bad)">图片/字体/视频 — 抓取严重不全（这是效果差的主因）</h3>
+    <div class="kpi">
+      <div class="b"><div class="n bad">107</div><div class="l">页面引用的唯一商品/资源图</div></div>
+      <div class="b"><div class="n bad">21</div><div class="l">抓取器实际下载的图（&lt;20%）</div></div>
+      <div class="b"><div class="n bad">0 / 4</div><div class="l">品牌字体下载（Pano-Light / PagerieFont）</div></div>
+      <div class="b"><div class="n bad">0 / 11</div><div class="l">iframe/视频抓取（换成了弹窗快照）</div></div>
+    </div>
+    <p class="small">细分：<code>src=</code> 图 56 张、<code>data-src=</code> 懒加载 23 张、<code>data-image-url=</code> 悬停换图 33 张。抓取器只认 <code>src=</code> 的一部分（21 张），<b>懒加载图全漏</b> → 子 Agent 只能临时 hotlink 源站（我事后手动补下了 20 张并本地化）。</p>
+  </div>
+
+  <h2>④ 为什么复刻效果差（逐条归因）</h2>
+  <div class="card">
+    <table>
+      <tr><th>现象</th><th>根因</th><th>归属层</th></tr>
+      <tr><td>大量商品图最初指向源站 / 部分缺失</td><td>抓取器不触发懒加载，<b>107 张只下 21 张</b></td><td class="bad">Layer 0 抓取</td></tr>
+      <tr><td>标题字体不对、整页纵向逐步错位、页高偏高</td><td><b>品牌字体没下载</b>（主题相对路径未解析）→ 标题回退字体，行高变化累积</td><td class="bad">Layer 0 抓取</td></tr>
+      <tr><td>顶部和原图差异大</td><td>原站截图顶部叠了 <b>$900 GIFT 订阅弹窗</b>，抓取没关掉浮层就截图（基准图被污染）</td><td class="bad">Layer 0 抓取</td></tr>
+      <tr><td>页面中段出现一大块伪造弹窗图（已被我中和）</td><td>视频 iframe 没抓，被替换成<b>弹窗静态快照</b></td><td class="bad">Layer 0 抓取</td></tr>
+      <tr><td>SSIM 仅 0.30（数值层面）</td><td>以上叠加 + 全页 SSIM 对累计纵向偏移极敏感（手工精修的 db-longbow 同打分器也只有 0.77）</td><td>度量特性</td></tr>
+      <tr><td>IR 自动生成没用上</td><td>Layer 1–3（IR/识别器/codegen）目前是空壳</td><td class="warn">Layer 1–3 未完成</td></tr>
+    </table>
+  </div>
+  <div class="note">绝大多数问题都压在 <b>Layer 0 抓取没做到位</b>——而架构文档里 Layer 0 明确写了"触发懒加载、下载视频/iframe、关闭浮层、本地化字体"。也就是说：<b>不是流程设计错了，是抓取器没把设计中的事做全</b>。这正是要交付给 Jose 之前必须补的能力。</p></div>
+
+  <h2>⑤ 左右对照（左 = 原站基准图，右 = 复刻）</h2>
+  <div class="big"><img src="compare.png" alt="对照图"/></div>
+  <p class="small">结构/配色/两个商品网格/犬只大片/Signature Collar/页脚 基本对齐；主要差异在顶部（弹窗浮层）与字体导致的纵向漂移。</p>
+  <div class="grid2">
+    <div class="imgbox"><img src="ref-full.png"/><div class="imgcap">原站全页（含顶部 $900 GIFT 弹窗浮层）</div></div>
+    <div class="imgbox"><img src="clone-full.png"/><div class="imgcap">复刻全页（已中和伪造视频区块）</div></div>
+  </div>
+
+  <h2>⑥ 达标的部分（干净度 / standalone / 体积）</h2>
+  <div class="kpi">
+    <div class="b"><div class="n ok">0</div><div class="l">dist 内 shopify 指纹</div></div>
+    <div class="b"><div class="n ok">0</div><div class="l">cdn/shop 残留</div></div>
+    <div class="b"><div class="n ok">0</div><div class="l">源域名 pagerie.com</div></div>
+    <div class="b"><div class="n ok">~82KB</div><div class="l">代码 gz（贴合 50–80KB 目标）</div></div>
+  </div>
+  <p class="small">代码干净、可离线、一段一组件、构建 exit 0 —— 这些都达标。短板纯粹在"抓取完整度 + 字体 + 弹窗"。</p>
+
+  <h2>⑦ 怎么修（把工作流补成你设想的样子）</h2>
+  <div class="card good">
+    <ol>
+      <li><b>Layer 0 抓取补全（最高优先）</b>：滚动到底逐张触发懒加载 → 下载<b>全部 107 张原图</b>（含 data-src/data-image-url），本地化；解析主题 assets 基址下载品牌字体；抓取前关闭订阅弹窗/cookie 条；下载视频或取 poster。<b>= "把原图全复制过来"这一步</b>。</li>
+      <li><b>"洗稿/换图"做成独立步骤</b>：原图全抓全之后，再按需把图片批量替换成新图（这是复刻完成<b>之后</b>的工序，不该和复刻混在一起）。</li>
+      <li><b>修 <code>check_weight</code> 把 MCP 服务器跑崩</b>的稳定性 bug；体积门禁拆分 代码 / 内容图 预算。</li>
+      <li><b>统一子 Agent 对懒加载/隐藏态的策略</b>（统一揭开真实内容）。</li>
+      <li>中长期：把 Layer 1–3（IR→识别器→codegen）真正做出来，替代手工逐段转换。</li>
+    </ol>
+  </div>
+
+  <hr/>
+  <p class="small">交付物：<code>showcase/products/pagerie/</code>（npm install &amp;&amp; npm run build &amp;&amp; npx vite preview）。本地预览：<a href="http://localhost:5191/">http://localhost:5191/</a>。本报告：<code>docs/pagerie-report/index.html</code>。</p>
+</div>
+</body>
+</html>

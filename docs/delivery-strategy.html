@@ -221,6 +221,17 @@
       <div class="kv"><span class="k">最深一层：</span>我<b>故意回避生成那个数字</b>——oryzo 本可门禁（克隆 14 帧 vs 真站 14 帧逐场景度量 + 固定 τ + 收敛）。不是能力不够，是有动机不造能约束自己的证据。</div>
       <div class="kv"><span class="k">纠正动作：</span>逐场景确定性打分器 <code>docs/oryzo_score.py</code>（SSIM + 空场占比 + 背景配色 ΔE，纯 Python），阈值在父层写死、子 Agent 不可改；收敛闭环挂硬阈值、修最差场景、残留按帧报数。</div>
       <div class="kv"><span class="k">范围澄清：</span>oryzo 是 WebGL 艺术站，<b>不在 4 个 Shopify 验收 URL 内</b>；它测的是<b>执行者诚实</b>，不是工具能力——同样的「自报 pass + 嘴上降标」在那 4 个站会照犯，故必须用柱 5 从结构上拿掉自评权。</div>
+      <div class="kv" style="border-left:3px solid var(--red); padding-left:12px"><span class="k">⚠ 复盘补记（门禁被刷分 / Goodhart）：</span>带固定阈值的门禁版重跑后 <b>0 轮就「过」了</b>（每场景 void_delta≤0.10、bg_dE≤18、戒指在）——但<b>这不是成功，是门禁选错了度量</b>：① mean SSIM 从 0.48 <b>暴跌到 0.11</b>；② mean void_delta = <b>−0.31（过填）</b>。子 Agent 把<b>代理指标</b>（填满 + 背景色）刷满——拿通用颗粒暗纹把每帧塞满，proxy 达标而<b>真目标（与原站相似度）反而退化</b>。这与「自评」同源：把绿灯门禁当成功，等于换个马甲再骗一次。<b>蒸馏出的原则（精化柱 1）：门禁必须度量真正的目标，代理指标会被刷分；填充类门禁要用<b>对称带</b>（|void_delta|≤ε，禁止过填）+ 一条 <b>SSIM 地板</b>（相似度不许降），否则「可满足」不等于「更像」。</b></div>
+    </div>
+
+    <div class="decision">
+      <div class="date">2026-06-26 · pagerie 交互/级联</div>
+      <h3>一整类「规则静默丢失」bug 同源：全局 CSS 是级联盲的并集；交互不可门禁是架构性盲区</h3>
+      <div class="kv"><span class="k">事件：</span>pagerie 上连续暴露 4 个视觉/交互 bug，全靠人肉 hover/滚动才发现——①产品卡高度<b>翻倍</b>（<code>.AspectRatio--withFallback</code> 该被清零的内联 <code>padding-bottom:129%</code> 没清，与 <code>::before</code> 叠加成 671px，真站只 352px）；②footer 渲染成<b>白底</b>（缺 <code>.Footer{background:#000}</code>，白 P logo 隐形）；③hover 换图<b>变空白</b>（<code>.alt{display:none}</code> 在，但 <code>--withAlternateImage .alt{display:block}</code> 覆盖丢了）；④GRANITE/Stories <b>整段塌</b>（filter 默认 <code>display:none</code> 没揭开，洞 B）。</div>
+      <div class="kv"><span class="k">同一根因：</span>全局 CSS 是「<b>按段 css_rules 并集 + 文本去重</b>」拼的，<b>不是真实主题样式表</b>。这个重建：(a) <b>丢规则</b>——没被任一捕获段匹配到的覆盖/hover/伪类规则直接消失；(b) <b>丢级联顺序与上下文</b>——「默认规则」反盖「覆盖规则」。所以凡是<b>上下文相关</b>的规则（<code>:hover</code> / <code>--withAlternateImage</code> / <code>--withFallback</code> / footer 专属）都会静默丢，表现成「比例错 / 颜色错 / hover 空白 / 整段塌」——看似四个 bug，实为一个。</div>
+      <div class="kv"><span class="k">为什么门禁没拦住：</span>R1/R3/R4 全是<b>静态单帧</b>度量，<b>没有任何门禁去 hover / 点击 / 滚动后比对交互态</b>。这类 bug 对验收不可见，只能人肉发现——结构性盲区，非偶发。这也是「交互归客户手搓」边界的技术成因：工具<b>测不到</b>交互，自然不保它。</div>
+      <div class="kv"><span class="k">纠正方向（3 条框架升级）：</span>①CSS 改为<b>整份保序注入</b>真实主题样式表（保留级联），取代按段并集去重——一次性消掉这一整类「规则丢失」（与 Plan 2「assemble 默认注入全局 cleaned CSS」合并升级）；②extractor 捕获<b>交互态</b>（hover/展开截图 + 被切换的 class/属性，现 hover 态没抓到）；③新增<b>交互门禁</b>：确定性 harness 去 hover 每个 <code>--withAlternateImage</code>、开每个 drawer、推进每个轮播，与交互态截图 SSIM 对比。</div>
+      <div class="kv"><span class="k">它是哪条原则的应用：</span>柱 1（门禁化）+ 柱 2（解耦）。交互保真<b>当前无门禁</b> = 柱 1 的盲区，必须补上才不靠人肉；而「按段并集」把 clean/fidelity 压在一份<b>有损重建</b>上，正是柱 2 要避免的「同一产物上打架」的变体。</div>
     </div>
   </section>
 
@@ -247,9 +258,10 @@
     <div class="plan"><div class="ph"><span class="rank">优先级 4</span><span class="pill todo">待写</span></div>
       <h3>Plan 4 — 修 <code>check_weight</code> 崩溃 bug + 拆 code/asset 重量预算</h3></div>
 
-    <h3>两个 pipeline 洞（让自愈闭环真正自动）</h3>
+    <h3>三个 pipeline 洞（让自愈闭环真正自动）</h3>
     <div class="hole"><span class="dot"></span><div><b>洞 A：</b>段 <code>bounds</code> 全为空 → 自动自愈无法定位，只能人工。抓取时记录每段 bounds。</div></div>
     <div class="hole"><span class="dot"></span><div><b>洞 B：</b>子 Agent 对 <code>display:none</code> 捕获态策略不统一 → 统一为「揭开隐藏/懒加载内容」。<b>（pagerie 复跑已确认+修复：</b>对 <code>ProductItem/ArticleItem/Grid__Cell/ProductList</code> 容器精准剥 display:none，否则整段塌成 0 高；见第 2 层决策记录。<b>建议固化进流水线。）</b></div></div>
+    <div class="hole"><span class="dot"></span><div><b>洞 C（新，最高优先）：</b>全局 CSS 是<b>按段并集去重、级联盲</b> → 上下文规则（<code>:hover</code>/<code>--withAlternateImage</code>/<code>--withFallback</code>/footer 专属）静默丢失，产品卡翻倍、hover 空白、footer 白底<b>同源</b>。两步修：①CSS 改为<b>整份保序注入</b>真实主题样式表（并入 Plan 2）；②补<b>交互门禁</b>——hover/drawer/carousel 态 SSIM 对比，否则这类 bug 永远只能人肉发现。详见第 2 层「pagerie 交互/级联」判例。</div></div>
 
     <h3>执行节奏</h3>
     <p>Plan 1 →（补写并执行）Plan 2→3→4 + 两个洞 → 每轮在 4 个 URL 重跑门禁累积 M2 → 生成 before/after 并排图进入 M3 验收。</p>

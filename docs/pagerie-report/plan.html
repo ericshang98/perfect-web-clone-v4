@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>pwc4 抓取补全 — TDD 实现计划</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+  body{margin:0;background:#fafafa;color:#1a1a1a;
+       font-family:-apple-system,"PingFang SC","Microsoft YaHei",Segoe UI,sans-serif;line-height:1.7}
+  .wrap{max-width:980px;margin:0 auto;padding:36px 24px 100px}
+  .banner{background:#eaf2ff;border:1px solid #c4d9ff;border-radius:12px;padding:14px 18px;margin:0 0 22px;font-size:14px}
+  h1{font-size:28px;margin:8px 0 4px}
+  h2{font-size:20px;margin:40px 0 12px;padding-bottom:8px;border-bottom:2px solid #1a1a1a}
+  h3{font-size:16px;margin:28px 0 8px;background:#1a1a1a;color:#fff;display:inline-block;padding:4px 12px;border-radius:6px}
+  blockquote{border-left:4px solid #c4d9ff;background:#f3f7ff;margin:12px 0;padding:8px 16px;color:#444;border-radius:0 8px 8px 0}
+  table{border-collapse:collapse;width:100%;margin:14px 0;font-size:14px;background:#fff}
+  th,td{border:1px solid #e2e2e2;padding:8px 10px;text-align:left;vertical-align:top}
+  th{background:#f2f2f4}
+  code{background:#eef0f3;padding:1px 6px;border-radius:5px;font-size:13px;
+       font-family:SFMono-Regular,Menlo,Consolas,monospace}
+  pre{background:#1e1e22;color:#eaeaea;padding:16px;border-radius:10px;overflow:auto;font-size:12.5px;line-height:1.55}
+  pre code{background:none;color:inherit;padding:0}
+  ul li{margin:4px 0}
+  input[type=checkbox]{transform:scale(1.1);margin-right:6px}
+  hr{border:0;border-top:1px solid #e2e2e2;margin:30px 0}
+  a{color:#3a5bd9}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="banner">
+    📋 这是 <b>"让 pwc4 默认走获奖路线"</b> 的第 1/4 份 TDD 实现计划：<b>抓取补全</b>（根因，收益最大）。
+    后续 3 份（全局 CSS 默认注入 / 按 #main 分段 / 修 check_weight）我会接着写。<br/>
+    源文件：<code>docs/superpowers/plans/2026-06-26-pwc4-capture-completeness.md</code>
+  </div>
+  <div id="md">加载中…</div>
+</div>
+<script>
+fetch('plan.md').then(r=>r.text()).then(t=>{
+  marked.setOptions({gfm:true, breaks:false});
+  document.getElementById('md').innerHTML = marked.parse(t);
+}).catch(e=>{document.getElementById('md').textContent='加载失败：'+e});
+</script>
+</body>
+</html>
