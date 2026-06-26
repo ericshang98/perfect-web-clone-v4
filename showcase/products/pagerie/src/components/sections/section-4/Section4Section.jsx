@@ -1,6 +1,69 @@
-// Section4Section — deterministic faithful reconstruction (cleaned HTML + global theme CSS)
-const __html = "<div class=\"site-section site-section--bordered\" id=\"site-section-160990024801aa3aa0\"><section class=\"Section testimonial_main\" id=\"section-160990024801aa3aa0\" style=\"background-color: rgba(0,0,0,0);\">\n<div class=\"TestimonialList TestimonialList--withNav Carousel Carousel--fadeIn flickity-enabled is-draggable\" data-flickity-config='{\n  \"prevNextButtons\": false,\n  \"wrapAround\": true,\n  \"dragThreshold\": 16,\n  \"adaptiveHeight\": false,\n  \"pageDots\": true,\n  \"autoPlay\": 6000\n}' tabindex=\"0\"><div class=\"flickity-viewport\" style=\"height: 84px; touch-action: pan-y;\"><div class=\"flickity-slider\" style=\"left: 0px; transform: translateX(0%);\"><div class=\"Carousel__Cell Testimonial is-selected\" data-slide-index=\"0\" id=\"block-160990024877b3b30f-0\" style=\"position: absolute; left: 0%;\">\n<div class=\"Container\"><div class=\"Testimonial__Content\">\n<p>\"Foolproof Gift for the dog lovers in your life.\"</p>\n</div><img alt=\"\" class=\"Testimonial__Logo hidden-lap-and-up\" id=\"block-n-160990024877b3b30f-0\" src=\"/assets/images/VOGUE_LOGO_svg_300x_2x.png\" style=\"\"/></div>\n</div><div class=\"Carousel__Cell Testimonial\" data-slide-index=\"1\" id=\"block-160990024877b3b30f-1\" style=\"position: absolute; left: 100%; display: none !important;\">\n<div class=\"Container\"><div class=\"Testimonial__Content\">\n<p>\u201cA luxury gift for your friend's loyal companion is as thoughtful as it is practical.\u201d</p>\n</div><img alt=\"\" class=\"Testimonial__Logo hidden-lap-and-up\" id=\"block-n-160990024877b3b30f-1\" src=\"/assets/images/Harper_s_Bazaar_Logo_svg_300x_2x.png\"/></div>\n</div><div class=\"Carousel__Cell Testimonial\" data-slide-index=\"2\" id=\"block-160990024877b3b30f-2\" style=\"position: absolute; left: 200%; display: none !important;\">\n<div class=\"Container\"><div class=\"Testimonial__Content\">\n<p>\"True luxury fashion that changes the way we walk our dogs\"</p>\n</div><img alt=\"\" class=\"Testimonial__Logo hidden-lap-and-up\" id=\"block-n-160990024877b3b30f-2\" src=\"/assets/images/Forbes_logo_svg_300x_2x.png\"/></div>\n</div><div class=\"Carousel__Cell Testimonial\" data-slide-index=\"3\" id=\"block-accd8623-262a-4a26-8b67-6dae630dae23\" style=\"position: absolute; left: 300%; display: none !important;\">\n<div class=\"Container\"><div class=\"Testimonial__Content\">\n<p>\u201cThese are accessories that help your dog tastefully blend into your highly curated lifestyle.\u201d </p>\n</div><img alt=\"\" class=\"Testimonial__Logo hidden-lap-and-up\" id=\"block-n-accd8623-262a-4a26-8b67-6dae630dae23\" src=\"/assets/images/The-Wall-Street-Journal-Symbol_300x_2x.png\"/></div>\n</div></div></div><ol class=\"flickity-page-dots\" style=\"display: none !important;\"><li class=\"dot is-selected\"></li><li class=\"dot\"></li><li class=\"dot\"></li><li class=\"dot\"></li></ol></div><div class=\"TestimonialNav hidden-pocket\" style=\"display: flex;\"><img alt=\"\" class=\"TestimonialNav__Item is-selected\" data-index=\"0\" id=\"block-n-160990024877b3b30f-0\" src=\"/assets/images/VOGUE_LOGO_svg_300x_2x.png\"/><img alt=\"\" class=\"TestimonialNav__Item\" data-index=\"1\" id=\"block-n-160990024877b3b30f-1\" src=\"/assets/images/Harper_s_Bazaar_Logo_svg_300x_2x.png\" style=\"\"/><img alt=\"\" class=\"TestimonialNav__Item\" data-index=\"2\" id=\"block-n-160990024877b3b30f-2\" src=\"/assets/images/Forbes_logo_svg_300x_2x.png\" style=\"\"/><img alt=\"\" class=\"TestimonialNav__Item\" data-index=\"3\" id=\"block-n-accd8623-262a-4a26-8b67-6dae630dae23\" src=\"/assets/images/The-Wall-Street-Journal-Symbol_300x_2x.png\" style=\"\"/></div></section>\n\n</div>";
-
+// Section4Section — clean JSX (route-(c) phase 2; theme.css styles real class names)
 export default function Section4Section() {
-  return <div className="pwc-section pwc-section-4" dangerouslySetInnerHTML={{ __html }} />;
+  return (
+    <div className="pwc-section pwc-section-4">
+      <div className="site-section site-section--bordered" id="site-section-160990024801aa3aa0">
+        <section className="Section testimonial_main" id="section-160990024801aa3aa0" style={{ backgroundColor: 'rgba(0,0,0,0)' }}>
+          <div className="TestimonialList TestimonialList--withNav Carousel Carousel--fadeIn flickity-enabled is-draggable" data-flickity-config={"{\n  \"prevNextButtons\": false,\n  \"wrapAround\": true,\n  \"dragThreshold\": 16,\n  \"adaptiveHeight\": false,\n  \"pageDots\": true,\n  \"autoPlay\": 6000\n}"} tabIndex="0">
+            <div className="flickity-viewport" style={{ height: '84px', touchAction: 'pan-y' }}>
+              <div className="flickity-slider" style={{ left: '0px', transform: 'translateX(0%)' }}>
+                <div className="Carousel__Cell Testimonial is-selected" data-slide-index="0" id="block-160990024877b3b30f-0" style={{ position: 'absolute', left: '0%' }}>
+                  <div className="Container">
+                    <div className="Testimonial__Content">
+                      <p>
+                        "Foolproof Gift for the dog lovers in your life."
+                      </p>
+                    </div>
+                    <img alt="" className="Testimonial__Logo hidden-lap-and-up" id="block-n-160990024877b3b30f-0" src="/assets/images/VOGUE_LOGO_svg_300x_2x.png" />
+                  </div>
+                </div>
+                <div className="Carousel__Cell Testimonial" data-slide-index="1" id="block-160990024877b3b30f-1" style={{ position: 'absolute', left: '100%', display: 'none !important' }}>
+                  <div className="Container">
+                    <div className="Testimonial__Content">
+                      <p>
+                        “A luxury gift for your friend's loyal companion is as thoughtful as it is practical.”
+                      </p>
+                    </div>
+                    <img alt="" className="Testimonial__Logo hidden-lap-and-up" id="block-n-160990024877b3b30f-1" src="/assets/images/Harper_s_Bazaar_Logo_svg_300x_2x.png" />
+                  </div>
+                </div>
+                <div className="Carousel__Cell Testimonial" data-slide-index="2" id="block-160990024877b3b30f-2" style={{ position: 'absolute', left: '200%', display: 'none !important' }}>
+                  <div className="Container">
+                    <div className="Testimonial__Content">
+                      <p>
+                        "True luxury fashion that changes the way we walk our dogs"
+                      </p>
+                    </div>
+                    <img alt="" className="Testimonial__Logo hidden-lap-and-up" id="block-n-160990024877b3b30f-2" src="/assets/images/Forbes_logo_svg_300x_2x.png" />
+                  </div>
+                </div>
+                <div className="Carousel__Cell Testimonial" data-slide-index="3" id="block-accd8623-262a-4a26-8b67-6dae630dae23" style={{ position: 'absolute', left: '300%', display: 'none !important' }}>
+                  <div className="Container">
+                    <div className="Testimonial__Content">
+                      <p>
+                        “These are accessories that help your dog tastefully blend into your highly curated lifestyle.”
+                      </p>
+                    </div>
+                    <img alt="" className="Testimonial__Logo hidden-lap-and-up" id="block-n-accd8623-262a-4a26-8b67-6dae630dae23" src="/assets/images/The-Wall-Street-Journal-Symbol_300x_2x.png" />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <ol className="flickity-page-dots" style={{ display: 'none !important' }}>
+              <li className="dot is-selected" />
+              <li className="dot" />
+              <li className="dot" />
+              <li className="dot" />
+            </ol>
+          </div>
+          <div className="TestimonialNav hidden-pocket" style={{ display: 'flex' }}>
+            <img alt="" className="TestimonialNav__Item is-selected" data-index="0" id="block-n-160990024877b3b30f-0" src="/assets/images/VOGUE_LOGO_svg_300x_2x.png" />
+            <img alt="" className="TestimonialNav__Item" data-index="1" id="block-n-160990024877b3b30f-1" src="/assets/images/Harper_s_Bazaar_Logo_svg_300x_2x.png" />
+            <img alt="" className="TestimonialNav__Item" data-index="2" id="block-n-160990024877b3b30f-2" src="/assets/images/Forbes_logo_svg_300x_2x.png" />
+            <img alt="" className="TestimonialNav__Item" data-index="3" id="block-n-accd8623-262a-4a26-8b67-6dae630dae23" src="/assets/images/The-Wall-Street-Journal-Symbol_300x_2x.png" />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }

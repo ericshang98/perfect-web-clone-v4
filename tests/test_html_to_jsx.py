@@ -55,6 +55,11 @@ def test_nested_structure_preserved_and_not_a_blob():
     assert out.index("<section") < out.index("<div") < out.index("<span")
 
 
+def test_empty_style_attr_is_dropped():
+    out = html_to_jsx('<img src="/a.png" style="">')
+    assert "style" not in out  # empty style="" is invalid as a JSX object — drop it
+
+
 def test_render_section_component_is_clean_jsx_no_blob():
     comp = render_section_component("HeroSection", '<section class="Hero"><h1>Hi</h1></section>')
     assert "export default function HeroSection()" in comp

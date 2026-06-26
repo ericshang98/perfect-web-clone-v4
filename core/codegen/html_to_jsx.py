@@ -79,9 +79,9 @@ def _render_attrs(tag: Tag) -> list[str]:
         if isinstance(value, list):
             value = " ".join(value)
         jn = _attr_name(name)
-        if name.lower() == "style" and value:
-            decls = _style_decls(str(value))
-            if decls:
+        if name.lower() == "style":
+            decls = _style_decls(str(value)) if value else ""
+            if decls:  # drop empty/whitespace style="" — invalid as a JSX object
                 out.append("style={{ " + decls + " }}")
             continue
         if name.lower() in _BOOL_ATTRS and (value in ("", True, name)):
