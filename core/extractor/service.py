@@ -143,6 +143,9 @@ class ExtractorService:
             )
             try:
                 response = await page.goto(url, wait_until="load", timeout=opts.nav_timeout_ms)
+                # Base for resolving relative image/font URLs against the *navigated* URL
+                # (handles redirects), so theme-relative assets absolutize correctly.
+                self._asset_base_url = response.url if response else url
                 # Dead-source guard: never clone an HTTP error / "site down" page.
                 status = response.status if response else None
                 if robustness.is_error_status(status):
@@ -328,7 +331,14 @@ class ExtractorService:
         if not data:
             return PageAssets()
 
-        def dedupe(items):
+        from core.extractor import asset_urls
+        base = getattr(self, "_asset_base_url", "") or ""
+        norm = asset_urls.normalize_assets(data, base_url=base)
+
+        def to_assets(items):
+            return [AssetInfo(url=i["url"], type=i.get("type", "image")) for i in items]
+
+        def dedupe_pass(items):
             seen, out = set(), []
             for it in items:
                 if it["url"] not in seen:
@@ -336,11 +346,11 @@ class ExtractorService:
                     out.append(AssetInfo(**it))
             return out
 
-        images = dedupe(data["images"])
-        scripts = dedupe(data["scripts"])
-        stylesheets = dedupe(data["stylesheets"])
-        fonts = dedupe(data["fonts"])
-        videos = dedupe(data.get("videos") or [])
+        images = to_assets(norm["images"])
+        fonts = to_assets(norm["fonts"])
+        scripts = dedupe_pass(norm["scripts"])
+        stylesheets = dedupe_pass(norm["stylesheets"])
+        videos = dedupe_pass(norm["videos"] or [])
         return PageAssets(
             images=images,
             scripts=scripts,

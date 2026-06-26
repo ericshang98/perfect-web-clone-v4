@@ -385,8 +385,8 @@ class ExtractOptions(BaseModel):
     extract_blocks: bool = True
 
     # Resource download caps (kept identical in spirit to v2).
-    max_images: int = 40
-    max_fonts: int = 12
+    max_images: int = 150   # image-heavy stores (e.g. Shopify) reference 100+ originals
+    max_fonts: int = 24
     max_scripts: int = 0  # default off; bundled JS is rarely useful for a clone
     max_videos: int = 8
     max_video_size: int = 25 * 1024 * 1024  # 25 MB cap per downloaded video
