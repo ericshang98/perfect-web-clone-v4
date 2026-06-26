@@ -65,3 +65,20 @@ def test_normalize_assets_expands_images_and_fonts():
     assert [i["url"] for i in norm["images"]] == ["https://cdn/p_1200x.jpg", "https://cdn/logo.svg"]
     assert [f["url"] for f in norm["fonts"]] == ["https://site.com/t/assets/panolight.woff2"]
     assert all(i["type"] == "image" for i in norm["images"])
+
+
+def test_harvest_html_image_urls_finds_noscript_relative_template_and_json():
+    html = (
+        '<img src="data:image/gif;base64,AAA">'
+        '<noscript><img src="https://cdn/shop/files/a_600x.jpg"></noscript>'
+        '<div data-src="//cdn/shop/files/b_{width}x.png?v=1"></div>'
+        '<a href="/cdn/shop/files/c.webp">x</a>'
+        '<script>{"image":"https:\\/\\/cdn\\/shop\\/files\\/d_1024x.jpg"}</script>'
+    )
+    out = asset_urls.harvest_html_image_urls(html, base_url="https://site.com/")
+    assert "https://cdn/shop/files/a_600x.jpg" in out
+    assert "https://cdn/shop/files/b_1200x.png?v=1" in out   # protocol-relative + {width}
+    assert "https://site.com/cdn/shop/files/c.webp" in out   # root-relative joined to base
+    assert "https://cdn/shop/files/d_1024x.jpg" in out       # JSON-escaped \/
+    assert not any(u.startswith("data:") for u in out)       # blobs/data skipped
+    assert len(out) == len(set(out))                         # deduped

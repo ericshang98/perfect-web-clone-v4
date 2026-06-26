@@ -8,9 +8,21 @@ while the rendered ``src`` is a 1px placeholder. The old ASSETS_JS only read
 """
 from __future__ import annotations
 
+import re
 from urllib.parse import urljoin
 
 _TEMPLATE_WIDTH = "1200"  # concrete width substituted for {width} URL templates
+
+# Image URLs embedded in the static HTML (noscript fallbacks, JSON config blobs,
+# JS-gated product grids) that the rendered DOM never materializes as <img>.
+# Matches absolute, protocol-relative (//cdn/…), and root-relative (/cdn/…) URLs
+# ending in a content-image extension. `.gif` is excluded to avoid 1px tracking
+# pixels. `{`/`}` are allowed so `{width}` templates survive to substitution.
+_HTML_IMG_RE = re.compile(
+    r"""(?:https?:)?//[^\s"'()<>\\]+?\.(?:jpe?g|png|webp|avif|svg)(?:\?[^\s"'()<>\\]*)?"""
+    r"""|/[^\s"'()<>\\]+?\.(?:jpe?g|png|webp|avif|svg)(?:\?[^\s"'()<>\\]*)?""",
+    re.IGNORECASE,
+)
 
 
 def _subst_width(url: str) -> str:
@@ -111,3 +123,33 @@ def normalize_assets(raw: dict, base_url: str = "") -> dict:
         "stylesheets": raw.get("stylesheets") or [],
         "videos": raw.get("videos") or [],
     }
+
+
+def harvest_html_image_urls(html: str, base_url: str = "") -> list[str]:
+    """Recover content-image URLs present in raw HTML but absent from the rendered DOM.
+
+    The live DOM omits product-grid images that Shopify ships only in ``<noscript>``
+    fallbacks or JS config blobs (hidden / mounted on interaction). Parsing the
+    static HTML recovers them with no browser interaction. ``{width}`` is
+    substituted; protocol- and root-relative URLs are absolutized; results are
+    deduped. Pure / deterministic.
+    """
+    if not html:
+        return []
+    text = html.replace("\\/", "/")  # unescape JSON-embedded URLs
+    out: list[str] = []
+    seen: set[str] = set()
+    for raw in _HTML_IMG_RE.findall(text):
+        u = _subst_width(raw.strip())
+        if not u or "{" in u:
+            continue
+        if u.startswith("//"):
+            u = "https:" + u
+        elif u.startswith("/"):
+            if not base_url:
+                continue
+            u = urljoin(base_url, u)
+        if u not in seen:
+            seen.add(u)
+            out.append(u)
+    return out

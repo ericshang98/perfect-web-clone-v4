@@ -346,7 +346,21 @@ class ExtractorService:
                     out.append(AssetInfo(**it))
             return out
 
-        images = to_assets(norm["images"])
+        # Merge image URLs the rendered DOM exposed with those only present in the
+        # static HTML (noscript fallbacks / JS-gated product grids the renderer
+        # never materialized) so an image-heavy store is captured completely.
+        img_items = list(norm["images"])
+        img_seen = {i["url"] for i in img_items}
+        try:
+            html = await page.content()
+        except Exception:
+            html = ""
+        for u in asset_urls.harvest_html_image_urls(html, base_url=base):
+            if u not in img_seen:
+                img_seen.add(u)
+                img_items.append({"url": u, "type": "image"})
+
+        images = to_assets(img_items)
         fonts = to_assets(norm["fonts"])
         scripts = dedupe_pass(norm["scripts"])
         stylesheets = dedupe_pass(norm["stylesheets"])
