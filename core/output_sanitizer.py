@@ -55,6 +55,28 @@ def sanitize_html(html: str, source_url: str) -> str:
     return html
 
 
+def defingerprint(text: str) -> str:
+    """Scrub Shopify platform fingerprints the R1 gate flags, consistently.
+
+    Eliminates every ``fingerprint_gate`` pattern (``shopify``, ``myshopify``,
+    ``template--…__``, ``data-shopify``, ``original.css``, ``shopify-section``)
+    by neutralizing the literal tokens — not by deleting rules — so the cascade
+    is preserved. Designed to be applied to BOTH the global CSS and the injected
+    section HTML: because the same token is rewritten the same way on both sides
+    (``.shopify-section`` ↔ ``class="shopify-section"`` → both ``-section``),
+    selectors keep matching. Pure / deterministic.
+    """
+    if not text:
+        return text
+    # ``template--abc__main`` → ``tpl-abc__main`` (kills the ``template--…__`` shape)
+    text = re.sub(r"template--", "tpl-", text, flags=re.IGNORECASE)
+    text = re.sub(r"original\.css", "theme.css", text, flags=re.IGNORECASE)
+    # ``shopify`` subsumes ``myshopify`` / ``data-shopify`` / ``shopify-section``:
+    # one rewrite clears all four. ``shopify-section`` → ``shop-section`` etc.
+    text = re.sub(r"shopify", "shop", text, flags=re.IGNORECASE)
+    return text
+
+
 def find_source_traces(text: str, source_url: str) -> List[str]:
     """Return the distinct source-site traces still present in ``text`` (for the gate)."""
     found: List[str] = []

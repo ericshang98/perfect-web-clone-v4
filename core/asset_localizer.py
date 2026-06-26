@@ -114,6 +114,27 @@ def localize_html(html: str, asset_map: Dict[str, str]) -> str:
     return html
 
 
+def localize_css(css: str, asset_map: Dict[str, str]) -> str:
+    """Rewrite ``url(...)`` references in a stylesheet to local asset paths.
+
+    The CSS-only counterpart of ``localize_html``: same filename-tolerant resolve
+    (``?width=``/``?v=`` variants, cdn vs shop-domain), applied to every ``url(...)``
+    (``@font-face`` src, background images). Unmapped URLs are left untouched.
+    """
+    if not css:
+        return css
+    base_index = _basename_index(asset_map or {})
+
+    def one(url: str) -> str:
+        return _resolve_local(url, asset_map or {}, base_index) or url
+
+    def sub_css(m):
+        q = m.group(1) or ""
+        return f"url({q}{one(m.group(2).strip())}{q})"
+
+    return _CSS_URL.sub(sub_css, css)
+
+
 def localize_section(section: Dict[str, Any], asset_map: Dict[str, str]) -> Dict[str, Any]:
     """Localize one section's ``full_html`` and annotate its ``images`` list.
 
