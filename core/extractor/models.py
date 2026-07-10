@@ -329,10 +329,14 @@ class ExtractionResult(BaseModel):
     # source directory (e.g. "screenshots/light.png").
     screenshot_path: Optional[str] = None
     full_page_screenshot_path: Optional[str] = None
+    # Persisted per-scroll-state raster paths (scroll-choreographed sites only).
+    scroll_state_paths: List[str] = Field(default_factory=list)
 
     # Transient base64 carriers (service -> api). Excluded from the manifest.
     screenshot_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
     full_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+    # Transient per-scroll-state base64 rasters (service -> api).
+    scroll_state_b64s: List[str] = Field(default_factory=list, exclude=True, repr=False)
 
     dom_tree: Optional[ElementInfo] = None
     style_summary: Optional[StyleSummary] = None

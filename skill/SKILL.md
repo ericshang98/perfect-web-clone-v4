@@ -80,6 +80,13 @@ Call **`pwc4 extract_page(url, options)`**.
 - Returns `source_id` + a `summary`. **Record `source_id`** — it threads through
   every later phase. The captured rasters are the immutable ground truth every
   downstream artifact is judged against.
+- The `summary` now carries **`site_classification`** (`site_type` +
+  `can_clone_well` + a human `ceiling` advisory). **If `can_clone_well` is false**
+  (a `webgl_canvas` or `scroll_choreography` site whose visuals live in a runtime
+  layer), **tell the user the ceiling up front** — you can faithfully recover the
+  content but NOT the runtime-drawn/animated *look*. Do not promise pixel-perfect
+  fidelity on these. It also carries **`capture_residuals`** (e.g. significant
+  `<canvas>` main visuals) — surface them; never silently drop them.
 - **Capture completeness is upstream of everything.** Lazy images
   (`data-src`/`srcset`/`{width}` templates), theme-relative fonts, and overlay
   dismissal must be complete here — a fidelity gap you can't fix downstream starts
@@ -110,10 +117,12 @@ Call **`pwc4 assemble_project(source_id)`** **before** filling sections.
   routing) and **creates the sandbox** — section files are written *into* the
   shell it creates, so it must run first. (This order is the reverse of older
   drafts; follow this one.)
-- It seeds `index.css` with the Tailwind layers **plus a deduped global cleaned
-  stylesheet** for the whole page, so sections render styled rather than blank.
-  (Global-CSS injection is being hardened as Plan 2; if a run predates it, the
-  per-section local CSS from Phase 4 is the fallback.)
+- It seeds `index.css` with the Tailwind layers and emits the **deduped global
+  cleaned stylesheet** for the whole page as a static **`public/theme.css`**
+  linked from `index.html` (`<link rel="stylesheet" href="/theme.css">`), so
+  sections render styled rather than blank. (This is the P0 wiring; older drafts
+  injected it into `index.css` directly — the `public/theme.css` + `<link>` form
+  is current. Per-section local CSS from Phase 4 remains the fallback.)
 - It will report `missing_section_files` for every planned section — expected at
   this point, because the subagents fill them in Phase 4.
 
@@ -182,12 +191,12 @@ raster distance → repair the worst region → re-measure.
    traces (`shopify`, `myshopify`, `template--…__`, `data-shopify*`,
    `original.css`, `shopify-section`) in `dist/`. Read `by_pattern` / `files` to
    see exactly what leaked.
-2. **`pwc4 check_weight(dist_dir, budget_kb)`** (R3) — `ok` iff the **code**
-   bundle is within budget (target 50–80 KB gz). Read `by_type`; judge code and
-   content-images on **separate** budgets — an image-heavy store will exceed a
-   single combined budget even when the code itself is ~80 KB. (Split budgets +
-   the known crash are Plan 4; if the tool errors, fall back to
-   `.venv/bin/python -m core.gates …`.)
+2. **`pwc4 check_weight(dist_dir, budget_kb)`** (R3) — now reports **separate
+   code and asset budgets**: `code_kb`/`code_ok` (html+css+js+svg gzipped, target
+   50–80 KB) and `asset_kb`/`asset_ok` (images/fonts/video raw; only fails when
+   you pass `asset_budget_kb`). `ok` = `code_ok` ∧ `asset_ok`, so an image-heavy
+   store no longer false-fails on content weight when its code is clean. Read
+   `code_ok` for the real "is the code lightweight" judgment.
 3. **`pwc4 score_fidelity(ref_png, cand_png, threshold)`** (R4) — render the
    built output at each breakpoint × state, then score SSIM vs the captured
    reference raster. `ok` iff `score ≥ τ` (default 0.97). Carries
@@ -206,9 +215,11 @@ Run the gates. **While any gate is red and budget remains:**
    `worst_regions[0]` (lowest-SSIM band) for visual misses, `check_fingerprints`'
    `files`/`by_pattern` for leaks, `check_weight`'s `by_type` for bloat.
 2. **Map region → section component.** Use the worst band's `y0`/`y1` against the
-   section `bounds` from the Phase-2 plan to find the section that owns it. (If
-   `bounds` are empty — a known gap, strategy-doc "hole A" — fall back to matching
-   the band against the rendered section order manually.)
+   section `bounds` from the Phase-2 plan to find the section that owns it.
+   `bounds` are now filled from the captured DOM geometry (`section_geometry`),
+   so this mapping works directly. (If a section still has empty `bounds` — no
+   geometric match was found — fall back to matching the band against the rendered
+   section order manually.)
 3. **Repair THAT section component.** This is your act of judgement: given (the
    diff/region, the section's component + captured data + computed style, the gate
    evidence), decide how to fix that single component — adjust its layout / style /

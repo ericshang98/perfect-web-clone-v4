@@ -201,6 +201,44 @@ def score_fidelity(
 
 
 # --------------------------------------------------------------------------- #
+# R4 — score_fidelity_by_section (height-independent, per-section)
+# --------------------------------------------------------------------------- #
+def score_fidelity_by_section(
+    ref_png: str,
+    cand_png: str,
+    sections: List[Dict[str, Any]],
+    ref_page_height: float,
+    cand_page_height: float,
+    threshold: float = fidelity.DEFAULT_THRESHOLD,
+) -> Dict[str, Any]:
+    """Height-independent fidelity: score each section on its own crop (R4).
+
+    Full-page ``score_fidelity`` squishes two whole pages onto one canvas, so a
+    clone much taller than the original is structurally misaligned and scores
+    badly even when faithful. This proxy crops each section out of BOTH rasters
+    by that section's own ``bounds`` (CSS px) and scores it independently, then
+    aggregates by section height — height-independent, and localizing which
+    section diverges.
+
+    ``sections`` is a list of ``{name, ref_bounds, cand_bounds}`` (each bounds
+    ``{x, y, width, height}`` in CSS px). Returns ``{ok, score, threshold,
+    graded, ungraded, sections}`` (per :func:`core.gates.fidelity.score_by_section`),
+    or ``{"ok": False, "error": ...}`` on a bad argument.
+    """
+    if not (isinstance(ref_png, str) and isinstance(cand_png, str)):
+        return _err("ref_png and cand_png must be file paths (strings).")
+    if not isinstance(sections, list):
+        return _err("sections must be a list of {name, ref_bounds, cand_bounds}.")
+    try:
+        return fidelity.score_by_section(
+            ref_png, cand_png, sections,
+            ref_page_height, cand_page_height, threshold=threshold,
+        )
+    except Exception as exc:  # noqa: BLE001
+        return _err(f"score_fidelity_by_section failed: {exc}")
+
+
+# --------------------------------------------------------------------------- #
 # R5 — compare_to_baseline
 # --------------------------------------------------------------------------- #
 def compare_to_baseline(
@@ -242,5 +280,6 @@ __all__ = [
     "check_fingerprints",
     "check_weight",
     "score_fidelity",
+    "score_fidelity_by_section",
     "compare_to_baseline",
 ]

@@ -54,6 +54,8 @@ v4 pipeline (``tools.pipeline``):
     * ``check_fingerprints``  — R1 gate: scan dist for Shopify fingerprints.
     * ``check_weight``        — R3 gate: measure dist transfer size vs budget.
     * ``score_fidelity``      — R4 gate: SSIM score + worst-region localization.
+    * ``score_fidelity_by_section`` — R4 gate, height-independent: per-section,
+      bounds-aligned SSIM (the trustworthy fidelity metric).
     * ``compare_to_baseline`` — R5 gate: new output strictly better than baseline.
 """
 
@@ -137,6 +139,7 @@ def register_tools(server: FastMCP) -> list[str]:
         pipeline.check_fingerprints,
         pipeline.check_weight,
         pipeline.score_fidelity,
+        pipeline.score_fidelity_by_section,
         pipeline.compare_to_baseline,
     )
     for fn in pipeline_tools:

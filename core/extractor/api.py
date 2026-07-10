@@ -220,6 +220,16 @@ def _persist(store: SourceStore, result: ExtractionResult) -> None:
     result.screenshot_b64 = None
     result.full_b64 = None
 
+    # Per-scroll-state rasters (scroll-choreographed / canvas sites).
+    if result.scroll_state_b64s:
+        paths = []
+        for i, b64 in enumerate(result.scroll_state_b64s):
+            p = _save_shot(store, f"screenshots/scroll_{i:02d}.png", b64)
+            if p:
+                paths.append(p)
+        result.scroll_state_paths = paths
+    result.scroll_state_b64s = []
+
     # Downloaded resources -> assets/, drop base64.
     if result.downloaded_resources:
         result.downloaded_resources = store.save_downloaded(result.downloaded_resources)

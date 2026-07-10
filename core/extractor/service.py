@@ -33,6 +33,8 @@ from playwright.async_api import (
 
 from . import dom_scripts as js
 from . import robustness
+from ..png_dims import png_css_height_b64
+from .. import scroll_capture, site_classifier
 from .models import (
     AssetInfo,
     CSSAnimation,
@@ -232,6 +234,35 @@ class ExtractorService:
                     await self._screenshot(page) if opts.full_page_screenshot else None
                 )
 
+                # Reconcile page_height with the ground-truth raster: _extract_metadata
+                # read scrollHeight BEFORE lazy-load/scroll-reveal, and scroll sites
+                # keep a virtual height at rest (e.g. 900 while the real full-page
+                # raster is ~13000). The full-page screenshot IS the ground truth, so
+                # take its pixel height (CSS-normalized by the width scale) as the
+                # authoritative page_height when it's taller.
+                if full_b64:
+                    try:
+                        raster_h = png_css_height_b64(full_b64, metadata.page_width)
+                        if raster_h and raster_h > (metadata.page_height or 0):
+                            metadata.page_height = int(raster_h)
+                    except Exception as e:  # noqa: BLE001 — advisory metric, never fatal.
+                        logger.warning("page_height reconcile failed: %s", e)
+
+                # Multi-state rasters for runtime-visual sites: a scroll-choreographed
+                # or canvas/WebGL page reveals content across the scroll, so the single
+                # full-page raster is mostly blank. Capture the viewport at evenly-spaced
+                # scroll positions so per-state rasters actually show revealed content.
+                scroll_state_b64s: List[str] = []
+                try:
+                    cls = site_classifier.classify_site(raw_html or "", {})
+                    tall = (metadata.page_height or 0) > 2 * (metadata.viewport_height or 1)
+                    if opts.full_page_screenshot and tall and not cls["can_clone_well"]:
+                        scroll_state_b64s = await self._capture_scroll_states(
+                            page, metadata.page_height, metadata.viewport_height
+                        )
+                except Exception as e:  # noqa: BLE001 — multi-state capture is best-effort.
+                    logger.warning("scroll-state capture failed: %s", e)
+
                 css_data = await self._extract_css_data(page, timeout_s=eval_s) if opts.extract_css else None
                 blocks = await self._extract_blocks(page) if opts.extract_blocks else []
 
@@ -282,6 +313,7 @@ class ExtractorService:
                     # transient base64 carried on the result for the caller to persist
                     screenshot_b64=screenshot_b64,
                     full_b64=full_b64,
+                    scroll_state_b64s=scroll_state_b64s,
                 )
             finally:
                 await page.close()
@@ -555,6 +587,32 @@ class ExtractorService:
     async def _screenshot(self, page: Page) -> str:
         data = await page.screenshot(type="png", full_page=True)
         return base64.b64encode(data).decode("utf-8")
+
+    async def _capture_scroll_states(
+        self, page: Page, page_height: float, viewport_height: float, n: int = 5
+    ) -> List[str]:
+        """Screenshot the viewport at evenly-spaced scroll positions (base64 PNGs).
+
+        For scroll-choreographed / canvas sites whose content reveals across the
+        scroll. Best-effort: any position that can't be shot is skipped, and the
+        page is always returned to the top.
+        """
+        shots: List[str] = []
+        try:
+            for y in scroll_capture.scroll_capture_positions(page_height, viewport_height, n):
+                try:
+                    await page.evaluate(f"window.scrollTo(0, {y})")
+                    await asyncio.sleep(0.5)  # let scroll-triggered reveals settle
+                    data = await page.screenshot(type="png", full_page=False)
+                    shots.append(base64.b64encode(data).decode("utf-8"))
+                except Exception as e:  # noqa: BLE001 — skip one bad position
+                    logger.warning("scroll-state shot at y=%s failed: %s", y, e)
+        finally:
+            try:
+                await page.evaluate("window.scrollTo(0, 0)")
+            except Exception:  # noqa: BLE001
+                pass
+        return shots
 
     async def _capture_embeds(self, page: Page, base_url: str) -> list:
         """Screenshot each cross-origin widget iframe while it renders.

@@ -44,3 +44,36 @@ def test_assets_counted_raw(tmp_path):
     assert r["ok"] is True
     # asset size contributes to total
     assert r["total_kb"] > 0
+
+
+def test_split_budget_fields_present(tmp_path):
+    (tmp_path / "main.js").write_text("console.log(1)")
+    (tmp_path / "logo.png").write_bytes(b"\x00" * 2048)
+    r = measure_dist(str(tmp_path))
+    assert "code_kb" in r and "asset_kb" in r
+    assert "code_ok" in r and "asset_ok" in r
+    # code_kb counts text buckets, asset_kb counts binary assets, total = sum
+    assert round(r["code_kb"] + r["asset_kb"], 3) == r["total_kb"]
+
+
+def test_image_heavy_passes_on_code_budget(tmp_path):
+    # ~300 KB of images but tiny code: the gate must PASS (code is within budget).
+    # This is the everswap/store case the old single-budget gate falsely failed.
+    import os
+    (tmp_path / "hero.jpg").write_bytes(os.urandom(300 * 1024))
+    (tmp_path / "main.js").write_text("console.log(1)")
+    (tmp_path / "index.html").write_text("<html></html>")
+    r = measure_dist(str(tmp_path), budget_kb=80)
+    assert r["code_ok"] is True
+    assert r["ok"] is True          # not failed by image weight
+    assert r["asset_kb"] > 250
+
+
+def test_asset_budget_can_fail_when_provided(tmp_path):
+    import os
+    (tmp_path / "hero.jpg").write_bytes(os.urandom(300 * 1024))
+    (tmp_path / "main.js").write_text("console.log(1)")
+    r = measure_dist(str(tmp_path), budget_kb=80, asset_budget_kb=100)
+    assert r["code_ok"] is True
+    assert r["asset_ok"] is False
+    assert r["ok"] is False         # asset budget, when set, can fail the gate

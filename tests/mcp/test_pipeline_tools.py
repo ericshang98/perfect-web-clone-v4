@@ -159,6 +159,49 @@ def test_score_fidelity_divergent(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
+# score_fidelity_by_section  (height-independent, per-section R4)
+# --------------------------------------------------------------------------- #
+def _striped_page(path, w, sec_h, n):
+    """A textured n-section page so SSIM is meaningful; each section distinct."""
+    from PIL import ImageDraw
+    page = Image.new("RGB", (w, sec_h * n), (255, 255, 255))
+    d = ImageDraw.Draw(page)
+    for i in range(n):
+        y0 = i * sec_h
+        for x in range(0, w, 8):
+            d.line([(x, y0), (x, y0 + sec_h)], fill=(40, 80 + i * 50, 160), width=3)
+    page.save(path)
+    return page.height
+
+
+def _secs(ref_h, cand_h, n=3):
+    return [
+        {"name": f"s{i}",
+         "ref_bounds": {"x": 0, "y": i * ref_h, "width": 400, "height": ref_h},
+         "cand_bounds": {"x": 0, "y": i * cand_h, "width": 400, "height": cand_h}}
+        for i in range(n)
+    ]
+
+
+def test_score_fidelity_by_section_height_independent(tmp_path):
+    ref = tmp_path / "ref.png"
+    cand = tmp_path / "cand.png"
+    rh = _striped_page(ref, 400, 300, 3)
+    ch = _striped_page(cand, 400, 600, 3)  # clone is 2x taller, same content
+    r = pipeline.score_fidelity_by_section(str(ref), str(cand), _secs(300, 600), rh, ch)
+    assert r["ok"] is True
+    assert _is_json(r)
+    assert r["score"] >= 0.95
+    assert r["graded"] == 3
+
+
+def test_score_fidelity_by_section_bad_input(tmp_path):
+    r = pipeline.score_fidelity_by_section(123, "x", [], 0, 0)
+    assert r["ok"] is False
+    assert "error" in r
+
+
+# --------------------------------------------------------------------------- #
 # compare_to_baseline  (R5 — new output strictly better than the baseline)
 # --------------------------------------------------------------------------- #
 def test_compare_to_baseline_new_better(tmp_path):
@@ -202,6 +245,7 @@ def test_server_registers_pipeline_tools_and_is_pwc4():
         "check_fingerprints",
         "check_weight",
         "score_fidelity",
+        "score_fidelity_by_section",
         "compare_to_baseline",
     ):
         assert name in server.REGISTERED_TOOLS, name

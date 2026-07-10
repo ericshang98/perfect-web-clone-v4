@@ -42,7 +42,7 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional
 
-from core import asset_localizer, css_matcher, embed_handler, layout_detect, output_sanitizer, section_chunker
+from core import anim_normalize, asset_localizer, capture_residuals, css_matcher, embed_handler, layout_detect, output_sanitizer, section_chunker, section_geometry, site_classifier
 from core.extractor import (
     ExtractOptions,
     extract_page as _core_extract_page,
@@ -269,6 +269,20 @@ def _compute_plan(source_id: str):
         dom_tree = None
     layout_keys = layout_detect.layout_container_keys(dom_tree) if dom_tree else None
     full_sections = section_chunker.chunk_page(raw_html, url, layout_containers=layout_keys)
+    # Fill each section's on-page rectangle from the persisted DOM geometry, so
+    # bounds are no longer always {} (which silently disabled self-heal region
+    # localization AND per-section fidelity scoring). Deterministic, no LLM.
+    if dom_tree:
+        section_geometry.attach_bounds(full_sections, dom_tree)
+    # Reveal content that a scroll/reveal site froze invisible at capture time
+    # (opacity:0 / display:none / blur / offscreen transforms on the real content).
+    # Without this a scroll-choreographed clone renders blank. Records how many
+    # hiding declarations were neutralized per section (a residual signal).
+    for sec in full_sections:
+        if sec.get("full_html"):
+            sec["full_html"], revealed = anim_normalize.reveal_animation_states(sec["full_html"])
+            if revealed:
+                sec["hidden_revealed"] = revealed
     # Attach each section's real CSS subset (hover/animation/transition/@media
     # + the variables it uses) so its sub-agent can reproduce interaction and
     # responsive behavior instead of guessing. Deterministic, no LLM.
@@ -382,6 +396,24 @@ def extract_page(url: str, options: Optional[Dict[str, Any]] = None) -> Dict[str
             source_id=result.get("source_id"),
             summary=summary,
         )
+
+    # Pre-clone site typing: tells the brain up front whether this page can be
+    # cloned to high fidelity (static / Shopify) or hits a known ceiling
+    # (canvas/WebGL or scroll-choreography), so it never promises pixel-perfection
+    # on a site whose visuals live in a runtime layer. Deterministic, no LLM.
+    try:
+        sid = result.get("source_id")
+        store = SourceStore(sid) if sid else None
+        raw_html = store.read_raw_html() if store else ""
+        summary["site_classification"] = site_classifier.classify_site(raw_html or "", summary)
+        # Surface canvas/WebGL main visuals as explicit residuals (never silently
+        # dropped) so the brain can flag what a static clone cannot reproduce.
+        dom = store.read_dom() if store else None
+        residuals = capture_residuals.find_canvas_residuals(dom)
+        if residuals:
+            summary["capture_residuals"] = residuals
+    except Exception:  # noqa: BLE001 — advisory, never fatal.
+        pass
 
     return {
         "ok": True,
