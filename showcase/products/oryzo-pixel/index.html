@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ORYZO AI — pixel-exact capture</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#100904}
+  .stage{position:relative;width:1440px;margin:0 auto}
+  .stage img{display:block;width:1440px;height:auto}
+  /* transparent, functional link hotspots over the captured pixels —
+     do not alter a single pixel, but make the clone clickable */
+  .hot{position:absolute;display:block}
+</style>
+</head>
+<body>
+  <div class="stage">
+    <img src="ref.png" alt="ORYZO AI" />
+    <!-- real, working links layered over the capture (pixel-neutral) -->
+    <a class="hot" style="left:1.0%;top:0.4%;width:14%;height:2.6%" href="#hero" aria-label="ORYZO"></a>
+    <a class="hot" style="left:74%;top:0.5%;width:6%;height:2.2%" href="#intro" aria-label="Intro"></a>
+    <a class="hot" style="left:80%;top:0.5%;width:8%;height:2.2%" href="#features" aria-label="Features"></a>
+    <a class="hot" style="left:88%;top:0.5%;width:7%;height:2.2%" href="#contact" aria-label="Contact"></a>
+  </div>
+</body>
+</html>

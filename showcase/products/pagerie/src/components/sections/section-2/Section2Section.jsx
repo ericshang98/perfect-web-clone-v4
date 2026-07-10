@@ -1,56 +1,6 @@
-// Section2Section — clean JSX (route-(c) phase 2; theme.css styles real class names)
+// Section2Section — deterministic faithful reconstruction (cleaned HTML + global theme CSS)
+const __html = "<div aria-hidden=\"true\" class=\"site-section\" id=\"site-section-sidebar-menu\"><section aria-hidden=\"true\" class=\"SidebarMenu Drawer Drawer--small Drawer--fromLeft\" id=\"sidebar-menu\" style=\"display: none !important;\">\n<header class=\"Drawer__Header\" data-drawer-animated-left=\"\">\n<button aria-label=\"Close navigation\" class=\"Drawer__Close Icon-Wrapper--clickable\" data-action=\"close-drawer\" data-drawer-id=\"sidebar-menu\"><svg class=\"Icon Icon--close\" role=\"presentation\" viewbox=\"0 0 16 14\">\n<path d=\"M15 0L1 14m14 0L1 0\" fill=\"none\" fill-rule=\"evenodd\" stroke=\"currentColor\"></path>\n</svg></button>\n</header>\n<div class=\"Drawer__Content\">\n<div class=\"Drawer__Main\" data-drawer-animated-left=\"\" data-scrollable=\"\">\n<div class=\"Drawer__Container\">\n<nav aria-label=\"Sidebar navigation\" class=\"SidebarMenu__Nav SidebarMenu__Nav--primary\"><div class=\"Collapsible\"><a class=\"Collapsible__Button Heading Link Link--primary u-h6\" href=\"/collections\">SHOP</a></div><div class=\"Collapsible\"><a class=\"Collapsible__Button Heading Link Link--primary u-h6\" href=\"/collections/the-lana-bags\">LANA BAG</a></div><div class=\"Collapsible\"><a class=\"Collapsible__Button Heading Link Link--primary u-h6\" href=\"/pages/the-house-of-pagerie\">HERITAGE</a></div><div class=\"Collapsible\"><a class=\"Collapsible__Button Heading Link Link--primary u-h6\" href=\"\">STORIES</a></div></nav><nav class=\"SidebarMenu__Nav SidebarMenu__Nav--secondary\">\n<ul class=\"Linklist Linklist--spacingLoose\"><li class=\"Linklist__Item\">\n<a class=\"Text--subdued Link Link--primary\" href=\"/account\">Account</a>\n</li></ul>\n</nav>\n</div>\n</div></div>\n</section>\n</div><div class=\"site-section\" id=\"site-section-announcement\"></div>";
+
 export default function Section2Section() {
-  return (
-    <div className="pwc-section pwc-section-2">
-      <div aria-hidden="true" className="site-section" id="site-section-sidebar-menu">
-        <section aria-hidden="true" className="SidebarMenu Drawer Drawer--small Drawer--fromLeft" id="sidebar-menu" style={{ display: 'none !important' }}>
-          <header className="Drawer__Header" data-drawer-animated-left="">
-            <button aria-label="Close navigation" className="Drawer__Close Icon-Wrapper--clickable" data-action="close-drawer" data-drawer-id="sidebar-menu">
-              <svg className="Icon Icon--close" role="presentation" viewbox="0 0 16 14">
-                <path d="M15 0L1 14m14 0L1 0" fill="none" fillRule="evenodd" stroke="currentColor" />
-              </svg>
-            </button>
-          </header>
-          <div className="Drawer__Content">
-            <div className="Drawer__Main" data-drawer-animated-left="" data-scrollable="">
-              <div className="Drawer__Container">
-                <nav aria-label="Sidebar navigation" className="SidebarMenu__Nav SidebarMenu__Nav--primary">
-                  <div className="Collapsible">
-                    <a className="Collapsible__Button Heading Link Link--primary u-h6" href="/collections">
-                      SHOP
-                    </a>
-                  </div>
-                  <div className="Collapsible">
-                    <a className="Collapsible__Button Heading Link Link--primary u-h6" href="/collections/the-lana-bags">
-                      LANA BAG
-                    </a>
-                  </div>
-                  <div className="Collapsible">
-                    <a className="Collapsible__Button Heading Link Link--primary u-h6" href="/pages/the-house-of-pagerie">
-                      HERITAGE
-                    </a>
-                  </div>
-                  <div className="Collapsible">
-                    <a className="Collapsible__Button Heading Link Link--primary u-h6" href="">
-                      STORIES
-                    </a>
-                  </div>
-                </nav>
-                <nav className="SidebarMenu__Nav SidebarMenu__Nav--secondary">
-                  <ul className="Linklist Linklist--spacingLoose">
-                    <li className="Linklist__Item">
-                      <a className="Text--subdued Link Link--primary" href="/account">
-                        Account
-                      </a>
-                    </li>
-                  </ul>
-                </nav>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-      <div className="site-section" id="site-section-announcement" />
-    </div>
-  );
+  return <div className="pwc-section pwc-section-2" dangerouslySetInnerHTML={{ __html }} />;
 }

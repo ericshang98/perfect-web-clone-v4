@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "raw_html": "<section class=\"section\" id=\"home-relayers\"> <div class=\"section__content\" style=\"visibility: hidden; transform: translateY(-13275px); display: none !important;\"> <div class=\"logo\" style=\"transform: translate(-50%, calc(-50% - 135px)) scale(1);\"> <canvas height=\"283\" id=\"home-relayers__logo-canvas\" width=\"283\"></canvas> </div> <div class=\"title-wrapper\" style=\"transform: translate(0px, 99.1648px);\"> <h3 class=\"title\" style=\"opacity: 0; filter: blur(0.25em);\">Re<span>DeFi</span>ned</h3> <p class=\"description body2\"></p><div class=\"line\" style=\"display: block; text-align: center; width: 100%; opacity: 0; filter: blur(0.25em);\">A new model for deeper, cleaner, and more</div><div class=\"line\" style=\"display: block; text-align: center; width: 100%; opacity: 0; filter: blur(0.25em);\">efficient liquidity.</div></div> </div> </section>",
+  "name": "section-5",
+  "section_type": "section",
+  "tag": "section",
+  "classes": [
+    "section"
+  ],
+  "full_html": "<section class=\"section\" id=\"home-relayers\"> <div class=\"section__content\" style=\"visibility: hidden; transform: translateY(-13275px); display: none !important;\"> <div class=\"logo\" style=\"transform: translate(-50%, calc(-50% - 135px)) scale(1);\"> <canvas height=\"283\" id=\"home-relayers__logo-canvas\" width=\"283\"></canvas> </div> <div class=\"title-wrapper\" style=\"transform: translate(0px, 99.1648px);\"> <h3 class=\"title\" style=\"opacity: 0; filter: blur(0.25em);\">Re<span>DeFi</span>ned</h3> <p class=\"description body2\"></p><div class=\"line\" style=\"display: block; text-align: center; width: 100%; opacity: 0; filter: blur(0.25em);\">A new model for deeper, cleaner, and more</div><div class=\"line\" style=\"display: block; text-align: center; width: 100%; opacity: 0; filter: blur(0.25em);\">efficient liquidity.</div></div> </div> </section>",
+  "estimated_tokens": 209,
+  "bounds": {},
+  "headings": [
+    "ReDeFined"
+  ],
+  "images": [],
+  "links": [],
+  "text": {
+    "headings": [
+      "ReDeFined"
+    ],
+    "paragraphs": []
+  },
+  "styles": {
+    "colors": {
+      "background": [],
+      "text": []
+    }
+  },
+  "namespace": "section-5",
+  "component_name": "Section5Section",
+  "order": 4,
+  "base_path": "src/components/sections/section-5/",
+  "component_path": "src/components/sections/section-5/Section5Section.jsx",
+  "css_rules": ":root { --vh: 1vh; --default-font: \"Britti Sans\"; --header-font: \"Feature Display\"; --ref-screen-width: 1440; --site-padding-x: min(60px, calc(40 * 100vw / var(--ref-screen-width))); --site-padding-y: var(--site-padding-x); --color-white: #fbfff4; --content-width: calc(100vw - var(--site-padding-x) * 2); --content-unit: calc(var(--content-width) / var(--ref-screen-width)); --h1: max(80px, calc(var(--content-unit) * 200)); --h3: max(55px, calc(var(--content-unit) * 80)); --body2: max(14px, calc(var(--content-unit) * 16)); }\nh3 { font-family:var(--header-font);font-weight:200;margin:0;padding:0;line-height:1 }\nh3 { font-size:var(--h3) }\n.body2 { font-family:var(--default-font);font-weight:400;font-size:var(--body2) }\n@font-face { font-family:Feature Display;font-weight:200;font-style:normal;font-display:block;src:url(/assets/fonts/FeatureDisplay-Extralight.woff2) format(\"woff2\") }\n@font-face { font-family:Feature Display;font-weight:400;font-style:normal;font-display:block;src:url(/assets/fonts/FeatureDisplay-Regular.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:400;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Regular.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:300;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Light.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:600;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Semibold.woff2) format(\"woff2\") }\nhtml { width:100%;height:100%;color:var(--color-white);line-height:1.4 }\nbody { position:fixed;width:100%;height:100%;overflow:hidden;margin:0;overscroll-behavior:none;touch-action:none }\n* { box-sizing:border-box }\nsection { position:relative;width:100% }\n#home-relayers { padding-bottom:calc(var(--vh) * 100) }\n#home-relayers .section__content { height:calc(var(--vh) * 100);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1em }\n#home-relayers .logo { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);height:calc(1.5 * var(--h1));width:calc(1.5 * var(--h1));z-index:0 }\n#home-relayers .title { margin-top:1em }\n#home-relayers .description { max-width:36ch;text-align:center }\n#home-relayers__logo-canvas { position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;aspect-ratio:1/1 }\n.section { position:relative }\n.section__content { position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:var(--site-padding-y) var(--site-padding-x) }\n.title-wrapper { width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:1em;justify-content:center;align-items:center }\n.title { text-shadow:0 0 .12em rgba(0,0,0,.3) }\n.description { text-shadow:0 0 1em rgba(0,0,0,.3) }\n@media (max-width: 991.98px) {\n#home-relayers .description { max-width:35ch }\n}"
+}

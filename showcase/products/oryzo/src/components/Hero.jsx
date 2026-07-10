@@ -9,7 +9,7 @@ export default function Hero() {
       {/* full-bleed cork/desk surface (warm tone matching the real frame) so the
           ring sits on a coaster-like backdrop, never empty black */}
       <div className="cork-surface-hero pointer-events-none absolute inset-0" />
-      <div className="cork-grid pointer-events-none absolute inset-0 opacity-50" />
+      <div className="cork-grid pointer-events-none absolute inset-0 opacity-[0.7]" />
 
       {/* wordmark — sized down and anchored top so the gold ring reads centre */}
       <div className="relative z-10">

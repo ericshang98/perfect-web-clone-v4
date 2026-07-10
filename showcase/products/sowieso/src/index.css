@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* pwc4 fix: the fixed animated gradient must sit BEHIND content (real site
+   reveals it only where sections are transparent, e.g. the hero). */
+.app__background { z-index: -1 !important; }
+
+/* pwc4 fix: hero WebGL-hand stills sit behind the hero text/badge/nav */
+.hero { position: relative; }
+.hero > *:not(.hero-hand) { position: relative; z-index: 1; }
+.hero .hero-hand { z-index: 0; }
+
+/* pwc4 hero: restore the reference pink→yellow gradient so the (gradient-baked)
+   hand stills blend seamlessly; size hands to native crop width. */
+.hero { background: linear-gradient(115deg, #ff708b 0%, #ff9a86 28%, #fff48d 62%) !important; }
+.hero .hero-hand { width: 33% !important; height: auto !important; }
+
+/* pwc4: center the top logo lockup (reference has it top-center) */
+header { justify-content: center !important; }

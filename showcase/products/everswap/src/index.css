@@ -1,0 +1,15 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- pwc de-animate override: scroll-choreography -> static stack (everswap is a
+   pinned/absolute scroll site; force readable static layout) --- */
+#root .pwc-section { position: relative !important; display: block !important;
+  width: 100%; max-width: 100%; opacity: 1 !important; transform: none !important;
+  filter: none !important; visibility: visible !important; min-height: auto !important;
+  height: auto !important; overflow: visible !important; padding: 40px 24px; }
+#root .pwc-section * { position: static !important; opacity: 1 !important;
+  transform: none !important; filter: none !important; visibility: visible !important;
+  display: revert !important; animation: none !important; transition: none !important;
+  clip-path: none !important; }
+#root .pwc-section [class*="title"], #root .pwc-section h1 { display: block !important; }

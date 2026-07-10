@@ -1,0 +1,706 @@
+// FooterSection — clean JSX (v4 new-code pipeline)
+export default function FooterSection() {
+  return (
+    <div className="pwc-section pwc-footer">
+      <div className="shop-section shop-section--footer" id="shop-section-footer">
+        <footer className="Footer" data-section-id="footer" data-section-type="footer" id="section-footer" role="contentinfo">
+          <div className="Container">
+            <div className="footer_top" style={{ display: 'flex' }}>
+              <div className="footer_logo">
+                <img src="/assets/images/PAGERIE_P.png" />
+              </div>
+              <div className="top-newslatter" style={{ display: 'flex', width: '768px', maxWidth: '100%' }}>
+                <div className="newsletter-head" style={{ width: '384px', maxWidth: '100%' }}>
+                  <h2 className="Footer__Title Heading u-h6">
+                    LE MONDE DE LA PAGERIE
+                  </h2>
+                  <p>
+                    From tales to tails, be in the know.
+                  </p>
+                </div>
+                <div className="newsletter_block" style={{ width: '384px', maxWidth: '100%' }}>
+                  <div className="klaviyo-form-YbuUJM klaviyo-form form-version-cid-1">
+                    <div className="needsclick kl-private-reset-css-Xuajs1" style={{ transform: 'translate(0px, 0px)' }}>
+                      <form aria-live="polite" className="needsclick klaviyo-form klaviyo-form-version-cid_1 go3279073480 kl-private-reset-css-Xuajs1" data-testid="klaviyo-form-YbuUJM" noValidate style={{ display: 'flex', flexDirection: 'row', boxSizing: 'border-box', width: '100%', overflow: 'visible', borderRadius: '2px', borderStyle: 'none', borderWidth: '0px', borderColor: 'rgb(0, 0, 0)', backgroundColor: 'rgba(255, 255, 255, 0)', backgroundRepeat: 'no-repeat', backgroundPositionY: 'center', padding: '10px 5px', flex: '1 1 0%' }}>
+                        <div className="needsclick kl-private-reset-css-Xuajs1" style={{ display: 'flex', flexDirection: 'column', width: '374px', margin: '0px', padding: '0px', minHeight: '120px', justifyContent: 'center', maxWidth: '100%' }}>
+                          <div className="needsclick kl-private-reset-css-Xuajs1" data-testid="form-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', position: 'relative', width: '374px', maxWidth: '100%' }}>
+                            <div className="needsclick go109754294 kl-private-reset-css-Xuajs1" component="[object Object]" data-testid="form-component">
+                              <div className="needsclick go3787345210 klaviyo-emailinput kl-private-reset-css-Xuajs1">
+                                <input aria-invalid="false" aria-label="Enter your email" aria-required="true" autoComplete="email" className="needsclick go1666189893 kl-private-reset-css-Xuajs1" id="email_016JB91TTR000000000022CQ5Q" name="email" options="[object Object]" placeholder="Enter your email" tabIndex="0" type="email" />
+                                <div className="needsclick kl-private-reset-css-Xuajs1" style={{ width: '100%', position: 'relative' }} />
+                              </div>
+                            </div>
+                          </div>
+                          <div className="needsclick kl-private-reset-css-Xuajs1" data-testid="form-row" style={{ display: 'flex', flexDirection: 'row', alignItems: 'stretch', position: 'relative', width: '374px', maxWidth: '100%' }}>
+                            <div className="needsclick go4237861949 kl-private-reset-css-Xuajs1" component="[object Object]" data-testid="form-component">
+                              <button className="needsclick go407147008 go4033861592 klaviyo-form-button kl-private-reset-css-Xuajs1" data-action-id="016JB91VT0000000000011521X" tabIndex="0" type="button">
+                                SIGN UP
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        <input style={{ display: 'none !important' }} tabIndex="-1" type="submit" value="Submit" />
+                      </form>
+                    </div>
+                    <div aria-atomic="true" aria-live="assertive" className="needsclick kl-private-reset-css-Xuajs1" data-testid="submit-announcer" role="alert" style={{ position: 'absolute', width: '1px', height: '1px', overflow: 'hidden', clip: 'rect(0px, 0px, 0px, 0px)', whiteSpace: 'nowrap', border: '0px', padding: '0px', margin: '-1px' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="Footer__Inner" style={{ display: 'flex' }}>
+              <div className="Footer__Block Footer__Block--text" style={{ width: '460px', maxWidth: '100%' }}>
+                <h2 className="Footer__Title Heading u-h6">
+                  About Pagerie
+                </h2>
+                <div className="Footer__Content Rte">
+                  <p>
+                    Pagerie creates luxury accessories for dogs. Every piece is designed with purpose, crafted to last, and made to celebrate the bond between you and your companion.
+                  </p>
+                </div>
+              </div>
+              <div className="footer-links" style={{ display: 'flex', width: '768px', maxWidth: '100%' }}>
+                <div className="Footer__Block Footer__Block--links" style={{ width: '384px', maxWidth: '100%' }}>
+                  <h2 className="Footer__Title Heading u-h6">
+                    Need Help?
+                  </h2>
+                  <ul className="Linklist">
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/contact-us">
+                        Contact Us
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/product-care">
+                        Product Care
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/size-guide">
+                        Size  Guide
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/faqs">
+                        FAQs
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/faqs/#s-13924e11-ee92-481c-b92e-40ae6d340401">
+                        Shipping Services
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/stockists">
+                        Stockists
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/terms-and-conditions">
+                        Terms and Conditions
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/policies/terms-of-service">
+                        Terms of service
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/cookie-policy">
+                        Cookie Policy
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/privacy-policy">
+                        Privacy Policy
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/pages/faqs#return_policy">
+                        Return Policy
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="/apps/ecoreturns">
+                        Start A Return
+                      </a>
+                    </li>
+                  </ul>
+                </div>
+                <div className="Footer__Block Footer__Block--links" style={{ width: '512px', maxWidth: '100%' }}>
+                  <h2 className="Footer__Title Heading u-h6">
+                    Find Us On
+                  </h2>
+                  <ul className="Linklist">
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="https://www.facebook.com/pagerieofficial/">
+                        Facebook
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="https://www.instagram.com/pagerieofficial/">
+                        Instagram
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="https://www.tiktok.com/@pagerieofficial?lang=en">
+                        TikTok
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="https://www.linkedin.com/company/pagerieofficial/?msgConversationId=6640862538932281344&msgOverlay=true">
+                        LinkedIn
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="http://www.pinterest.com/pagerieofficial">
+                        Pinterest
+                      </a>
+                    </li>
+                    <li className="Linklist__Item">
+                      <a className="Link Link--primary" href="https://www.youtube.com/channel/UCzRPF7d02axIFzswhmeqsDg">
+                        YouTube
+                      </a>
+                    </li>
+                  </ul>
+                  <div className="Footer__Localization">
+                    <form acceptCharset="UTF-8" action="/localization" className="Footer__LocalizationForm" encType="multipart/form-data" id="localization_form_footer" method="post" style={{ display: 'flex' }}>
+                      <input name="form_type" style={{ display: 'none !important' }} type="hidden" value="localization" />
+                      <input name="utf8" style={{ display: 'none !important' }} type="hidden" value="✓" />
+                      <input name="_method" style={{ display: 'none !important' }} type="hidden" value="put" />
+                      <input name="return_to" style={{ display: 'none !important' }} type="hidden" value="/" />
+                      <div className="Footer__LocalizationItem">
+                        <input name="currency_code" style={{ display: 'none !important' }} type="hidden" value="USD" />
+                        <span className="u-visually-hidden">
+                          Currency
+                        </span>
+                        <button aria-controls="footer-currency-popover" aria-expanded="false" aria-haspopup="true" className="SelectButton Link Link--primary u-h8" type="button">
+                          USD$
+                          <svg className="Icon Icon--select-arrow" role="presentation" style={{ width: '10px', height: '6px', flex: '0 0 auto' }} viewbox="0 0 19 12">
+                            <polyline fill="none" fillRule="evenodd" points="17 2 9.5 10 2 2" stroke="currentColor" strokeLinecap="square" strokeWidth="2" />
+                          </svg>
+                        </button>
+                        <div aria-hidden="true" className="Popover Popover--small Popover--noWrap" id="footer-currency-popover" style={{ display: 'none !important' }}>
+                          <header className="Popover__Header">
+                            <button className="Popover__Close Icon-Wrapper--clickable" data-action="close-popover" type="button">
+                              <svg className="Icon Icon--close" role="presentation" viewbox="0 0 16 14">
+                                <path d="M15 0L1 14m14 0L1 0" fill="none" fillRule="evenodd" stroke="currentColor" />
+                              </svg>
+                            </button>
+                            <span className="Popover__Title Heading u-h4">
+                              Currency
+                            </span>
+                          </header>
+                          <div className="Popover__Content">
+                            <div className="Popover__ValueList Popover__ValueList--center" data-scrollable="">
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="AED">
+                                AED د.إ
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="AFN">
+                                AFN ؋
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="ALL">
+                                ALL L
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="AMD">
+                                AMD դր.
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="ANG">
+                                ANG ƒ
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="AUD">
+                                AUD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="AWG">
+                                AWG ƒ
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="AZN">
+                                AZN ₼
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BAM">
+                                BAM КМ
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BBD">
+                                BBD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BDT">
+                                BDT ৳
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BIF">
+                                BIF Fr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BND">
+                                BND $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BOB">
+                                BOB Bs.
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BRL">
+                                BRL R$
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BSD">
+                                BSD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BWP">
+                                BWP P
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="BZD">
+                                BZD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CAD">
+                                CAD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CDF">
+                                CDF Fr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CHF">
+                                CHF CHF
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CNY">
+                                CNY ¥
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CRC">
+                                CRC ₡
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CVE">
+                                CVE $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="CZK">
+                                CZK Kč
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="DJF">
+                                DJF Fdj
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="DKK">
+                                DKK kr.
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="DOP">
+                                DOP $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="DZD">
+                                DZD د.ج
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="EGP">
+                                EGP ج.م
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="ETB">
+                                ETB Br
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="EUR">
+                                EUR €
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="FJD">
+                                FJD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="FKP">
+                                FKP £
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="GBP">
+                                GBP £
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="GMD">
+                                GMD D
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="GNF">
+                                GNF Fr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="GTQ">
+                                GTQ Q
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="GYD">
+                                GYD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="HKD">
+                                HKD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="HNL">
+                                HNL L
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="HUF">
+                                HUF Ft
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="IDR">
+                                IDR Rp
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="ILS">
+                                ILS ₪
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="INR">
+                                INR ₹
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="ISK">
+                                ISK kr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="JMD">
+                                JMD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="JPY">
+                                JPY ¥
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KES">
+                                KES KSh
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KGS">
+                                KGS som
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KHR">
+                                KHR ៛
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KMF">
+                                KMF Fr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KRW">
+                                KRW ₩
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KYD">
+                                KYD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="KZT">
+                                KZT ₸
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="LAK">
+                                LAK ₭
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="LBP">
+                                LBP ل.ل
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="LKR">
+                                LKR ₨
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MAD">
+                                MAD د.م.
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MDL">
+                                MDL L
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MKD">
+                                MKD ден
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MMK">
+                                MMK K
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MNT">
+                                MNT ₮
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MOP">
+                                MOP P
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MUR">
+                                MUR ₨
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MVR">
+                                MVR MVR
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MWK">
+                                MWK MK
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="MYR">
+                                MYR RM
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="NGN">
+                                NGN ₦
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="NIO">
+                                NIO C$
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="NPR">
+                                NPR Rs.
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="NZD">
+                                NZD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="PEN">
+                                PEN S/
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="PGK">
+                                PGK K
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="PHP">
+                                PHP ₱
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="PKR">
+                                PKR ₨
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="PLN">
+                                PLN zł
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="PYG">
+                                PYG ₲
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="QAR">
+                                QAR ر.ق
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="RON">
+                                RON Lei
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="RSD">
+                                RSD РСД
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="RWF">
+                                RWF FRw
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="SAR">
+                                SAR ر.س
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="SBD">
+                                SBD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="SEK">
+                                SEK kr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="SGD">
+                                SGD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="SHP">
+                                SHP £
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="SLL">
+                                SLL Le
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="STD">
+                                STD Db
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="THB">
+                                THB ฿
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="TJS">
+                                TJS ЅМ
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="TOP">
+                                TOP T$
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="TTD">
+                                TTD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="TWD">
+                                TWD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="TZS">
+                                TZS Sh
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="UAH">
+                                UAH ₴
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="UGX">
+                                UGX USh
+                              </button>
+                              <button aria-current="true" className="Popover__Value is-selected Heading Link Link--primary u-h6" name="currency_code" type="submit" value="USD">
+                                USD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="UYU">
+                                UYU $U
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="UZS">
+                                UZS so'm
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="VND">
+                                VND ₫
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="VUV">
+                                VUV Vt
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="WST">
+                                WST T
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="XAF">
+                                XAF CFA
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="XCD">
+                                XCD $
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="XOF">
+                                XOF Fr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="XPF">
+                                XPF Fr
+                              </button>
+                              <button className="Popover__Value Heading Link Link--primary u-h6" name="currency_code" type="submit" value="YER">
+                                YER ﷼
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="Footer__Aside" style={{ display: 'flex' }}>
+              <div className="Footer__Copyright">
+                <a className="Footer__StoreName Heading u-h7 Link Link--secondary" href="/">
+                  © PAGERIE
+                </a>
+              </div>
+              <ul className="Footer__PaymentList HorizontalList">
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-american_express" fill="none" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-american_express">
+                      American Express
+                    </title>
+                    <rect fill="none" height="23" rx="2.5" stroke="#000" strokeOpacity=".07" width="37" x=".5" y=".5" />
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3V21C0 22.7 1.4 24 3 24H35C36.7 24 38 22.7 38 21V3C38 1.3 36.6 0 35 0Z" fill="#0071CE" style={{ fill: '#0071CE', fill: 'color(display-p3 0.0000 0.4431 0.8078)', fillOpacity: '1' }} />
+                    <path d="M3 0.5H35C36.3348 0.5 37.5 1.58692 37.5 3V21C37.5 22.4239 36.4239 23.5 35 23.5H3C1.66524 23.5 0.5 22.4131 0.5 21V3C0.5 1.57614 1.57614 0.5 3 0.5Z" stroke="black" strokeOpacity="0.07" style={{ stroke: 'black', strokeOpacity: '0.07' }} />
+                    <path d="M25.8662 6.33203V3H31L31.8662 5.5332L32.7334 3H37V14.2002H36.7998L34.8672 16.2656L36.7998 18.3594H37V21.2666H33.5996L31.9336 19.3994L30.2002 21.2666H19.4668V12.666H16L20.2666 3H24.4004L25.8662 6.33203ZM20.5996 20.2656H27V18.5322H22.666V17.3994H26.8662V15.666H22.666V14.5322H27V12.7988H20.5996V20.2656ZM30.5332 16.5322L27 20.2656H29.5996L31.8662 17.8662L34.0664 20.2656H36.7324L33.1992 16.4658L36.7324 12.7988H34.1328L31.8662 15.1992L29.7324 12.7988H27L30.5332 16.5322ZM17.666 11.7324H19.9326L20.5332 10.1992H23.999L24.666 11.7324H26.999L23.666 4.19922H20.999L17.666 11.7324ZM33.5996 4.19922L31.9326 8.86621L30.1992 4.19922H27V11.666H29.0664V6.39941L31 11.666H32.7998L34.7324 6.39941V11.666H36.7324V4.13281L33.5996 4.19922ZM23.2656 8.46582H21.2656L22.2656 5.99902L23.2656 8.46582Z" fill="white" style={{ fill: 'white', fillOpacity: '1' }} />
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-apple_pay" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} version="1.1" viewbox="0 0 165.521 105.965" width="38" x="0" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg" y="0">
+                    <title id="pi-apple_pay">
+                      Apple Pay
+                    </title>
+                    <path d="M150.698 0H14.823c-.566 0-1.133 0-1.698.003-.477.004-.953.009-1.43.022-1.039.028-2.087.09-3.113.274a10.51 10.51 0 0 0-2.958.975 9.932 9.932 0 0 0-4.35 4.35 10.463 10.463 0 0 0-.975 2.96C.113 9.611.052 10.658.024 11.696a70.22 70.22 0 0 0-.022 1.43C0 13.69 0 14.256 0 14.823v76.318c0 .567 0 1.132.002 1.699.003.476.009.953.022 1.43.028 1.036.09 2.084.275 3.11a10.46 10.46 0 0 0 .974 2.96 9.897 9.897 0 0 0 1.83 2.52 9.874 9.874 0 0 0 2.52 1.83c.947.483 1.917.79 2.96.977 1.025.183 2.073.245 3.112.273.477.011.953.017 1.43.02.565.004 1.132.004 1.698.004h135.875c.565 0 1.132 0 1.697-.004.476-.002.952-.009 1.431-.02 1.037-.028 2.085-.09 3.113-.273a10.478 10.478 0 0 0 2.958-.977 9.955 9.955 0 0 0 4.35-4.35c.483-.947.789-1.917.974-2.96.186-1.026.246-2.074.274-3.11.013-.477.02-.954.022-1.43.004-.567.004-1.132.004-1.699V14.824c0-.567 0-1.133-.004-1.699a63.067 63.067 0 0 0-.022-1.429c-.028-1.038-.088-2.085-.274-3.112a10.4 10.4 0 0 0-.974-2.96 9.94 9.94 0 0 0-4.35-4.35A10.52 10.52 0 0 0 156.939.3c-1.028-.185-2.076-.246-3.113-.274a71.417 71.417 0 0 0-1.431-.022C151.83 0 151.263 0 150.698 0z" fill="#000" />
+                    <path d="M150.698 3.532l1.672.003c.452.003.905.008 1.36.02.793.022 1.719.065 2.583.22.75.135 1.38.34 1.984.648a6.392 6.392 0 0 1 2.804 2.807c.306.6.51 1.226.645 1.983.154.854.197 1.783.218 2.58.013.45.019.9.02 1.36.005.557.005 1.113.005 1.671v76.318c0 .558 0 1.114-.004 1.682-.002.45-.008.9-.02 1.35-.022.796-.065 1.725-.221 2.589a6.855 6.855 0 0 1-.645 1.975 6.397 6.397 0 0 1-2.808 2.807c-.6.306-1.228.511-1.971.645-.881.157-1.847.2-2.574.22-.457.01-.912.017-1.379.019-.555.004-1.113.004-1.669.004H14.801c-.55 0-1.1 0-1.66-.004a74.993 74.993 0 0 1-1.35-.018c-.744-.02-1.71-.064-2.584-.22a6.938 6.938 0 0 1-1.986-.65 6.337 6.337 0 0 1-1.622-1.18 6.355 6.355 0 0 1-1.178-1.623 6.935 6.935 0 0 1-.646-1.985c-.156-.863-.2-1.788-.22-2.578a66.088 66.088 0 0 1-.02-1.355l-.003-1.327V14.474l.002-1.325a66.7 66.7 0 0 1 .02-1.357c.022-.792.065-1.717.222-2.587a6.924 6.924 0 0 1 .646-1.981c.304-.598.7-1.144 1.18-1.623a6.386 6.386 0 0 1 1.624-1.18 6.96 6.96 0 0 1 1.98-.646c.865-.155 1.792-.198 2.586-.22.452-.012.905-.017 1.354-.02l1.677-.003h135.875" fill="#FFF" />
+                    <g>
+                      <g>
+                        <path d="M43.508 35.77c1.404-1.755 2.356-4.112 2.105-6.52-2.054.102-4.56 1.355-6.012 3.112-1.303 1.504-2.456 3.959-2.156 6.266 2.306.2 4.61-1.152 6.063-2.858" fill="#000" />
+                        <path d="M45.587 39.079c-3.35-.2-6.196 1.9-7.795 1.9-1.6 0-4.049-1.8-6.698-1.751-3.447.05-6.645 2-8.395 5.1-3.598 6.2-.95 15.4 2.55 20.45 1.699 2.5 3.747 5.25 6.445 5.151 2.55-.1 3.549-1.65 6.647-1.65 3.097 0 3.997 1.65 6.696 1.6 2.798-.05 4.548-2.5 6.247-5 1.95-2.85 2.747-5.6 2.797-5.75-.05-.05-5.396-2.101-5.446-8.251-.05-5.15 4.198-7.6 4.398-7.751-2.399-3.548-6.147-3.948-7.447-4.048" fill="#000" />
+                      </g>
+                      <g>
+                        <path d="M78.973 32.11c7.278 0 12.347 5.017 12.347 12.321 0 7.33-5.173 12.373-12.529 12.373h-8.058V69.62h-5.822V32.11h14.062zm-8.24 19.807h6.68c5.07 0 7.954-2.729 7.954-7.46 0-4.73-2.885-7.434-7.928-7.434h-6.706v14.894z" fill="#000" />
+                        <path d="M92.764 61.847c0-4.809 3.665-7.564 10.423-7.98l7.252-.442v-2.08c0-3.04-2.001-4.704-5.562-4.704-2.938 0-5.07 1.507-5.51 3.82h-5.252c.157-4.86 4.731-8.395 10.918-8.395 6.654 0 10.995 3.483 10.995 8.89v18.663h-5.38v-4.497h-.13c-1.534 2.937-4.914 4.782-8.579 4.782-5.406 0-9.175-3.222-9.175-8.057zm17.675-2.417v-2.106l-6.472.416c-3.64.234-5.536 1.585-5.536 3.95 0 2.288 1.975 3.77 5.068 3.77 3.95 0 6.94-2.522 6.94-6.03z" fill="#000" />
+                        <path d="M120.975 79.652v-4.496c.364.051 1.247.103 1.715.103 2.573 0 4.029-1.09 4.913-3.899l.52-1.663-9.852-27.293h6.082l6.863 22.146h.13l6.862-22.146h5.927l-10.216 28.67c-2.34 6.577-5.017 8.735-10.683 8.735-.442 0-1.872-.052-2.261-.157z" fill="#000" />
+                      </g>
+                    </g>
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-bancontact" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-bancontact">
+                      Bancontact
+                    </title>
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000" opacity=".07" />
+                    <path d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32" fill="#fff" />
+                    <path d="M4.703 3.077h28.594c.139 0 .276.023.405.068.128.045.244.11.343.194a.9.9 0 0 1 .229.29c.053.107.08.223.08.34V20.03a.829.829 0 0 1-.31.631 1.164 1.164 0 0 1-.747.262H4.703a1.23 1.23 0 0 1-.405-.068 1.09 1.09 0 0 1-.343-.194.9.9 0 0 1-.229-.29.773.773 0 0 1-.08-.34V3.97c0-.118.027-.234.08-.342a.899.899 0 0 1 .23-.29c.098-.082.214-.148.342-.193a1.23 1.23 0 0 1 .405-.068Z" fill="#fff" />
+                    <path d="M6.38 18.562v-3.077h1.125c.818 0 1.344.259 1.344.795 0 .304-.167.515-.401.638.338.132.536.387.536.734 0 .62-.536.91-1.37.91H6.38Zm.724-1.798h.537c.328 0 .468-.136.468-.387 0-.268-.255-.356-.599-.356h-.406v.743Zm0 1.262h.448c.438 0 .693-.093.693-.383 0-.286-.219-.404-.63-.404h-.51v.787Zm3.284.589c-.713 0-1.073-.295-1.073-.69 0-.436.422-.69 1.047-.695.156.002.31.014.464.035v-.105c0-.269-.183-.396-.531-.396a2.128 2.128 0 0 0-.688.105l-.13-.474a3.01 3.01 0 0 1 .9-.132c.767 0 1.147.343 1.147.936v1.222c-.214.093-.615.194-1.136.194Zm.438-.497v-.47a2.06 2.06 0 0 0-.37-.036c-.24 0-.427.08-.427.286 0 .185.156.281.432.281a.947.947 0 0 0 .365-.061Zm1.204.444v-2.106a3.699 3.699 0 0 1 1.177-.193c.76 0 1.198.316 1.198.9v1.399h-.719v-1.354c0-.303-.167-.444-.484-.444a1.267 1.267 0 0 0-.459.079v1.719h-.713Zm4.886-2.167-.135.479a1.834 1.834 0 0 0-.588-.11c-.422 0-.652.25-.652.664 0 .453.24.685.688.685.2-.004.397-.043.578-.114l.115.488a2.035 2.035 0 0 1-.75.128c-.865 0-1.365-.453-1.365-1.17 0-.712.495-1.182 1.323-1.182.27-.001.538.043.787.132Zm1.553 2.22c-.802 0-1.302-.47-1.302-1.178 0-.704.5-1.174 1.302-1.174.807 0 1.297.47 1.297 1.173 0 .708-.49 1.179-1.297 1.179Zm0-.502c.37 0 .563-.259.563-.677 0-.413-.193-.672-.563-.672-.364 0-.568.26-.568.672 0 .418.204.677.568.677Zm1.713.449v-2.106a3.699 3.699 0 0 1 1.177-.193c.76 0 1.198.316 1.198.9v1.399h-.719v-1.354c0-.303-.166-.444-.484-.444a1.268 1.268 0 0 0-.459.079v1.719h-.713Zm3.996.053c-.62 0-.938-.286-.938-.866v-.95h-.354v-.484h.355v-.488l.718-.03v.518h.578v.484h-.578v.94c0 .256.125.374.36.374.093 0 .185-.008.276-.026l.036.488c-.149.028-.3.041-.453.04Zm1.814 0c-.713 0-1.073-.295-1.073-.69 0-.436.422-.69 1.047-.695.155.002.31.014.464.035v-.105c0-.269-.183-.396-.532-.396a2.128 2.128 0 0 0-.687.105l-.13-.474a3.01 3.01 0 0 1 .9-.132c.766 0 1.146.343 1.146.936v1.222c-.213.093-.614.194-1.135.194Zm.438-.497v-.47a2.06 2.06 0 0 0-.37-.036c-.24 0-.427.08-.427.286 0 .185.156.281.432.281a.946.946 0 0 0 .365-.061Zm3.157-1.723-.136.479a1.834 1.834 0 0 0-.588-.11c-.422 0-.651.25-.651.664 0 .453.24.685.687.685.2-.004.397-.043.578-.114l.115.488a2.035 2.035 0 0 1-.75.128c-.865 0-1.365-.453-1.365-1.17 0-.712.495-1.182 1.323-1.182.27-.001.538.043.787.132Zm1.58 2.22c-.62 0-.938-.286-.938-.866v-.95h-.354v-.484h.354v-.488l.72-.03v.518h.577v.484h-.578v.94c0 .256.125.374.36.374.092 0 .185-.008.276-.026l.036.488c-.149.028-.3.041-.453.04Z" fill="#1E3764" />
+                    <path d="M11.394 13.946c3.803 0 5.705-2.14 7.606-4.28H6.38v4.28h5.014Z" fill="url(#pi-bancontact-a)" />
+                    <path d="M26.607 5.385c-3.804 0-5.705 2.14-7.607 4.28h12.62v-4.28h-5.013Z" fill="url(#pi-bancontact-b)" />
+                    <defs>
+                      <lineargradient gradientunits="userSpaceOnUse" id="pi-bancontact-a" x1="8.933" x2="17.734" y1="12.003" y2="8.13">
+                        <stop stopColor="#005AB9" />
+                        <stop offset="1" stopColor="#1E3764" />
+                      </lineargradient>
+                      <lineargradient gradientunits="userSpaceOnUse" id="pi-bancontact-b" x1="19.764" x2="29.171" y1="10.037" y2="6.235">
+                        <stop stopColor="#FBA900" />
+                        <stop offset="1" stopColor="#FFD800" />
+                      </lineargradient>
+                    </defs>
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-diners_club" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-diners_club">
+                      Diners Club
+                    </title>
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" opacity=".07" />
+                    <path d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32" fill="#fff" />
+                    <path d="M12 12v3.7c0 .3-.2.3-.5.2-1.9-.8-3-3.3-2.3-5.4.4-1.1 1.2-2 2.3-2.4.4-.2.5-.1.5.2V12zm2 0V8.3c0-.3 0-.3.3-.2 2.1.8 3.2 3.3 2.4 5.4-.4 1.1-1.2 2-2.3 2.4-.4.2-.4.1-.4-.2V12zm7.2-7H13c3.8 0 6.8 3.1 6.8 7s-3 7-6.8 7h8.2c3.8 0 6.8-3.1 6.8-7s-3-7-6.8-7z" fill="#3086C8" />
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-discover" fill="none" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-discover">
+                      Discover
+                    </title>
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000" opacity=".07" />
+                    <path d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32z" fill="#fff" />
+                    <path d="M3.57 7.16H2v5.5h1.57c.83 0 1.43-.2 1.96-.63.63-.52 1-1.3 1-2.11-.01-1.63-1.22-2.76-2.96-2.76zm1.26 4.14c-.34.3-.77.44-1.47.44h-.29V8.1h.29c.69 0 1.11.12 1.47.44.37.33.59.84.59 1.37 0 .53-.22 1.06-.59 1.39zm2.19-4.14h1.07v5.5H7.02v-5.5zm3.69 2.11c-.64-.24-.83-.4-.83-.69 0-.35.34-.61.8-.61.32 0 .59.13.86.45l.56-.73c-.46-.4-1.01-.61-1.62-.61-.97 0-1.72.68-1.72 1.58 0 .76.35 1.15 1.35 1.51.42.15.63.25.74.31.21.14.32.34.32.57 0 .45-.35.78-.83.78-.51 0-.92-.26-1.17-.73l-.69.67c.49.73 1.09 1.05 1.9 1.05 1.11 0 1.9-.74 1.9-1.81.02-.89-.35-1.29-1.57-1.74zm1.92.65c0 1.62 1.27 2.87 2.9 2.87.46 0 .86-.09 1.34-.32v-1.26c-.43.43-.81.6-1.29.6-1.08 0-1.85-.78-1.85-1.9 0-1.06.79-1.89 1.8-1.89.51 0 .9.18 1.34.62V7.38c-.47-.24-.86-.34-1.32-.34-1.61 0-2.92 1.28-2.92 2.88zm12.76.94l-1.47-3.7h-1.17l2.33 5.64h.58l2.37-5.64h-1.16l-1.48 3.7zm3.13 1.8h3.04v-.93h-1.97v-1.48h1.9v-.93h-1.9V8.1h1.97v-.94h-3.04v5.5zm7.29-3.87c0-1.03-.71-1.62-1.95-1.62h-1.59v5.5h1.07v-2.21h.14l1.48 2.21h1.32l-1.73-2.32c.81-.17 1.26-.72 1.26-1.56zm-2.16.91h-.31V8.03h.33c.67 0 1.03.28 1.03.82 0 .55-.36.85-1.05.85z" fill="#231F20" />
+                    <path d="M20.16 12.86a2.931 2.931 0 100-5.862 2.931 2.931 0 000 5.862z" fill="url(#pi-paint0_linear)" />
+                    <path d="M20.16 12.86a2.931 2.931 0 100-5.862 2.931 2.931 0 000 5.862z" fill="url(#pi-paint1_linear)" opacity=".65" />
+                    <path d="M36.57 7.506c0-.1-.07-.15-.18-.15h-.16v.48h.12v-.19l.14.19h.14l-.16-.2c.06-.01.1-.06.1-.13zm-.2.07h-.02v-.13h.02c.06 0 .09.02.09.06 0 .05-.03.07-.09.07z" fill="#231F20" />
+                    <path d="M36.41 7.176c-.23 0-.42.19-.42.42 0 .23.19.42.42.42.23 0 .42-.19.42-.42 0-.23-.19-.42-.42-.42zm0 .77c-.18 0-.34-.15-.34-.35 0-.19.15-.35.34-.35.18 0 .33.16.33.35 0 .19-.15.35-.33.35z" fill="#231F20" />
+                    <path d="M37 12.984S27.09 19.873 8.976 23h26.023a2 2 0 002-1.984l.024-3.02L37 12.985z" fill="#F48120" />
+                    <defs>
+                      <lineargradient gradientunits="userSpaceOnUse" id="pi-paint0_linear" x1="21.657" x2="19.632" y1="12.275" y2="9.104">
+                        <stop stopColor="#F89F20" />
+                        <stop offset=".25" stopColor="#F79A20" />
+                        <stop offset=".533" stopColor="#F68D20" />
+                        <stop offset=".62" stopColor="#F58720" />
+                        <stop offset=".723" stopColor="#F48120" />
+                        <stop offset="1" stopColor="#F37521" />
+                      </lineargradient>
+                      <lineargradient gradientunits="userSpaceOnUse" id="pi-paint1_linear" x1="21.338" x2="18.378" y1="12.232" y2="6.446">
+                        <stop stopColor="#F58720" />
+                        <stop offset=".359" stopColor="#E16F27" />
+                        <stop offset=".703" stopColor="#D4602C" />
+                        <stop offset=".982" stopColor="#D05B2E" />
+                      </lineargradient>
+                    </defs>
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-google_pay" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-google_pay">
+                      Google Pay
+                    </title>
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000" opacity=".07" />
+                    <path d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32" fill="#FFF" />
+                    <path d="M18.093 11.976v3.2h-1.018v-7.9h2.691a2.447 2.447 0 0 1 1.747.692 2.28 2.28 0 0 1 .11 3.224l-.11.116c-.47.447-1.098.69-1.747.674l-1.673-.006zm0-3.732v2.788h1.698c.377.012.741-.135 1.005-.404a1.391 1.391 0 0 0-1.005-2.354l-1.698-.03zm6.484 1.348c.65-.03 1.286.188 1.778.613.445.43.682 1.03.65 1.649v3.334h-.969v-.766h-.049a1.93 1.93 0 0 1-1.673.931 2.17 2.17 0 0 1-1.496-.533 1.667 1.667 0 0 1-.613-1.324 1.606 1.606 0 0 1 .613-1.336 2.746 2.746 0 0 1 1.698-.515c.517-.02 1.03.093 1.49.331v-.208a1.134 1.134 0 0 0-.417-.901 1.416 1.416 0 0 0-.98-.368 1.545 1.545 0 0 0-1.319.717l-.895-.564a2.488 2.488 0 0 1 2.182-1.06zM23.29 13.52a.79.79 0 0 0 .337.662c.223.176.5.269.785.263.429-.001.84-.17 1.146-.472.305-.286.478-.685.478-1.103a2.047 2.047 0 0 0-1.324-.374 1.716 1.716 0 0 0-1.03.294.883.883 0 0 0-.392.73zm9.286-3.75l-3.39 7.79h-1.048l1.281-2.728-2.224-5.062h1.103l1.612 3.885 1.569-3.885h1.097z" fill="#5F6368" />
+                    <path d="M13.986 11.284c0-.308-.024-.616-.073-.92h-4.29v1.747h2.451a2.096 2.096 0 0 1-.9 1.373v1.134h1.464a4.433 4.433 0 0 0 1.348-3.334z" fill="#4285F4" />
+                    <path d="M9.629 15.721a4.352 4.352 0 0 0 3.01-1.097l-1.466-1.14a2.752 2.752 0 0 1-4.094-1.44H5.577v1.17a4.53 4.53 0 0 0 4.052 2.507z" fill="#34A853" />
+                    <path d="M7.079 12.05a2.709 2.709 0 0 1 0-1.735v-1.17H5.577a4.505 4.505 0 0 0 0 4.075l1.502-1.17z" fill="#FBBC04" />
+                    <path d="M9.629 8.44a2.452 2.452 0 0 1 1.74.68l1.3-1.293a4.37 4.37 0 0 0-3.065-1.183 4.53 4.53 0 0 0-4.027 2.5l1.502 1.171a2.715 2.715 0 0 1 2.55-1.875z" fill="#EA4335" />
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-spidealwero" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-spidealwero">
+                      iDEAL Wero
+                    </title>
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3V21C0 22.7 1.4 24 3 24H35C36.7 24 38 22.7 38 21V3C38 1.3 36.6 0 35 0Z" fill="black" opacity="0.07" />
+                    <path d="M35 1C36.1 1 37 1.9 37 3V21C37 22.1 36.1 23 35 23H3C1.9 23 1 22.1 1 21V3C1 1.9 1.9 1 3 1H35Z" fill="#FFF48D" />
+                    <path d="M3.45001 7.43572V17.0022C3.45001 17.4602 3.82664 17.8347 4.28673 17.8347H10.0301C14.3722 17.8347 16.2539 15.4157 16.2539 12.2063C16.2539 8.99693 14.3715 6.60321 10.0294 6.60321H4.28603C3.82594 6.60321 3.44931 6.97773 3.44931 7.43572H3.45001Z" fill="white" />
+                    <path d="M7.29413 8.95133V16.0203H10.385C13.1918 16.0203 14.4087 14.4422 14.4087 12.2112C14.4087 9.98022 13.1911 8.41901 10.385 8.41901H7.82926C7.53259 8.41901 7.29413 8.66027 7.29413 8.95204V8.95133Z" fill="#CC0066" />
+                    <path clipRule="evenodd" d="M5.03507 17.073H10.0294C13.539 17.073 15.4754 15.3456 15.4754 12.2105C15.4754 10.4038 14.7685 7.36908 10.0294 7.36908H5.03507C4.59182 7.36908 4.23203 7.72677 4.23203 8.16862V16.2742C4.23203 16.7153 4.59182 17.0737 5.03507 17.0737V17.073ZM4.49924 8.16862C4.49924 7.87335 4.7377 7.63559 5.03437 7.63559H10.0287C11.9609 7.63559 15.2068 8.23104 15.2068 12.2105C15.2068 15.1744 13.3665 16.8065 10.0287 16.8065H5.03507C4.7384 16.8065 4.49994 16.5694 4.49994 16.2735V8.16862H4.49924Z" fill="#232323" fillRule="evenodd" />
+                    <path clipRule="evenodd" d="M8.81464 11.1831C8.72066 11.1494 8.62247 11.1326 8.51586 11.1326V11.1284H7.8082V12.8355H8.52428C8.65122 12.8355 8.76134 12.8102 8.85602 12.7681C8.95 12.7218 9.02785 12.6629 9.08957 12.5872C9.15129 12.5114 9.19618 12.4188 9.22844 12.3136C9.25719 12.2084 9.27332 12.0948 9.27332 11.9686C9.27332 11.8255 9.25299 11.7035 9.21581 11.5983C9.17514 11.4973 9.12183 11.4089 9.05661 11.3374C8.98717 11.27 8.90932 11.2153 8.81534 11.1817L8.81464 11.1831ZM8.64702 12.4995C8.59371 12.5163 8.54462 12.5248 8.49132 12.5248V12.529H8.16799V11.4524H8.4296C8.51937 11.4524 8.59301 11.465 8.65473 11.4903C8.71645 11.5155 8.76554 11.5576 8.80201 11.6039C8.83849 11.6502 8.86724 11.7133 8.88407 11.7806C8.9002 11.8479 8.90862 11.9279 8.90862 12.0121C8.90862 12.1088 8.896 12.1846 8.87215 12.2519C8.85108 12.3106 8.81921 12.3649 8.77817 12.4118C8.74305 12.4524 8.69779 12.4829 8.64702 12.5002V12.4995Z" fill="white" fillRule="evenodd" />
+                    <path d="M10.7504 11.1333V11.4489H9.87441V11.815H10.6803V12.1053H9.87441V12.5219H10.7707V12.8376H9.51041V11.1305H10.7504V11.1347V11.1333Z" fill="white" />
+                    <path clipRule="evenodd" d="M12.6244 12.8404L12.0023 11.1333H11.6222L10.9958 12.8404H11.3641L11.4952 12.4616H12.1173L12.2443 12.8404H12.6251H12.6244ZM11.8136 11.5534L12.0226 12.1797H11.5934L11.8101 11.5534H11.8143H11.8136Z" fill="white" fillRule="evenodd" />
+                    <path d="M13.2178 11.1325V12.5247H14.0278V12.8403H12.8538V11.1332H13.2178V11.1325Z" fill="white" />
+                    <path d="M5.85774 12.8656C6.30099 12.8656 6.66009 12.5065 6.66009 12.0625C6.66009 11.6186 6.30099 11.2595 5.85774 11.2595C5.41448 11.2595 5.05539 11.6186 5.05539 12.0625C5.05539 12.5065 5.41448 12.8656 5.85774 12.8656ZM6.33536 16.0771C5.71396 16.0771 5.216 15.5406 5.216 14.8813V13.9478C5.216 13.6181 5.46498 13.3474 5.77778 13.3474C6.09059 13.3474 6.33957 13.6139 6.33957 13.9478V16.0771H6.33536Z" fill="#232323" />
+                    <path d="M31.45 12.2209C31.45 11.1773 32.1926 10.2264 33.4749 10.2264C34.7572 10.2264 35.5053 11.178 35.5053 12.2209C35.5053 13.2638 34.7627 14.2154 33.4749 14.2154C32.1926 14.2154 31.45 13.2638 31.45 12.2209ZM34.3782 12.2209C34.3782 11.7178 34.0467 11.2537 33.4749 11.2537C32.9032 11.2537 32.5717 11.7186 32.5717 12.2209C32.5717 12.7232 32.9086 13.1889 33.4749 13.1889C34.0412 13.1889 34.3782 12.724 34.3782 12.2209ZM30.6615 12.9619C31.0889 12.7185 31.3455 12.2537 31.3455 11.7404C31.3455 10.9784 30.7948 10.3294 29.94 10.3294H28.1452V14.1132H29.2567V13.146H29.4649L30.1006 14.1132H31.4095L30.6615 12.9619ZM29.7161 12.2747H29.2567V11.2046H29.7216C30.0211 11.2046 30.213 11.4479 30.213 11.7396C30.213 12.0314 30.0148 12.2747 29.7161 12.2747ZM23.0713 10.3247L22.4044 12.5797L21.7539 10.3247H20.8686L20.2126 12.5797L19.5511 10.3247H18.378L19.722 14.1015H20.6868L21.3108 12.0454L21.9294 14.1015H22.8997L24.2436 10.3247H23.0705H23.0713ZM25.9261 13.1795H25.9237C25.508 13.1795 25.2163 12.9284 25.0915 12.5961H27.9159C27.9385 12.4713 27.9502 12.3434 27.9502 12.2139C27.9502 11.1734 27.21 10.2241 25.9261 10.2233V11.2482C26.3442 11.249 26.6328 11.5002 26.7568 11.8317H23.9363C23.9137 11.9565 23.902 12.0844 23.902 12.2139C23.902 13.2552 24.643 14.2052 25.923 14.2052H25.9253V13.1795H25.9261Z" fill="#1D1C1C" />
+                    <path d="M25.9237 14.2044C25.9674 14.2044 26.0103 14.2029 26.0524 14.2013C26.3122 14.188 26.5485 14.135 26.7591 14.05C26.9697 13.965 27.1546 13.8472 27.3114 13.7052C27.4673 13.5644 27.5983 13.3982 27.699 13.2138C27.7903 13.0469 27.8574 12.8667 27.8995 12.6787H26.7225C26.6983 12.7287 26.6702 12.777 26.6382 12.8215C26.5945 12.8831 26.5431 12.9385 26.4846 12.9861C26.4261 13.0344 26.3605 13.075 26.2888 13.1062C26.217 13.1374 26.1382 13.1592 26.0532 13.1709C26.0119 13.1764 25.969 13.1795 25.9245 13.1795C25.6601 13.1795 25.4456 13.0773 25.2919 12.9174L24.5268 13.6912C24.8668 14.0055 25.3387 14.2036 25.9237 14.2036V14.2044Z" fill="#1D1C1C" />
+                    <path d="M25.9237 10.2225C24.838 10.2225 24.1399 10.9058 23.9535 11.7482H25.1266C25.267 11.4581 25.5431 11.2475 25.9237 11.2475C26.2272 11.2475 26.4627 11.3785 26.6164 11.5766L27.3886 10.7958C27.0438 10.4464 26.5477 10.2225 25.9245 10.2225H25.9237Z" fill="#1D1C1C" />
+                    <path d="M17.3927 16.431C17.3069 16.431 17.2367 16.3608 17.2367 16.275V8.16296C17.2367 8.07716 17.3069 8.00696 17.3927 8.00696C17.4785 8.00696 17.5487 8.07716 17.5487 8.16296V16.275C17.5487 16.3608 17.4785 16.431 17.3927 16.431Z" fill="#1D1C1C" />
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-master" fill="none" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-master">
+                      Mastercard
+                    </title>
+                    <rect fill="none" height="23" rx="2.5" stroke="#000" strokeOpacity=".07" width="37" x=".5" y=".5" />
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3V21C0 22.7 1.4 24 3 24H35C36.7 24 38 22.7 38 21V3C38 1.3 36.6 0 35 0Z" fill="#1C1C1C" style={{ fill: '#1C1C1C', fill: 'color(display-p3 0.1098 0.1098 0.1098)', fillOpacity: '1' }} />
+                    <path d="M35 1C36.1 1 37 1.9 37 3V21C37 22.1 36.1 23 35 23H3C1.9 23 1 22.1 1 21V3C1 1.9 1.9 1 3 1H35Z" fill="#232323" style={{ fill: '#232323', fill: 'color(display-p3 0.1373 0.1373 0.1373)', fillOpacity: '1' }} />
+                    <path d="M14.6364 19.2727C18.8538 19.2727 22.2727 15.8538 22.2727 11.6364C22.2727 7.41892 18.8538 4 14.6364 4C10.4189 4 7 7.41892 7 11.6364C7 15.8538 10.4189 19.2727 14.6364 19.2727Z" fill="#EB001B" style={{ fill: '#EB001B', fill: 'color(display-p3 0.9216 0.0000 0.1059)', fillOpacity: '1' }} />
+                    <path d="M23.3637 19.2727C27.5811 19.2727 31 15.8538 31 11.6364C31 7.41892 27.5811 4 23.3637 4C19.1462 4 15.7273 7.41892 15.7273 11.6364C15.7273 15.8538 19.1462 19.2727 23.3637 19.2727Z" fill="#F79E1B" style={{ fill: '#F79E1B', fill: 'color(display-p3 0.9686 0.6196 0.1059)', fillOpacity: '1' }} />
+                    <path d="M22.2727 11.6362C22.2727 9.01797 20.9637 6.72706 19 5.41797C17.0364 6.83615 15.7273 9.12706 15.7273 11.6362C15.7273 14.1452 17.0364 16.5452 19 17.8543C20.9637 16.5452 22.2727 14.2543 22.2727 11.6362Z" fill="#FF5F00" style={{ fill: '#FF5F00', fill: 'color(display-p3 1.0000 0.3725 0.0000)', fillOpacity: '1' }} />
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-shop_pay" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-shop_pay">
+                      Shop Pay
+                    </title>
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3v18c0 1.7 1.4 3 3 3h32c1.7 0 3-1.3 3-3V3c0-1.7-1.4-3-3-3z" fill="#000" opacity=".07" />
+                    <path d="M35.889 0C37.05 0 38 .982 38 2.182v19.636c0 1.2-.95 2.182-2.111 2.182H2.11C.95 24 0 23.018 0 21.818V2.182C0 .982.95 0 2.111 0H35.89z" fill="#5A31F4" />
+                    <path d="M9.35 11.368c-1.017-.223-1.47-.31-1.47-.705 0-.372.306-.558.92-.558.54 0 .934.238 1.225.704a.079.079 0 00.104.03l1.146-.584a.082.082 0 00.032-.114c-.475-.831-1.353-1.286-2.51-1.286-1.52 0-2.464.755-2.464 1.956 0 1.275 1.15 1.597 2.17 1.82 1.02.222 1.474.31 1.474.705 0 .396-.332.582-.993.582-.612 0-1.065-.282-1.34-.83a.08.08 0 00-.107-.035l-1.143.57a.083.083 0 00-.036.111c.454.92 1.384 1.437 2.627 1.437 1.583 0 2.539-.742 2.539-1.98s-1.155-1.598-2.173-1.82v-.003zM15.49 8.855c-.65 0-1.224.232-1.636.646a.04.04 0 01-.069-.03v-2.64a.08.08 0 00-.08-.081H12.27a.08.08 0 00-.08.082v8.194a.08.08 0 00.08.082h1.433a.08.08 0 00.081-.082v-3.594c0-.695.528-1.227 1.239-1.227.71 0 1.226.521 1.226 1.227v3.594a.08.08 0 00.081.082h1.433a.08.08 0 00.081-.082v-3.594c0-1.51-.981-2.577-2.355-2.577zM20.753 8.62c-.778 0-1.507.24-2.03.588a.082.082 0 00-.027.109l.632 1.088a.08.08 0 00.11.03 2.5 2.5 0 011.318-.366c1.25 0 2.17.891 2.17 2.068 0 1.003-.736 1.745-1.669 1.745-.76 0-1.288-.446-1.288-1.077 0-.361.152-.657.548-.866a.08.08 0 00.032-.113l-.596-1.018a.08.08 0 00-.098-.035c-.799.299-1.359 1.018-1.359 1.984 0 1.46 1.152 2.55 2.76 2.55 1.877 0 3.227-1.313 3.227-3.195 0-2.018-1.57-3.492-3.73-3.492zM28.675 8.843c-.724 0-1.373.27-1.845.746-.026.027-.069.007-.069-.029v-.572a.08.08 0 00-.08-.082h-1.397a.08.08 0 00-.08.082v8.182a.08.08 0 00.08.081h1.433a.08.08 0 00.081-.081v-2.683c0-.036.043-.054.069-.03a2.6 2.6 0 001.808.7c1.682 0 2.993-1.373 2.993-3.157s-1.313-3.157-2.993-3.157zm-.271 4.929c-.956 0-1.681-.768-1.681-1.783s.723-1.783 1.681-1.783c.958 0 1.68.755 1.68 1.783 0 1.027-.713 1.783-1.681 1.783h.001z" fill="#fff" />
+                  </svg>
+                </li>
+                <li className="HorizontalList__Item">
+                  <svg aria-labelledby="pi-visa" fill="none" height="24" role="img" style={{ width: '38px', height: '24px', flex: '0 0 auto' }} viewbox="0 0 38 24" width="38" xmlns="http://www.w3.org/2000/svg">
+                    <title id="pi-visa">
+                      Visa
+                    </title>
+                    <rect fill="none" height="23" rx="2.5" stroke="#000" strokeOpacity=".07" width="37" x=".5" y=".5" />
+                    <path d="M35 0H3C1.3 0 0 1.3 0 3V21C0 22.7 1.4 24 3 24H35C36.7 24 38 22.7 38 21V3C38 1.3 36.6 0 35 0Z" fill="#142FBD" style={{ fill: '#142FBD', fill: 'color(display-p3 0.0784 0.1843 0.7412)', fillOpacity: '1' }} />
+                    <path d="M35 1C36.1 1 37 1.9 37 3V21C37 22.1 36.1 23 35 23H3C1.9 23 1 22.1 1 21V3C1 1.9 1.9 1 3 1H35Z" fill="#1532CB" style={{ fill: '#1532CB', fill: 'color(display-p3 0.0824 0.1961 0.7961)', fillOpacity: '1' }} />
+                    <path d="M29.5944 10.2167H29.2778C28.8556 11.2722 28.5389 11.8 28.2222 13.3833H30.2278C29.9111 11.8 29.9111 11.0611 29.5944 10.2167V10.2167ZM32.6556 16.4444H30.8611C30.7556 16.4444 30.7556 16.4444 30.65 16.3389L30.4389 15.3889L30.3333 15.1778H27.8C27.6944 15.1778 27.5889 15.1778 27.5889 15.3889L27.2722 16.3389C27.2722 16.4444 27.1667 16.4444 27.1667 16.4444H24.95L25.1611 15.9167L28.2222 8.73889C28.2222 8.21111 28.5389 8 29.0667 8H30.65C30.7556 8 30.8611 8 30.8611 8.21111L32.3389 15.0722C32.4444 15.4944 32.55 15.8111 32.55 16.2333C32.6556 16.3389 32.6556 16.3389 32.6556 16.4444V16.4444ZM18.5111 16.1278L18.9333 14.2278C19.0389 14.2278 19.1444 14.3333 19.1444 14.3333C19.8833 14.65 20.6222 14.8611 21.3611 14.7556C21.5722 14.7556 21.8889 14.65 22.1 14.5444C22.6278 14.3333 22.6278 13.8056 22.2056 13.3833C21.9944 13.1722 21.6778 13.0667 21.3611 12.8556C20.9389 12.6444 20.5167 12.4333 20.2 12.1167C18.9333 11.0611 19.3556 9.58333 20.0944 8.84444C20.7278 8.42222 21.0444 8 21.8889 8C23.1556 8 24.5278 8 25.1611 8.21111H25.2667C25.1611 8.84444 25.0556 9.37222 24.8444 10.0056C24.3167 9.79444 23.7889 9.58333 23.2611 9.58333C22.9444 9.58333 22.6278 9.58333 22.3111 9.68889C22.1 9.68889 21.9944 9.79444 21.8889 9.9C21.6778 10.1111 21.6778 10.4278 21.8889 10.6389L22.4167 11.0611C22.8389 11.2722 23.2611 11.4833 23.5778 11.6944C24.1056 12.0111 24.6333 12.5389 24.7389 13.1722C24.95 14.1222 24.6333 14.9667 23.7889 15.6C23.2611 16.0222 23.05 16.2333 22.3111 16.2333C20.8333 16.2333 19.6722 16.3389 18.7222 16.0222C18.6167 16.2333 18.6167 16.2333 18.5111 16.1278V16.1278ZM14.8167 16.4444C14.9222 15.7056 14.9222 15.7056 15.0278 15.3889C15.5556 13.0667 16.0833 10.6389 16.5056 8.31667C16.6111 8.10556 16.6111 8 16.8222 8H18.7222C18.5111 9.26667 18.3 10.2167 17.9833 11.3778C17.6667 12.9611 17.35 14.5444 16.9278 16.1278C16.9278 16.3389 16.8222 16.3389 16.6111 16.3389L14.8167 16.4444ZM5 8.21111C5 8.10556 5.21111 8 5.31667 8H8.90556C9.43333 8 9.85556 8.31667 9.96111 8.84444L10.9111 13.4889C10.9111 13.5944 10.9111 13.5944 11.0167 13.7C11.0167 13.5944 11.1222 13.5944 11.1222 13.5944L13.3389 8.21111C13.2333 8.10556 13.3389 8 13.4444 8H15.6611C15.6611 8.10556 15.6611 8.10556 15.5556 8.21111L12.2833 15.9167C12.1778 16.1278 12.1778 16.2333 12.0722 16.3389C11.9667 16.4444 11.7556 16.3389 11.5444 16.3389H9.96111C9.85556 16.3389 9.75 16.3389 9.75 16.1278L8.06111 9.58333C7.85 9.37222 7.53333 9.05556 7.11111 8.95C6.47778 8.63333 5.31667 8.42222 5.10556 8.42222L5 8.21111Z" fill="white" style={{ fill: 'white', fillOpacity: '1' }} />
+                  </svg>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+  );
+}

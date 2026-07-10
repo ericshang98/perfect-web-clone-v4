@@ -1,0 +1,36 @@
+{
+  "ok": true,
+  "raw_html": "<section class=\"section\" id=\"home-hero\"> <div class=\"section__content\" style=\"visibility: visible; transform: translateY(0px); display: flex;\"> <div class=\"kicker sub2\" style=\"opacity: 0.488; filter: blur(0.128em); transform: translate3d(-50%, -51.2%, 0px);\"> <span>DeFi at Peak.</span> </div> <div class=\"title-wrapper\" style=\"display: flex; width: 1360px; max-width: 100%;\"> <h1 class=\"title\" style=\"display: none !important;\">EverSwap</h1> <span class=\"subtitle sub2\" style=\"opacity: 0; filter: blur(0.25em); display: none !important;\">Scroll to start</span> </div> <!-- <div id=\"home-hero__trusted-by\" class=\"body2\">\n\t\t\t\t<span>Trusted by</span>\n\t\t\t\t<div id=\"home-hero__trusted-by-logos\">\n\t\t\t\t\t<div class=\"home-hero__trusted-by-logo-list\">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div> --> </div> </section>",
+  "name": "section",
+  "section_type": "section",
+  "tag": "section",
+  "classes": [
+    "section"
+  ],
+  "full_html": "<section class=\"section\" id=\"home-hero\"> <div class=\"section__content\" style=\"visibility: visible; transform: translateY(0px); display: flex;\"> <div class=\"kicker sub2\" style=\"opacity: 0.488; filter: blur(0.128em); transform: translate3d(-50%, -51.2%, 0px);\"> <span>DeFi at Peak.</span> </div> <div class=\"title-wrapper\" style=\"display: flex; width: 1360px; max-width: 100%;\"> <h1 class=\"title\" style=\"display: none !important;\">EverSwap</h1> <span class=\"subtitle sub2\" style=\"opacity: 0; filter: blur(0.25em); display: none !important;\">Scroll to start</span> </div> <!-- <div id=\"home-hero__trusted-by\" class=\"body2\">\n\t\t\t\t<span>Trusted by</span>\n\t\t\t\t<div id=\"home-hero__trusted-by-logos\">\n\t\t\t\t\t<div class=\"home-hero__trusted-by-logo-list\">\n\t\t\t\t\t</div>\n\t\t\t\t</div>\n\t\t\t</div> --> </div> </section>",
+  "estimated_tokens": 199,
+  "bounds": {},
+  "headings": [
+    "EverSwap"
+  ],
+  "images": [],
+  "links": [],
+  "text": {
+    "headings": [
+      "EverSwap"
+    ],
+    "paragraphs": []
+  },
+  "styles": {
+    "colors": {
+      "background": [],
+      "text": []
+    }
+  },
+  "namespace": "section",
+  "component_name": "Section",
+  "order": 0,
+  "base_path": "src/components/sections/section/",
+  "component_path": "src/components/sections/section/Section.jsx",
+  "css_rules": ":root { --vh: 1vh; --header-font: \"Feature Display\"; --ref-screen-width: 1440; --site-padding-x: min(60px, calc(40 * 100vw / var(--ref-screen-width))); --site-padding-y: var(--site-padding-x); --color-white: #fbfff4; --content-width: calc(100vw - var(--site-padding-x) * 2); --content-unit: calc(var(--content-width) / var(--ref-screen-width)); --h1: max(80px, calc(var(--content-unit) * 200)); --sub2: max(18px, calc(var(--content-unit) * 18)); }\nh1 { font-family:var(--header-font);font-weight:200;margin:0;padding:0;line-height:1 }\nh1 { font-size:var(--h1) }\n.sub2 { font-family:var(--header-font);font-weight:400 }\n.sub2 { font-size:var(--sub2) }\n@font-face { font-family:Feature Display;font-weight:200;font-style:normal;font-display:block;src:url(/assets/fonts/FeatureDisplay-Extralight.woff2) format(\"woff2\") }\n@font-face { font-family:Feature Display;font-weight:400;font-style:normal;font-display:block;src:url(/assets/fonts/FeatureDisplay-Regular.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:400;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Regular.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:300;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Light.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:600;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Semibold.woff2) format(\"woff2\") }\nhtml { width:100%;height:100%;color:var(--color-white);line-height:1.4 }\nbody { position:fixed;width:100%;height:100%;overflow:hidden;margin:0;overscroll-behavior:none;touch-action:none }\n* { box-sizing:border-box }\nsection { position:relative;width:100% }\n#home-hero { padding-bottom:calc(var(--vh) * 100) }\n#home-hero .section__content { height:calc(var(--vh) * 100) }\n#home-hero .title { visibility:hidden }\n.section { position:relative }\n.section__content { position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:var(--site-padding-y) var(--site-padding-x) }\n.kicker { margin-top:calc(var(--site-padding-y) + .7em);position:absolute;top:0;left:50%;transform:translate(-50%) }\n.title-wrapper { width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:1em;justify-content:center;align-items:center }\n.title { text-shadow:0 0 .12em rgba(0,0,0,.3) }\n.subtitle { text-shadow:0 0 1em rgba(0,0,0,.3) }\n@media (max-width: 991.98px) {\n#home-hero .kicker { position:relative;padding-bottom:.5rem }\n}"
+}

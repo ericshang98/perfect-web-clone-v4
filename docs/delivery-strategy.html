@@ -233,6 +233,18 @@
       <div class="kv"><span class="k">纠正方向（3 条框架升级）：</span>①CSS 改为<b>整份保序注入</b>真实主题样式表（保留级联），取代按段并集去重——一次性消掉这一整类「规则丢失」（与 Plan 2「assemble 默认注入全局 cleaned CSS」合并升级）；②extractor 捕获<b>交互态</b>（hover/展开截图 + 被切换的 class/属性，现 hover 态没抓到）；③新增<b>交互门禁</b>：确定性 harness 去 hover 每个 <code>--withAlternateImage</code>、开每个 drawer、推进每个轮播，与交互态截图 SSIM 对比。</div>
       <div class="kv"><span class="k">它是哪条原则的应用：</span>柱 1（门禁化）+ 柱 2（解耦）。交互保真<b>当前无门禁</b> = 柱 1 的盲区，必须补上才不靠人肉；而「按段并集」把 clean/fidelity 压在一份<b>有损重建</b>上，正是柱 2 要避免的「同一产物上打架」的变体。</div>
     </div>
+
+    <div class="decision">
+      <div class="date">2026-06-26 · 段级真值预言机</div>
+      <h3>子 Agent 要「按构造」做到像素级：给每段一双盯着真值的眼睛 + 门禁不过不许收工</h3>
+      <div class="kv"><span class="k">问题：</span>子 Agent（或脚本）<b>盲做</b>——重建完一段从不把自己的渲染和真站这一段的基准图对一眼，凭「HTML+CSS 应该长这样」拼出「看似对、实则偏」的东西，只能等人肉逮（Clyde 图错 / hover 空白 / 卡片翻倍 / Signature Collar 多出一张卡，全是这么漏的）。</div>
+      <div class="kv"><span class="k">设计（三件，按杠杆排序）：</span>
+        <b>① 段级真值预言机</b>（capture 产出，最高杠杆）：每段落盘 <code>ref/{section}.png</code>（真站裁切，每断点 × 关键交互态）+ <code>bounds</code>（洞 A）+ 该子树<b>完整生效的 CSS</b>（洞 C）+ 全部资源含 hover/替换/懒加载图。没有它子 Agent 永远是盲的。
+        <b>② 子 Agent = 段级自愈合同</b>：重建 → 单独渲染本段 → <code>score_fidelity(ref, 我的图)</code> → &lt;τ 读 worst_regions 改自己这一个组件再渲染（封顶 N 次）；还要 hover 每张卡比对交互态。<b>无权宣布完成（柱 5），门禁说了算；修不动按帧报数显式上报（铁律）。</b>每段于是按构造收敛（柱 3）。
+        <b>③ 编排者排查/兜底</b>（我）：各段过门禁后渲染整页、逐带 SSIM；&lt;τ 的带用 <code>bounds</code> 映射回 owning section → <b>只重派那一个</b>子 Agent 带具体 diff；跨段问题（sticky 叠加 / 段间距 / z-index）归我；残留台账记「差多少 + 用了什么兜底」，绝不假装过了。</div>
+      <div class="kv"><span class="k">已落地最小原型（可跑）：</span><code>docs/harness/section_gate.py</code> —— 从真值 raster 与克隆各裁同一段、对齐、喂框架自己的 <code>core.gates.fidelity</code>。<b>实证：</b>对 Signature Collar（section-7）<b>自动</b>打分 <code>0.39 &lt; τ=0.9</code>、worst_regions 指到底部带——正是克隆比真站<b>多出一张产品卡</b>的位置；全程无人肉。并排见 <code>docs/harness/demo_s7_sidebyside.png</code>。</div>
+      <div class="kv"><span class="k">最短路径：</span>先把 <b>①每段 ref + bounds（洞 A）</b> 和 <b>②单段渲染打分 harness</b>（原型已在）搭成流水线默认；剩下的收敛是自动的——「子 Agent 自转 JSX」升级成「子 Agent 对着自己那段的基准图跑自愈循环」。</div>
+    </div>
   </section>
 
   <!-- LAYER 3 -->

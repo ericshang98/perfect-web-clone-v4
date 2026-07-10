@@ -8,20 +8,25 @@ import * as THREE from "three";
 const N = 14;
 const at = (i) => i / (N - 1);
 
+// PHOTO scenes (03,04,05,06,08,09,10,11,12) reproduce the original's real
+// photography in the DOM overlay, so the gold ring is parked far off-camera there
+// (x≈22) and only stages on the STAGE scenes (00 hero, 01 powered-by-AI,
+// 02 so-portable, 13 selector) where it is the required central 3D object.
+const OFF = { pos: [22, 0, 0], scale: 0.6 };
 export const RING_KF = [
   { at: at(0),  rot: [1.20, 0.30, 0.00], pos: [0.20, -0.10, 0.0], scale: 2.40 }, // 00 hero — flat on mat, low 3/4
   { at: at(1),  rot: [0.05, 0.25, 0.00], pos: [1.70, -0.40, 0.4], scale: 2.70 }, // 01 powered by AI — upright, held lower-right
   { at: at(2),  rot: [1.42, 0.00, 0.00], pos: [0.00,  0.00, 0.0], scale: 2.40 }, // 02 so portable — floating dead-centre, top-down
-  { at: at(3),  rot: [0.60, 0.55, 0.30], pos: [2.40, -0.10, 0.3], scale: 1.90 }, // 03 wearable jacket — chest pocket, ~45deg right
-  { at: at(4),  rot: [0.85, -0.45, 0.22], pos: [-2.20, -0.30, 0.0], scale: 1.95 }, // 04 red knit — pocket, 3/4 tilt left
-  { at: at(5),  rot: [1.30, 0.20, 0.00], pos: [-1.20, -0.60, 0.0], scale: 2.30 }, // 05 coffee — flat coaster under cup
-  { at: at(6),  rot: [1.10, 0.65, 0.00], pos: [-1.80,  0.20, 0.0], scale: 2.60 }, // 06 circular — CAD framing, off-left
+  { at: at(3),  rot: [0.60, 0.55, 0.30], ...OFF }, // 03 wearable jacket — real intro.webp photo (ring parked)
+  { at: at(4),  rot: [0.85, -0.45, 0.22], ...OFF }, // 04 red knit — real pocket-1.webp photo (ring parked)
+  { at: at(5),  rot: [1.30, 0.20, 0.00], ...OFF }, // 05 coffee — bright desk scene (ring parked)
+  { at: at(6),  rot: [1.10, 0.65, 0.00], ...OFF }, // 06 circular — red CAD blueprint (ring parked)
   { at: at(7),  rot: [0.30, 1.00, 0.00], pos: [0.00,  0.00, -2.6], scale: 1.20 }, // 07 void — dissolved into darkness
-  { at: at(8),  rot: [0.18, 0.40, 0.00], pos: [0.55, -0.20, 3.2], scale: 5.00 }, // 08 macro edge — pushed up to camera
-  { at: at(9),  rot: [0.42, 0.85, 0.10], pos: [0.00,  0.00, 2.9], scale: 4.60 }, // 09 bark — material macro, warm
-  { at: at(10), rot: [0.90, 0.30, 0.00], pos: [2.40, -0.70, -1.0], scale: 1.20 }, // 10 sustainability — receded, small
-  { at: at(11), rot: [1.45, 0.00, 0.00], pos: [0.00,  0.00, 0.0], scale: 2.20 }, // 11 always — centre panel, face-on
-  { at: at(12), rot: [0.50, -0.60, 0.55], pos: [0.30, -0.70, 0.5], scale: 2.50 }, // 12 drop-tested — mid-impact, dynamic
+  { at: at(8),  rot: [0.18, 0.40, 0.00], ...OFF }, // 08 macro edge — full-bleed grayscale cork (ring parked)
+  { at: at(9),  rot: [0.42, 0.85, 0.10], ...OFF }, // 09 bark — full-bleed warm macro (ring parked)
+  { at: at(10), rot: [0.90, 0.30, 0.00], ...OFF }, // 10 sustainability — cream type scene (ring parked)
+  { at: at(11), rot: [1.45, 0.00, 0.00], ...OFF }, // 11 always — real triptych photos (ring parked)
+  { at: at(12), rot: [0.50, -0.60, 0.55], ...OFF }, // 12 drop-tested — real drop_test photo (ring parked)
   { at: at(13), rot: [0.18, 0.40, 0.00], pos: [0.00,  0.10, 0.2], scale: 2.70 }, // 13 outro — hero product, centre
 ];
 

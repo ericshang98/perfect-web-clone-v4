@@ -1,41 +1,6 @@
-// Section7Section — clean JSX (route-(c) phase 2; theme.css styles real class names)
+// Section7Section — deterministic faithful reconstruction (cleaned HTML + global theme CSS)
+const __html = "<div class=\"site-section\" id=\"site-section-d9cedfa4-3f81-444c-812c-591cf292c7d0\"><section class=\"Section\">\n<div class=\"featured_product_img\" style=\"display: grid;\">\n<div class=\"FeaturedProduct\" style=\"width: 720px; max-width: 100%;\">\n<div class=\"heading\">\n<h2>Signature Collar</h2>\n</div>\n<a class=\"FeaturedProduct__Gallery\" href=\"/products/the-dorro-luxury-collar\"><div class=\"AspectRatio\" style=\"max-width: 1500px; --aspect-ratio: 0.7735946364105208\">\n<img src=\"/assets/images/PAGERIE-PDP-The-Sahara-Collection-The-Dorro-Luxury-Pet-Collar-Saddle-01-FINAL-V2_1200x.317dbc.png\" alt=\"The D\u00f3rro\" class=\"Image--lazyLoad Image--lazyLoaded Image--fadeIn\" data-sizes=\"auto\" data-src=\"/assets/images/PAGERIE-PDP-The-Sahara-Collection-The-Dorro-Luxury-Pet-Collar-Saddle-01-FINAL-V2_1200x.317dbc.png\" data-widths=\"[200,300,400,600,700,800,900,1000]\" style=\"\"/>\n<span class=\"Image__Loader\" style=\"display: none !important;\"></span>\n\n</div>\n</a><div class=\"FeaturedProduct__Info\" style=\"display: grid;\">\n<h5 class=\"product_title\">\n<a href=\"/products/the-dorro-luxury-collar\">The D\u00f3rro</a>\n</h5>\n<div class=\"FeaturedProduct__ViewWrapper\">\n<a class=\"Link Link--underline\" href=\"/products/the-dorro-luxury-collar\">Shop Now</a>\n</div>\n</div></div>\n<div class=\"product_img\" style=\"width: 720px; max-width: 100%;\">\n<img src=\"/assets/images/PAGERIE_Luxury_Dog_accessories_HERO.jpg\"/>\n</div>\n</div></section>\n\n</div>";
+
 export default function Section7Section() {
-  return (
-    <div className="pwc-section pwc-section-7">
-      <div className="site-section" id="site-section-d9cedfa4-3f81-444c-812c-591cf292c7d0">
-        <section className="Section">
-          <div className="featured_product_img" style={{ display: 'grid' }}>
-            <div className="FeaturedProduct" style={{ width: '720px', maxWidth: '100%' }}>
-              <div className="heading">
-                <h2>
-                  Signature Collar
-                </h2>
-              </div>
-              <a className="FeaturedProduct__Gallery" href="/products/the-dorro-luxury-collar">
-                <div className="AspectRatio" style={{ maxWidth: '1500px', '--aspect-ratio': '0.7735946364105208' }}>
-                  <img src="/assets/images/PAGERIE-PDP-The-Sahara-Collection-The-Dorro-Luxury-Pet-Collar-Saddle-01-FINAL-V2_1200x.317dbc.png" alt="The Dórro" className="Image--lazyLoad Image--lazyLoaded Image--fadeIn" data-sizes="auto" data-src="/assets/images/PAGERIE-PDP-The-Sahara-Collection-The-Dorro-Luxury-Pet-Collar-Saddle-01-FINAL-V2_1200x.317dbc.png" data-widths="[200,300,400,600,700,800,900,1000]" />
-                  <span className="Image__Loader" style={{ display: 'none !important' }} />
-                </div>
-              </a>
-              <div className="FeaturedProduct__Info" style={{ display: 'grid' }}>
-                <h5 className="product_title">
-                  <a href="/products/the-dorro-luxury-collar">
-                    The Dórro
-                  </a>
-                </h5>
-                <div className="FeaturedProduct__ViewWrapper">
-                  <a className="Link Link--underline" href="/products/the-dorro-luxury-collar">
-                    Shop Now
-                  </a>
-                </div>
-              </div>
-            </div>
-            <div className="product_img" style={{ width: '720px', maxWidth: '100%' }}>
-              <img src="/assets/images/PAGERIE_Luxury_Dog_accessories_HERO.jpg" />
-            </div>
-          </div>
-        </section>
-      </div>
-    </div>
-  );
+  return <div className="pwc-section pwc-section-7" dangerouslySetInnerHTML={{ __html }} />;
 }

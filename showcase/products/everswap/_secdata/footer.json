@@ -1,0 +1,47 @@
+{
+  "ok": true,
+  "raw_html": "<footer class=\"section\" id=\"home-join\" style=\"pointer-events: none;\"> <div class=\"section__content\" style=\"transform: translateY(-17775px); visibility: hidden; display: none !important;\"> <div class=\"title-wrapper\"> <span class=\"subtitle sub2\" style=\"opacity: 0; filter: blur(0.25em);\">Stay close to the summit</span> <h3 class=\"title\"> <span style=\"opacity: 0; filter: blur(0.25em);\">Climb with</span> <span style=\"opacity: 0; filter: blur(0.25em);\">EverSwap</span> </h3> <div class=\"btn2\" id=\"home-join__buttons\" style=\"opacity: 0; transform: scale(0.5);\"> <a href=\"https://t.me/EverSwap\" role=\"button\" style=\"opacity: 0; transform: translateY(20%);\" target=\"_blank\"> <span>Telegram</span> </a> <a href=\"https://x.com/EverSwapX\" role=\"button\" style=\"opacity: 0; transform: translateY(20%);\" target=\"_blank\"> <span>Twitter (X)</span> </a> </div> </div> </div> </footer>",
+  "name": "footer",
+  "section_type": "footer",
+  "tag": "footer",
+  "classes": [
+    "section"
+  ],
+  "full_html": "<footer class=\"section\" id=\"home-join\" style=\"pointer-events: none;\"> <div class=\"section__content\" style=\"transform: translateY(-17775px); visibility: hidden; display: none !important;\"> <div class=\"title-wrapper\"> <span class=\"subtitle sub2\" style=\"opacity: 0; filter: blur(0.25em);\">Stay close to the summit</span> <h3 class=\"title\"> <span style=\"opacity: 0; filter: blur(0.25em);\">Climb with</span> <span style=\"opacity: 0; filter: blur(0.25em);\">EverSwap</span> </h3> <div class=\"btn2\" id=\"home-join__buttons\" style=\"opacity: 0; transform: scale(0.5);\"> <a href=\"https://t.me/EverSwap\" role=\"button\" style=\"opacity: 0; transform: translateY(20%);\" target=\"_blank\"> <span>Telegram</span> </a> <a href=\"https://x.com/EverSwapX\" role=\"button\" style=\"opacity: 0; transform: translateY(20%);\" target=\"_blank\"> <span>Twitter (X)</span> </a> </div> </div> </div> </footer>",
+  "estimated_tokens": 217,
+  "bounds": {},
+  "headings": [
+    "Climb withEverSwap"
+  ],
+  "images": [],
+  "links": [
+    {
+      "url": "https://t.me/EverSwap",
+      "text": "Telegram",
+      "type": "internal"
+    },
+    {
+      "url": "https://x.com/EverSwapX",
+      "text": "Twitter (X)",
+      "type": "internal"
+    }
+  ],
+  "text": {
+    "headings": [
+      "Climb withEverSwap"
+    ],
+    "paragraphs": []
+  },
+  "styles": {
+    "colors": {
+      "background": [],
+      "text": []
+    }
+  },
+  "namespace": "footer",
+  "component_name": "FooterSection",
+  "order": 6,
+  "base_path": "src/components/sections/footer/",
+  "component_path": "src/components/sections/footer/FooterSection.jsx",
+  "css_rules": ":root { --vh: 1vh; --header-font: \"Feature Display\"; --ref-screen-width: 1440; --site-padding-x: min(60px, calc(40 * 100vw / var(--ref-screen-width))); --site-padding-y: var(--site-padding-x); --color-white: #fbfff4; --color-dark-green: #203727; --color-light-green: #e0ffab; --content-width: calc(100vw - var(--site-padding-x) * 2); --content-unit: calc(var(--content-width) / var(--ref-screen-width)); --h3: max(55px, calc(var(--content-unit) * 80)); --sub2: max(18px, calc(var(--content-unit) * 18)); --btn2: max(16px, calc(var(--content-unit) * 18)); }\nh3 { font-family:var(--header-font);font-weight:200;margin:0;padding:0;line-height:1 }\nh3 { font-size:var(--h3) }\n.sub2 { font-family:var(--header-font);font-weight:400 }\n.sub2 { font-size:var(--sub2) }\n.btn2 { font-family:var(--header-font);font-weight:400;font-size:var(--btn2) }\n@font-face { font-family:Feature Display;font-weight:200;font-style:normal;font-display:block;src:url(/assets/fonts/FeatureDisplay-Extralight.woff2) format(\"woff2\") }\n@font-face { font-family:Feature Display;font-weight:400;font-style:normal;font-display:block;src:url(/assets/fonts/FeatureDisplay-Regular.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:400;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Regular.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:300;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Light.woff2) format(\"woff2\") }\n@font-face { font-family:Britti Sans;font-weight:600;font-style:normal;font-display:block;src:url(/assets/fonts/BrittiSans-Semibold.woff2) format(\"woff2\") }\nhtml { width:100%;height:100%;color:var(--color-white);line-height:1.4 }\nbody { position:fixed;width:100%;height:100%;overflow:hidden;margin:0;overscroll-behavior:none;touch-action:none }\n* { box-sizing:border-box }\n#home-join { padding-bottom:calc(var(--vh) * 0) }\n#home-join .section__content { height:calc(var(--vh) * 100) }\n#home-join .title-wrapper { position:absolute;left:0;top:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;height:40%;text-align:center }\n#home-join .subtitle { letter-spacing:.18px }\n#home-join__buttons { position:relative;margin-top:1em;display:flex;flex-direction:row;align-items:center;gap:1.8em;height:2.5em;line-height:2.6em;padding:0 1.5em;color:var(--color-dark-green);border-radius:2em;overflow:hidden }\n#home-join__buttons span { transition:transform .18s }\n#home-join__buttons a { position:relative;display:block;height:100%;cursor:pointer;color:inherit }\n#home-join__buttons a span { display:inline-block }\n#home-join__buttons a:hover span { transform:scale(1.03) }\n#home-join__buttons:before { --width: 0px;position:absolute;content:\"\";top:0;left:50%;transform:translate(-50%);width:100%;height:100%;background:var(--color-light-green) }\n.section { position:relative }\n.section__content { position:relative;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:var(--site-padding-y) var(--site-padding-x) }\n.title-wrapper { width:100%;display:flex;flex-direction:column;align-items:flex-start;gap:1em;justify-content:center;align-items:center }\n.title { text-shadow:0 0 .12em rgba(0,0,0,.3) }\n.subtitle { text-shadow:0 0 1em rgba(0,0,0,.3) }\n@media (max-width: 991.98px) {\n#home-join .title { text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center }\n}"
+}

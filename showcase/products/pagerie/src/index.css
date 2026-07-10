@@ -1181,9 +1181,13 @@ h2.Footer__Title{font-size:14px;color:#ffffff;text-transform:uppercase;font-fami
    the box height and expects BOTH imgs absolutely filling it (object-fit:cover).
    Without this the in-flow img stacks on top of the padding spacer → 2x-tall cards. */
 .ProductItem__ImageWrapper{position:relative;display:block;}
-/* the --withFallback variant uses its ::before for height; the element's own inline
-   padding-bottom:129% must be zeroed (real theme does this) or the box doubles. */
+/* AspectRatio height must come from ONE source. Some cards get a ::before height
+   (then the inline padding-bottom doubles the box → 2x tall); others have no
+   ::before and rely on the inline padding (zeroing it collapses them to 0 — the
+   granite regression). Fix: make ::before the single height source from
+   --aspect-ratio for ALL withFallback boxes, and zero the element's own padding. */
 .AspectRatio--withFallback{padding-bottom:0!important;}
+.AspectRatio--withFallback::before{content:""!important;display:block!important;padding-bottom:calc(100% / var(--aspect-ratio, 0.774))!important;}
 .ProductItem__ImageWrapper .AspectRatio{position:relative;overflow:hidden;}
 .ProductItem__ImageWrapper .AspectRatio>img,
 .ProductItem .ProductItem__Image{position:absolute!important;top:0;left:0;width:100%!important;height:100%!important;object-fit:cover;}
@@ -1195,6 +1199,10 @@ h2.Footer__Title{font-size:14px;color:#ffffff;text-transform:uppercase;font-fami
 .ProductItem__ImageWrapper--withAlternateImage .ProductItem__Image{transition:opacity .45s ease;}
 .ProductItem__ImageWrapper--withAlternateImage:hover .ProductItem__Image--alternate{opacity:1!important;}
 .ProductItem__ImageWrapper--withAlternateImage:hover .ProductItem__Image:not(.ProductItem__Image--alternate){opacity:0!important;}
+/* Signature Collar (FeaturedProduct): the real site shows only the info text +
+   the custom lifestyle image (.product_img greyhound); the product gallery
+   thumbnail is NOT shown (left panel is empty black). Hide the stray gallery. */
+.pwc-section-7 .FeaturedProduct__Gallery{display:none!important;}
 .Image--lazyLoad{opacity:0;transition:opacity .7s ease;}
 .Image--lazyLoad.is-loaded,.Image--lazyLoaded{opacity:1;}
 /* carousel page dots */
