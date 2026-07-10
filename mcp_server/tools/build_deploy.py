@@ -191,7 +191,16 @@ def _render_app_jsx(template: Dict[str, Any]) -> str:
         if not import_path.endswith((".jsx", ".tsx", ".js", ".ts")):
             import_path = f"{import_path}.jsx"
         import_lines.append(f'import {import_name} from "{import_path}";')
-        render_lines.append(f"      <{import_name} />")
+        # data-pwc-section: the deterministic anchor the fidelity gate uses to
+        # measure this section's bounds on the LIVE clone (getBoundingClientRect)
+        # for score_fidelity_by_section. Assembly-owned; layout-neutral for
+        # top-level page bands.
+        namespace = comp.get("namespace") or import_name
+        render_lines.append(
+            f'      <div data-pwc-section="{namespace}">\n'
+            f"        <{import_name} />\n"
+            f"      </div>"
+        )
 
     return (
         header
