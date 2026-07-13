@@ -94,9 +94,9 @@ Call **`pwc4 extract_page(url, options)`**.
 - If `ok` is false (bad URL, page won't load), report the error and stop. Do not
   guess at page content you never extracted.
 - **Immediately after a successful extraction**, call **`pwc4 generate_manifest(source_id)`**
-  once — this writes the per-site state checklist (`manifest.json`) that the
+  once — this writes the per-site state checklist (`checklist.json`) that the
   verify phase's `verify_manifest` gate will replay on the live clone. Do it here
-  so the manifest is always present before Phase 6 runs.
+  so the checklist is always present before Phase 6 runs.
 
 ---
 

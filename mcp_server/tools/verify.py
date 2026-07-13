@@ -315,16 +315,24 @@ async def score_clone_sections(
 
 
 async def generate_manifest(source_id: str) -> Dict[str, Any]:
-    """Generate the per-site state checklist (manifest.json) — M1: baseline states.
+    """Generate the per-site state checklist (checklist.json) — M1: baseline states.
 
     Reads the captured source's url / viewport / page_height from
     ``sections.json`` (url) and ``summary.json`` (viewport + page_height), seeds
     one state per scroll offset (aligned with the multi-state reference rasters),
-    and writes ``manifest.json`` into the source dir.
+    and writes ``checklist.json`` into the source dir.
+
+    NOTE: the checklist is written to ``checklist.json``, NOT ``manifest.json``.
+    ``manifest.json`` is the extraction metadata file owned by the extractor
+    (SourceStore) and must never be overwritten by this tool.
+
+    After building states, calls :func:`core.refs.materialize_refs` to write
+    any missing reference rasters so that ``verify_manifest`` can compare
+    against them.
 
     THE IRON RULE: no LLM here — pure filesystem reads + deterministic seeding.
 
-    Returns ``{"ok", "source_id", "states", "manifest"}`` on success, or
+    Returns ``{"ok", "source_id", "states", "checklist", "refs"}`` on success, or
     ``{"ok": False, "error"}`` on a setup failure.
     """
     if not isinstance(source_id, str) or not source_id.strip():
@@ -332,6 +340,7 @@ async def generate_manifest(source_id: str) -> Dict[str, Any]:
     source_id = source_id.strip()
 
     from core import manifest as mf
+    from core.refs import materialize_refs
 
     store = SourceStore(source_id)
     sj = store.dir / "sections.json"
@@ -369,12 +378,22 @@ async def generate_manifest(source_id: str) -> Dict[str, Any]:
     m = mf.new_manifest(meta.get("source_url", ""), [vw])
     for st in mf.baseline_states(page_h, (vw, vh), vw):
         mf.add_state(m, st)
-    mf.save_manifest(m, store.dir / "manifest.json")
+    checklist_path = store.dir / "checklist.json"
+    mf.save_manifest(m, checklist_path)
+
+    # Materialize reference rasters from captured screenshots (idempotent)
+    try:
+        refs_summary = materialize_refs(store.dir, page_h, (vw, vh), vw)
+    except Exception as exc:  # noqa: BLE001
+        refs_summary = {"written": [], "skipped": [], "missing": [], "source": "none",
+                        "error": str(exc)}
+
     return {
         "ok": True,
         "source_id": source_id,
         "states": len(m["states"]),
-        "manifest": str(store.dir / "manifest.json"),
+        "checklist": str(checklist_path),
+        "refs": refs_summary,
     }
 
 
@@ -404,16 +423,16 @@ async def verify_manifest(source_id: str, url: str) -> Dict[str, Any]:
     from core.manifest_report import render_report
 
     store = SourceStore(source_id)
-    mpath = store.dir / "manifest.json"
+    mpath = store.dir / "checklist.json"
     if not mpath.is_file():
         return _err(
-            f"no manifest for {source_id!r}; run generate_manifest first.",
+            f"no checklist for {source_id!r}; run generate_manifest first.",
             source_id=source_id,
         )
     try:
         m = mf.load_manifest(mpath)
     except Exception as exc:  # noqa: BLE001
-        return _err(f"could not read manifest.json: {exc}", source_id=source_id)
+        return _err(f"could not read checklist.json: {exc}", source_id=source_id)
 
     out_dir = store.dir / "manifest_out"
 
