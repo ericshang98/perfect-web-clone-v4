@@ -1087,3 +1087,69 @@ git commit -m "docs(plan): M1 smoke log on real clone"
   not assume.
 - **Type consistency:** trigger dicts `{kind,...}` identical across Tasks 1/3/5;
   gate row shape `{id,status,ssim?,sbs?,reason?}` identical across Tasks 5/6/7.
+
+---
+
+## Smoke log
+
+**Date:** 2026-07-13
+**source_id:** `www.pagerie.com-1782476473-9b6f51`
+**Clone URL:** `http://localhost:5199` (pagerie-v4 Vite dist, served via `python3 -m http.server 5199`)
+**Source location:** `core/extractor/_sources/www.pagerie.com-1782476473-9b6f51/`
+**Page:** https://www.pagerie.com — viewport 1440×900, page_height 8168px
+
+### generate_manifest output
+
+```json
+{
+  "ok": true,
+  "source_id": "www.pagerie.com-1782476473-9b6f51",
+  "states": 5,
+  "manifest": ".../_sources/www.pagerie.com-1782476473-9b6f51/manifest.json"
+}
+```
+
+5 baseline states seeded from scroll positions [0, 1817, 3634, 5451, 7268].
+
+### verify_manifest summary
+
+```json
+{
+  "total": 5,
+  "pass": 0,
+  "fail": 0,
+  "waived": 0,
+  "pending": 5,
+  "ok": false
+}
+```
+
+### Per-state table
+
+| state id | status | ssim | reason |
+|---|---|---|---|
+| s_1440_scroll_0 | pending | — | missing ref `.../refs/1440/s_1440_scroll_0.png` |
+| s_1440_scroll_1817 | pending | — | missing ref `.../refs/1440/s_1440_scroll_1817.png` |
+| s_1440_scroll_3634 | pending | — | missing ref `.../refs/1440/s_1440_scroll_3634.png` |
+| s_1440_scroll_5451 | pending | — | missing ref `.../refs/1440/s_1440_scroll_5451.png` |
+| s_1440_scroll_7268 | pending | — | missing ref `.../refs/1440/s_1440_scroll_7268.png` |
+
+### What did work
+
+- `generate_manifest` ran cleanly: valid `manifest.json` written with schema=1, url, 5 baseline states.
+- `verify_manifest` ran cleanly: Playwright navigated all 5 states on the live clone (viewport rasters written to `manifest_out/` — 5 PNGs, sizes 13KB–901KB confirming content was captured, not blank).
+- `report.html` was rendered with one row per state.
+- The gate correctly blocked on missing refs rather than silently passing or crashing.
+
+### Gaps found
+
+- **Missing `refs/` directory — root cause of all pending states.** `baseline_states` generates ref paths at `refs/<breakpoint>/<state_id>.png` relative to the source dir, but extraction (`extract_page`) never writes scroll-position viewport crops there. Only `screenshots/primary_full.png` and `screenshots/primary.png` exist. The `refs/1440/` directory does not exist in any captured source.
+- **No extraction step creates `refs/`.** The multi-state raster capture (per `core/scroll_capture`) exists in the codebase but is not wired into `extract_page`. Until extraction writes per-scroll-position viewport rasters at `refs/<breakpoint>/s_<bp>_scroll_<y>.png`, the manifest gate will always return all-pending.
+- **SSIM could not be exercised.** Because no refs exist, the compare/score/sbs path in `manifest_gate.verify_manifest` was never reached. Anti-Goodhart eyeball not possible: cannot tell whether SSIM would rank a faithful clone above a broken one.
+- **`generate_manifest` reads `page_height` from `summary.json` (correct).** The plan's Task 7 step 3 note flagged uncertainty about whether `sections.json` carries these fields — confirmed: it does NOT. The implementation in `verify.py` correctly falls back to `summary.json`.
+- **`manifest.json` collides with extraction's existing `manifest.json`.** Both the old extraction manifest (keys: `success`, `source_id`, `metadata`, etc.) and the new checklist manifest (keys: `schema`, `url`, `breakpoints`, `states`) write to the same `manifest.json` path. The new `generate_manifest` overwrites the old file silently. Recommend renaming to `checklist.json`.
+- **Clone SSIM quality unknown** — the pagerie-v4 dist is a built Vite/React clone that loads via JS. No SSIM was measured. Anti-Goodhart confidence: zero this run.
+
+### Next action required
+
+Wire `refs/` creation into `extract_page` (or a new `capture_refs` step): at extraction time, scroll to each position from `scroll_capture_positions(page_height, vh, n=5)` and save a viewport screenshot at `refs/<viewport_width>/<state_id>.png`. Until then the manifest gate is structurally inert.
