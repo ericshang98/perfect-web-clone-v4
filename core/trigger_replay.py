@@ -34,13 +34,9 @@ def replay_triggers(page: Any, triggers: List[Dict[str, Any]]) -> None:
         elif kind == "hover":
             page.hover(step["target"], timeout=_ACTION_TIMEOUT_MS)
         elif kind == "click":
-            # Use JS dispatch to avoid Playwright's auto-scroll-to-element
-            # behaviour, which would clobber a prior scroll trigger's position.
-            sel = step["target"].replace("'", "\\'")
-            page.evaluate(
-                f"document.querySelector('{sel}')"
-                ".dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}))"
-            )
+            # dispatch_event: fires click without Playwright's auto-scroll,
+            # preserving the scroll position set by prior triggers.
+            page.dispatch_event(step["target"], "click", timeout=_ACTION_TIMEOUT_MS)
         elif kind == "wait":
             page.wait_for_timeout(int(step["ms"]))
         elif kind == "viewport":
