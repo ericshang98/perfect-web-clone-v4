@@ -151,8 +151,13 @@ def test_bottom_clamp_overflow(tmp_path):
 # ---------------------------------------------------------------------------
 
 def test_scroll_raster_preferred_over_fullpage(tmp_path):
-    """When screenshots/scroll_{i:02d}.png exists, it must be copied verbatim
-    (no crop); source should include 'scroll_rasters'."""
+    """When screenshots/scroll_{i:02d}.png exists for every position, scroll
+    rasters must be used verbatim (no crop); source should include 'scroll_rasters'.
+
+    Note: the count-guard requires the number of scroll_*.png files to equal
+    len(positions) — a partial set triggers the guard and falls back to fullpage
+    crop.  This test therefore writes a complete, matching set of scroll rasters.
+    """
     src = _make_store(tmp_path)
     positions = scroll_capture_positions(PAGE_HEIGHT, VH, n=5)
 
@@ -160,15 +165,19 @@ def test_scroll_raster_preferred_over_fullpage(tmp_path):
     fallback = _solid(VW, PAGE_HEIGHT, (0, 0, 0))
     fallback.save(src / "screenshots" / "primary_full.png")
 
-    # Write scroll_00.png with a unique colour
+    # Write a complete matching set of scroll rasters (count == len(positions))
+    # scroll_00.png has a unique colour so we can confirm it was used.
     unique_color = (255, 0, 128)
-    scroll_shot = _solid(VW, VH, unique_color)
-    scroll_shot.save(src / "screenshots" / "scroll_00.png")
+    _solid(VW, VH, unique_color).save(src / "screenshots" / "scroll_00.png")
+    filler_color = (200, 200, 200)
+    for idx in range(1, len(positions)):
+        _solid(VW, VH, filler_color).save(src / "screenshots" / f"scroll_{idx:02d}.png")
 
     result = materialize_refs(src, PAGE_HEIGHT, (VW, VH), BP)
     # Source may be "scroll_rasters" (all from scroll shots) or "mixed" (some
     # scroll shots, rest from fullpage crop) — either signals scroll rasters were used.
     assert result["source"] in ("scroll_rasters", "mixed")
+    assert "warning" not in result
 
     # The ref for positions[0] should use the scroll raster
     ref_path = src / state_ref_relpath(BP, positions[0])
@@ -178,15 +187,21 @@ def test_scroll_raster_preferred_over_fullpage(tmp_path):
 
 
 def test_scroll_raster_resizes_if_wrong_size(tmp_path):
-    """If a scroll raster has wrong size, it is resized to (VW, VH)."""
+    """If a scroll raster has wrong size, it is resized to (VW, VH).
+
+    A complete matching set of scroll rasters is written so the count-guard
+    does not trigger.  scroll_00.png is deliberately the wrong size.
+    """
     src = _make_store(tmp_path)
     positions = scroll_capture_positions(PAGE_HEIGHT, VH, n=5)
 
-    # write scroll_00.png at wrong size
-    scroll_shot = _solid(800, 600, (10, 20, 30))
-    scroll_shot.save(src / "screenshots" / "scroll_00.png")
+    # write scroll_00.png at wrong size, plus a full set so the count matches
+    _solid(800, 600, (10, 20, 30)).save(src / "screenshots" / "scroll_00.png")
+    for idx in range(1, len(positions)):
+        _solid(VW, VH, (50, 50, 50)).save(src / "screenshots" / f"scroll_{idx:02d}.png")
 
     result = materialize_refs(src, PAGE_HEIGHT, (VW, VH), BP)
+    assert "warning" not in result
     ref_path = src / state_ref_relpath(BP, positions[0])
     with Image.open(ref_path) as ref:
         assert ref.size == (VW, VH)
@@ -248,3 +263,88 @@ def test_device_scale_2x(tmp_path):
         ref_path = src / state_ref_relpath(BP, y)
         with Image.open(ref_path) as ref:
             assert ref.size == (VW, VH), f"expected ({VW},{VH}) got {ref.size} at y={y}"
+
+
+# ---------------------------------------------------------------------------
+# 8. Scroll-raster count guard
+# ---------------------------------------------------------------------------
+
+def test_count_mismatch_falls_back_to_fullpage_crop_with_warning(tmp_path):
+    """When scroll rasters are present but their count != len(positions), the
+    index mapping is unsafe.  materialize_refs must skip all scroll rasters,
+    fall through to fullpage_crop for every position, and include a 'warning'
+    key explaining the count mismatch."""
+    src = _make_store(tmp_path)
+    positions = scroll_capture_positions(PAGE_HEIGHT, VH, n=5)
+
+    # Write a recognisable full-page fallback
+    fallback_color = (77, 88, 99)
+    fallback = _solid(VW, PAGE_HEIGHT, fallback_color)
+    fallback.save(src / "screenshots" / "primary_full.png")
+
+    # Write fewer scroll rasters than len(positions) — creates a count mismatch.
+    # Use a uniquely different colour so we can detect if it was (wrongly) used.
+    wrong_color = (255, 0, 0)
+    wrong_shot = _solid(VW, VH, wrong_color)
+    # Write only 3 scroll rasters when 5 positions are expected
+    for idx in range(3):
+        wrong_shot.save(src / "screenshots" / f"scroll_{idx:02d}.png")
+
+    result = materialize_refs(src, PAGE_HEIGHT, (VW, VH), BP)
+
+    # Must contain a warning mentioning the count mismatch
+    assert "warning" in result, "expected a 'warning' key when counts mismatch"
+    warning = result["warning"]
+    assert "3" in warning, f"warning should mention count 3: {warning!r}"
+    assert str(len(positions)) in warning, (
+        f"warning should mention expected count {len(positions)}: {warning!r}"
+    )
+
+    # All positions must be written (from fullpage crop, not scroll rasters)
+    assert set(result["written"]) == {state_ref_relpath(BP, y) for y in positions}
+    assert result["missing"] == []
+
+    # Verify none of the refs used the (wrong) scroll-raster colour
+    for y in positions:
+        ref_path = src / state_ref_relpath(BP, y)
+        with Image.open(ref_path) as ref:
+            px = ref.getpixel((VW // 2, VH // 2))
+            assert px == fallback_color, (
+                f"ref at y={y} used wrong colour {px!r}; expected fullpage crop colour"
+            )
+
+
+def test_count_match_uses_scroll_rasters_no_warning(tmp_path):
+    """When scroll raster count matches len(positions), the index mapping is
+    safe: scroll rasters are used and no 'warning' key is present."""
+    src = _make_store(tmp_path)
+    positions = scroll_capture_positions(PAGE_HEIGHT, VH, n=5)
+
+    # Full-page fallback with a distinct colour (should NOT be used)
+    fallback = _solid(VW, PAGE_HEIGHT, (0, 0, 0))
+    fallback.save(src / "screenshots" / "primary_full.png")
+
+    # Write exactly len(positions) scroll rasters, each with a unique colour
+    scroll_colors = [(i * 40 + 10, i * 20 + 50, 255 - i * 30) for i in range(len(positions))]
+    for idx, color in enumerate(scroll_colors):
+        shot = _solid(VW, VH, color)
+        shot.save(src / "screenshots" / f"scroll_{idx:02d}.png")
+
+    result = materialize_refs(src, PAGE_HEIGHT, (VW, VH), BP)
+
+    # No warning should be present
+    assert "warning" not in result, f"unexpected warning: {result.get('warning')!r}"
+
+    # Source must indicate scroll rasters were used
+    assert result["source"] in ("scroll_rasters", "mixed")
+
+    # Each ref should carry the colour from the matching scroll raster
+    for i, y in enumerate(positions):
+        ref_path = src / state_ref_relpath(BP, y)
+        assert ref_path.is_file(), f"ref missing for y={y}"
+        with Image.open(ref_path) as ref:
+            px = ref.getpixel((VW // 2, VH // 2))
+            assert px == scroll_colors[i], (
+                f"ref at position {i} (y={y}) has colour {px!r}; "
+                f"expected scroll raster colour {scroll_colors[i]!r}"
+            )

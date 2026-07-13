@@ -65,6 +65,18 @@ def materialize_refs(
         "scroll_rasters" | "fullpage_crop" | "mixed" | "none"}``
         where each list contains project-relative ref paths (relative to
         ``source_dir``).
+
+        If stale scroll rasters are detected (files present but their count
+        does not match the number of positions produced by
+        :func:`~core.scroll_capture.scroll_capture_positions` for the given
+        ``page_height`` / ``viewport`` / ``n=5``), the index mapping
+        ``scroll_{i:02d}.png`` → ``positions[i]`` is **not safe** — the
+        rasters may have been captured at a different ``n`` or a different
+        ``page_height``.  In that case the scroll-raster branch is skipped
+        entirely (every position falls through to fullpage crop or missing)
+        and a ``"warning"`` key is added to the returned dict explaining the
+        mismatch, e.g.:
+        ``"scroll raster count 3 != 5 positions; index mapping unsafe, used fullpage crop"``.
     """
     source_dir = Path(source_dir)
     vw, vh = viewport
@@ -75,6 +87,22 @@ def materialize_refs(
     skipped: List[str] = []
     missing: List[str] = []
     sources_used: set[str] = set()
+    warning: str | None = None
+
+    # Guard: count available scroll_*.png files.  The index mapping
+    # scroll_{i:02d}.png → positions[i] is only valid when the raster count
+    # equals len(positions) (same n=5 and same page_height as the current
+    # call).  A mismatch means the rasters were captured at a different
+    # configuration; using them would silently assign wrong pixels to wrong
+    # scroll positions.  Disable the scroll-raster branch in that case.
+    screenshots_dir = source_dir / "screenshots"
+    scroll_raster_count = len(list(screenshots_dir.glob("scroll_*.png")))
+    use_scroll_rasters = scroll_raster_count == len(positions)
+    if scroll_raster_count > 0 and not use_scroll_rasters:
+        warning = (
+            f"scroll raster count {scroll_raster_count} != {len(positions)} positions; "
+            "index mapping unsafe, used fullpage crop"
+        )
 
     # Pre-load the full-page raster lazily (open once, keep handle)
     fullpage_path = source_dir / "screenshots" / "primary_full.png"
@@ -91,9 +119,9 @@ def materialize_refs(
 
         target.parent.mkdir(parents=True, exist_ok=True)
 
-        # 2. Prefer scroll raster
+        # 2. Prefer scroll raster (only when count matches — see guard above)
         scroll_path = source_dir / "screenshots" / f"scroll_{i:02d}.png"
-        if scroll_path.is_file():
+        if use_scroll_rasters and scroll_path.is_file():
             try:
                 with Image.open(scroll_path) as shot:
                     if shot.size != (vw, vh):
@@ -144,9 +172,12 @@ def materialize_refs(
     else:
         source_label = "none"
 
-    return {
+    result: Dict[str, List[str] | str] = {
         "written": written,
         "skipped": skipped,
         "missing": missing,
         "source": source_label,
     }
+    if warning is not None:
+        result["warning"] = warning
+    return result

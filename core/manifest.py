@@ -111,11 +111,15 @@ def load_manifest(path: str | Path) -> Dict[str, Any]:
 
 
 def baseline_states(page_height: float, viewport: tuple[int, int],
-                    breakpoint: int, ref_dir: str = "refs") -> List[Dict[str, Any]]:
+                    breakpoint: int) -> List[Dict[str, Any]]:
     """M1 checklist seed: one state per scroll offset (no probes yet).
 
     Reuses :func:`core.scroll_capture.scroll_capture_positions` so the checklist
     aligns 1:1 with the multi-state reference rasters extraction already takes.
+
+    Reference paths are always produced by :func:`state_ref_relpath` (which
+    hardcodes ``refs/`` as the namespace prefix).  There is no ``ref_dir``
+    parameter — callers cannot change the prefix here.
     """
     from core.scroll_capture import scroll_capture_positions
 
