@@ -41,7 +41,14 @@ def _side_by_side(ref_png: str, cand_png: str, out_png: Path) -> None:
 def verify_manifest(manifest: Dict[str, Any], clone_url: Optional[str],
                     base_dir: str | Path, out_dir: str | Path,
                     dry_run: bool = False) -> Dict[str, Any]:
-    """Returns {states: [{id, status, ssim, ref, shot, sbs}], summary: {...}}."""
+    """Returns {states: [{id, status, ssim, ref, shot, sbs}], summary: {...}}.
+
+    Side-effects on *manifest*:
+      - The manifest is mutated in-place: each state's ``status`` field is
+        written back via ``update_status`` as soon as it is resolved.
+      - Residual-channel states are written back as ``"waived"`` even when
+        ``dry_run=True``; they are never sent to the browser regardless.
+    """
     base, out = Path(base_dir), Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
     rows: List[Dict[str, Any]] = []
@@ -65,10 +72,11 @@ def verify_manifest(manifest: Dict[str, Any], clone_url: Optional[str],
             bounds = (s.get("expect") or {}).get("bounds") or {}
             vw = int(bounds.get("width") or s["breakpoint"])
             vh = int(bounds.get("height") or 900)
-            page = browser.new_page(viewport={"width": vw, "height": vh},
-                                    device_scale_factor=1)
             row: Dict[str, Any] = {"id": s["id"]}
+            page = None
             try:
+                page = browser.new_page(viewport={"width": vw, "height": vh},
+                                        device_scale_factor=1)
                 page.goto(clone_url, wait_until="networkidle", timeout=60_000)
                 replay_triggers(page, s["trigger"])
                 page.wait_for_timeout(_SETTLE_MS)
@@ -87,7 +95,8 @@ def verify_manifest(manifest: Dict[str, Any], clone_url: Optional[str],
             except Exception as exc:  # noqa: BLE001 — a state must never kill the run
                 row.update(status="fail", reason=f"replay error: {exc}")
             finally:
-                page.close()
+                if page is not None:
+                    page.close()
             if row["status"] in ("pass", "fail", "waived"):
                 update_status(manifest, s["id"], row["status"])
             rows.append(row)

@@ -4,9 +4,14 @@ The anti-Goodhart requirement (learned from the pagerie full-page-SSIM failure):
 the metric must RANK candidates correctly — identical beats shifted, shifted
 beats blank.
 """
+import os
+
+import pytest
 from PIL import Image
 
 from core.gates.fidelity import ssim_images
+from core.gates.manifest_gate import reconcile, verify_manifest
+from core.manifest import add_state, new_manifest
 
 
 def _png(tmp_path, name, color, size=(200, 120)):
@@ -21,14 +26,6 @@ def test_ssim_images_ranks_identical_above_different(tmp_path):
     diff = _png(tmp_path, "diff.png", (30, 30, 200))
     assert ssim_images(a, same) > ssim_images(a, diff)
     assert ssim_images(a, same) > 0.95
-
-
-import os
-
-import pytest
-
-from core.gates.manifest_gate import reconcile, verify_manifest
-from core.manifest import add_state, new_manifest
 
 
 def _mk_manifest(tmp_path, ref_color=(200, 30, 30)):
