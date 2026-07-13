@@ -327,6 +327,10 @@ async def generate_manifest(source_id: str) -> Dict[str, Any]:
     Returns ``{"ok", "source_id", "states", "manifest"}`` on success, or
     ``{"ok": False, "error"}`` on a setup failure.
     """
+    if not isinstance(source_id, str) or not source_id.strip():
+        return _err("source_id is required and must be a non-empty string.")
+    source_id = source_id.strip()
+
     from core import manifest as mf
 
     store = SourceStore(source_id)
@@ -387,6 +391,14 @@ async def verify_manifest(source_id: str, url: str) -> Dict[str, Any]:
 
     THE IRON RULE: no LLM here — replay + raster + SSIM + bookkeeping only.
     """
+    if not isinstance(source_id, str) or not source_id.strip():
+        return _err("source_id is required and must be a non-empty string.")
+    source_id = source_id.strip()
+    if not url:
+        return _err(
+            "no url to verify: pass url explicitly or run start_preview first."
+        )
+
     from core.gates import manifest_gate
     from core import manifest as mf
     from core.manifest_report import render_report

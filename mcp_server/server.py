@@ -18,7 +18,7 @@ deploy. ALL reasoning — writing React code, judging whether the clone looks li
 the original, deciding what to fix — happens in Claude Code, the brain. This
 server is only the wiring that exposes the hands and eyes.
 
-Registered tools (24 total)
+Registered tools (29 total)
 ---------------------------
 Extraction / chunking (``tools.extraction``):
     * ``extract_page``        — Playwright render a URL → ``source_id`` + summary.
