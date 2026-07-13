@@ -27,6 +27,21 @@ _TRIGGER_REQUIRED = {
 }
 
 
+def state_ref_relpath(breakpoint: int, y: int) -> str:
+    """Canonical relative path for a scroll-state reference raster.
+
+    This is the single naming authority — ``core.refs.materialize_refs`` writes
+    to this path; ``baseline_states`` builds its ``expect.ref`` from this
+    function so the two modules can never drift.
+
+    Example::
+
+        state_ref_relpath(1440, 0)   → "refs/1440/s_1440_scroll_0.png"
+        state_ref_relpath(375, 1234) → "refs/375/s_375_scroll_1234.png"
+    """
+    return f"refs/{breakpoint}/s_{breakpoint}_scroll_{y}.png"
+
+
 def new_manifest(url: str, breakpoints: List[int]) -> Dict[str, Any]:
     """Return a fresh, empty manifest dict for the given URL and breakpoints."""
     return {"schema": SCHEMA_VERSION, "url": url,
@@ -111,7 +126,7 @@ def baseline_states(page_height: float, viewport: tuple[int, int],
         states.append({
             "id": sid, "section": None, "breakpoint": breakpoint,
             "trigger": [{"kind": "scroll", "y": y}],
-            "expect": {"ref": f"{ref_dir}/{breakpoint}/{sid}.png", "ssim": 0.97,
+            "expect": {"ref": state_ref_relpath(breakpoint, y), "ssim": 0.97,
                        "bounds": {"x": 0, "y": y, "width": vw, "height": vh}},
             "channel": "baseline", "evidence": None,
             "stability": "stable", "status": "pending",
