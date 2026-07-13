@@ -34,7 +34,7 @@ from playwright.async_api import (
 from . import dom_scripts as js
 from . import robustness
 from ..png_dims import png_css_height_b64
-from .. import scroll_capture, site_classifier
+from .. import scroll_capture
 from .models import (
     AssetInfo,
     CSSAnimation,
@@ -248,15 +248,20 @@ class ExtractorService:
                     except Exception as e:  # noqa: BLE001 — advisory metric, never fatal.
                         logger.warning("page_height reconcile failed: %s", e)
 
-                # Multi-state rasters for runtime-visual sites: a scroll-choreographed
+                # Multi-state rasters for EVERY tall site: a scroll-choreographed
                 # or canvas/WebGL page reveals content across the scroll, so the single
-                # full-page raster is mostly blank. Capture the viewport at evenly-spaced
-                # scroll positions so per-state rasters actually show revealed content.
+                # full-page raster is mostly blank — but ordinary pages also need these,
+                # because they are the preferred source for the state-checklist reference
+                # images (core.refs.materialize_refs). Capture the viewport at
+                # evenly-spaced scroll positions so per-state rasters show revealed
+                # content. Best-effort: ~5 extra viewport screenshots for static sites.
                 scroll_state_b64s: List[str] = []
                 try:
-                    cls = site_classifier.classify_site(raw_html or "", {})
-                    tall = (metadata.page_height or 0) > 2 * (metadata.viewport_height or 1)
-                    if opts.full_page_screenshot and tall and not cls["can_clone_well"]:
+                    if self._should_capture_scroll_states(
+                        opts.full_page_screenshot,
+                        metadata.page_height,
+                        metadata.viewport_height,
+                    ):
                         scroll_state_b64s = await self._capture_scroll_states(
                             page, metadata.page_height, metadata.viewport_height
                         )
@@ -587,6 +592,27 @@ class ExtractorService:
     async def _screenshot(self, page: Page) -> str:
         data = await page.screenshot(type="png", full_page=True)
         return base64.b64encode(data).decode("utf-8")
+
+    @staticmethod
+    def _should_capture_scroll_states(
+        full_page_screenshot: bool,
+        page_height: Optional[float],
+        viewport_height: Optional[float],
+    ) -> bool:
+        """Decide whether to capture multi-state scroll rasters.
+
+        Runs for EVERY site (not just runtime-visual ones): these rasters are the
+        preferred source for the state-checklist reference images. Two structural
+        preconditions remain:
+
+          * ``full_page_screenshot`` — the reconciled full-page height we scroll
+            against comes from that pass; without it there is nothing to scroll.
+          * the page must be genuinely tall (> 2x the viewport) — a short page has
+            no content to reveal across the scroll.
+        """
+        if not full_page_screenshot:
+            return False
+        return (page_height or 0) > 2 * (viewport_height or 1)
 
     async def _capture_scroll_states(
         self, page: Page, page_height: float, viewport_height: float, n: int = 5
