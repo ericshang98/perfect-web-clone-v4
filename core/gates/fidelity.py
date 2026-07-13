@@ -142,6 +142,11 @@ def _ssim_images(a: Image.Image, b: Image.Image) -> float:
     return min(1.0, max(0.0, s))
 
 
+def ssim_images(a_png: str, b_png: str) -> float:
+    """Public file-path SSIM on the shared canvas (0..1) for other gates."""
+    return _ssim_images(Image.open(a_png), Image.open(b_png))
+
+
 def _has_bounds(b: dict | None) -> bool:
     return isinstance(b, dict) and (b.get("width") or b.get("height"))
 
