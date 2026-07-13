@@ -46,6 +46,11 @@ Fidelity gates (``tools.verify``):
       REAL links (no fabricated ``#`` / ``javascript:`` placeholders).
     * ``verify_assets``       — deterministic check that each section uses the
       DOWNLOADED local assets instead of hotlinking the live origin.
+    * ``capture_clone_sections`` — full-page raster of the LIVE clone + bounds
+      of every ``data-pwc-section`` anchor (the candidate half of R4).
+    * ``score_clone_sections``   — one-shot R4: capture the live clone, pair
+      plan/clone bounds by name, per-section SSIM, worst-first — drives the
+      self-heal loop.
 
 v4 pipeline (``tools.pipeline``):
     * ``build_ir``            — DOM + computed styles → normalized semantic IR.
@@ -127,7 +132,12 @@ def register_tools(server: FastMCP) -> list[str]:
         registered.append(fn.__name__)
 
     # 4) Fidelity gates — deterministic verification of the generated clone.
-    for fn in (verify.verify_links, verify.verify_assets):
+    for fn in (
+        verify.verify_links,
+        verify.verify_assets,
+        verify.capture_clone_sections,
+        verify.score_clone_sections,
+    ):
         server.tool()(fn)
         registered.append(fn.__name__)
 
