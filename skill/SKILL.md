@@ -93,6 +93,10 @@ Call **`pwc4 extract_page(url, options)`**.
   as a capture gap here. (Hardening tracked as Plan 1 in the strategy doc.)
 - If `ok` is false (bad URL, page won't load), report the error and stop. Do not
   guess at page content you never extracted.
+- **Immediately after a successful extraction**, call **`pwc4 generate_manifest(source_id)`**
+  once — this writes the per-site state checklist (`manifest.json`) that the
+  verify phase's `verify_manifest` gate will replay on the live clone. Do it here
+  so the manifest is always present before Phase 6 runs.
 
 ---
 
@@ -228,6 +232,17 @@ Run the gates. **While any gate is red and budget remains:**
 4. **Rebuild** (Phase 5) just what changed.
 5. **Re-gate** (re-run all three). Loop.
 
+### Gate-driven self-heal loop (run until green or 5 iterations)
+
+1. `generate_manifest(source_id)` — once, right after extraction (Phase 1 above).
+2. After every build: `score_clone_sections(source_id, url)` (static per-section R4)
+   AND `verify_manifest(source_id, url)` (state checklist).
+3. If any section/state fails: pick the WORST item (lowest SSIM), open its
+   side-by-side evidence (`manifest_out/<id>_sbs.png`), repair ONLY that
+   section/interaction, rebuild, re-run step 2.
+4. Stop at all-green or after 5 iterations; report `report.html` + remaining
+   fails/waived items explicitly — never claim done while items are red.
+
 ### Exit / stop criteria (no infinite loops)
 
 - **Exit (success):** `check_fingerprints.ok` ∧ `check_weight.ok` ∧
@@ -265,7 +280,7 @@ Run the gates. **While any gate is red and budget remains:**
 | 3 Assemble shell | `assemble_project(source_id)` |
 | 4 Per-section | `get_section_data(source_id, section_id)`, `sandbox_write_file(path, content)` |
 | 5 Build | `assemble_project(source_id)`, `build_project()`, `get_build_errors()`, `diagnose()` |
-| 6 Verify (gates) | `check_fingerprints(dist_dir)`, `check_weight(dist_dir, budget_kb)`, `score_fidelity(ref_png, cand_png, threshold)`, `compare_to_baseline(ref_png, new_png, baseline_png)`, `preview_screenshot(...)` |
+| 6 Verify (gates) | `check_fingerprints(dist_dir)`, `check_weight(dist_dir, budget_kb)`, `score_fidelity(ref_png, cand_png, threshold)`, `compare_to_baseline(ref_png, new_png, baseline_png)`, `score_clone_sections(source_id, url)`, `verify_manifest(source_id, url)`, `preview_screenshot(...)` |
 | 7 Deliver | (default: `dist/`) — optional deploy |
 | — Experimental (OFF default path) | `build_ir`, `run_recognizers`, `generate_code` |
 
