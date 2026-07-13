@@ -30,13 +30,13 @@ def render_report(manifest: Dict[str, Any], rows: List[Dict[str, Any]],
         "<tr><th>state</th><th>status</th><th>ssim</th><th>evidence</th></tr>",
     ]
     for r in rows:
-        color = _BADGE.get(r["status"], "#6b7280")
+        color = _BADGE.get(r.get("status"), "#6b7280")
         ssim = f"{r['ssim']:.3f}".rstrip("0").rstrip(".") if r.get("ssim") is not None else "—"
         ev = (f"<img src=\"{escape(r['sbs'])}\" style='max-width:640px'>"
               if r.get("sbs") else escape(r.get("reason", "")))
         parts.append(
-            f"<tr><td><code>{escape(r['id'])}</code></td>"
-            f"<td style='color:{color};font-weight:600'>{r['status']}</td>"
+            f"<tr><td><code>{escape(str(r.get('id', '')))}</code></td>"
+            f"<td style='color:{color};font-weight:600'>{escape(str(r.get('status', '')))}</td>"
             f"<td>{ssim}</td><td>{ev}</td></tr>")
     parts.append("</table></body>")
     Path(out_html).write_text("\n".join(parts), encoding="utf-8")

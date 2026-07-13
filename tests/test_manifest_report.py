@@ -29,3 +29,14 @@ def test_report_verdict_reflects_ok_flag(tmp_path):
     render_report({"url": "u", "states": []}, ROWS,
                   {**SUMMARY, "fail": 0, "pending": 0, "ok": True}, out)
     assert "CHECKLIST GREEN" in out.read_text(encoding="utf-8")
+
+
+def test_report_escapes_untrusted_row_fields(tmp_path):
+    out = tmp_path / "esc.html"
+    rows = [{"id": "s_<b>", "status": "<script>x</script>", "reason": "a & b"}]
+    render_report({"url": "u"}, rows,
+                  {"total": 1, "pass": 0, "fail": 0, "waived": 0, "pending": 1,
+                   "ok": False}, out)
+    html = out.read_text(encoding="utf-8")
+    assert "<script>" not in html
+    assert "&lt;script&gt;" in html and "s_&lt;b&gt;" in html
