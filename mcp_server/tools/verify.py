@@ -314,9 +314,121 @@ async def score_clone_sections(
     return result
 
 
+async def generate_manifest(source_id: str) -> Dict[str, Any]:
+    """Generate the per-site state checklist (manifest.json) — M1: baseline states.
+
+    Reads the captured source's url / viewport / page_height from
+    ``sections.json`` (url) and ``summary.json`` (viewport + page_height), seeds
+    one state per scroll offset (aligned with the multi-state reference rasters),
+    and writes ``manifest.json`` into the source dir.
+
+    THE IRON RULE: no LLM here — pure filesystem reads + deterministic seeding.
+
+    Returns ``{"ok", "source_id", "states", "manifest"}`` on success, or
+    ``{"ok": False, "error"}`` on a setup failure.
+    """
+    from core import manifest as mf
+
+    store = SourceStore(source_id)
+    sj = store.dir / "sections.json"
+    if not sj.is_file():
+        return _err(
+            f"no captured source {source_id!r}; run extract_page first.",
+            source_id=source_id,
+        )
+    try:
+        meta = json.loads(sj.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        return _err(f"could not read sections.json: {exc}", source_id=source_id)
+
+    # viewport + page_height live in summary.json, not sections.json
+    vw, vh = 1440, 900
+    page_h: float = 0.0
+    summary_path = store.dir / "summary.json"
+    if summary_path.is_file():
+        try:
+            summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            vp = summary.get("viewport") or {}
+            vw = int(vp.get("width", 1440))
+            vh = int(vp.get("height", 900))
+            page_h = float(summary.get("page_height") or 0)
+        except Exception:  # noqa: BLE001
+            pass
+
+    if page_h <= 0:
+        return _err(
+            "source has no page_height in summary.json; "
+            "re-extract with current harness.",
+            source_id=source_id,
+        )
+
+    m = mf.new_manifest(meta.get("source_url", ""), [vw])
+    for st in mf.baseline_states(page_h, (vw, vh), vw):
+        mf.add_state(m, st)
+    mf.save_manifest(m, store.dir / "manifest.json")
+    return {
+        "ok": True,
+        "source_id": source_id,
+        "states": len(m["states"]),
+        "manifest": str(store.dir / "manifest.json"),
+    }
+
+
+async def verify_manifest(source_id: str, url: str) -> Dict[str, Any]:
+    """Replay the checklist on the live clone and reconcile it (spec §6).
+
+    Requires ``generate_manifest`` to have run first (manifest.json must exist).
+    Drives the Playwright trigger-replay loop in a worker thread (sync Playwright
+    path — same pattern as ``capture_clone_sections``), then writes statuses back
+    into manifest.json and renders report.html beside it.
+
+    Returns ``{"ok", "source_id", "states", "summary", "report"}`` on success,
+    or ``{"ok": False, "error"}`` on a setup failure.
+
+    THE IRON RULE: no LLM here — replay + raster + SSIM + bookkeeping only.
+    """
+    from core.gates import manifest_gate
+    from core import manifest as mf
+    from core.manifest_report import render_report
+
+    store = SourceStore(source_id)
+    mpath = store.dir / "manifest.json"
+    if not mpath.is_file():
+        return _err(
+            f"no manifest for {source_id!r}; run generate_manifest first.",
+            source_id=source_id,
+        )
+    try:
+        m = mf.load_manifest(mpath)
+    except Exception as exc:  # noqa: BLE001
+        return _err(f"could not read manifest.json: {exc}", source_id=source_id)
+
+    out_dir = store.dir / "manifest_out"
+
+    def _run():
+        return manifest_gate.verify_manifest(m, url, store.dir, out_dir)
+
+    try:
+        result = await anyio.to_thread.run_sync(_run)
+    except Exception as exc:  # noqa: BLE001
+        return _err(f"verify_manifest failed: {exc}", source_id=source_id)
+
+    mf.save_manifest(m, mpath)
+    report_path = store.dir / "report.html"
+    render_report(m, result["states"], result["summary"], report_path)
+    return {
+        "ok": True,
+        "source_id": source_id,
+        **result,
+        "report": str(report_path),
+    }
+
+
 __all__ = [
     "verify_links",
     "verify_assets",
     "capture_clone_sections",
     "score_clone_sections",
+    "generate_manifest",
+    "verify_manifest",
 ]

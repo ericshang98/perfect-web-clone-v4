@@ -51,6 +51,8 @@ Fidelity gates (``tools.verify``):
     * ``score_clone_sections``   — one-shot R4: capture the live clone, pair
       plan/clone bounds by name, per-section SSIM, worst-first — drives the
       self-heal loop.
+    * ``generate_manifest``  — write the per-site state checklist (baseline states)
+    * ``verify_manifest``    — replay the checklist on the live clone + report
 
 v4 pipeline (``tools.pipeline``):
     * ``build_ir``            — DOM + computed styles → normalized semantic IR.
@@ -137,6 +139,8 @@ def register_tools(server: FastMCP) -> list[str]:
         verify.verify_assets,
         verify.capture_clone_sections,
         verify.score_clone_sections,
+        verify.generate_manifest,
+        verify.verify_manifest,
     ):
         server.tool()(fn)
         registered.append(fn.__name__)
