@@ -14,9 +14,15 @@ def _make_source(root, sid):
     (d / "manifest.json").write_text(
         json.dumps(
             {
+                "success": True,
+                "capture_integrity": {"ok": True, "status": "passed"},
                 "downloaded_resources": {
                     "images": [
-                        {"url": "https://cdn.shopify.com/x/foo.png", "saved_path": "assets/images/foo.png"}
+                        {
+                            "url": "https://cdn.shopify.com/x/foo.png",
+                            "type": "image",
+                            "saved_path": "assets/images/foo.png",
+                        }
                     ]
                 }
             }
@@ -57,7 +63,15 @@ def test_section_data_uses_embed_snapshot_for_cross_origin_iframe(tmp_path, monk
     sid = "shop.com-2-embed"
     d = tmp_path / sid
     d.mkdir()
-    (d / "manifest.json").write_text("{}", encoding="utf-8")
+    (d / "manifest.json").write_text(
+        json.dumps(
+            {
+                "success": True,
+                "capture_integrity": {"ok": True, "status": "passed"},
+            }
+        ),
+        encoding="utf-8",
+    )
     (d / "raw.html").write_text(
         "<html><body>"
         '<header class="h"><a href="/x">x</a></header>'

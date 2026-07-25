@@ -1,308 +1,237 @@
 ---
 name: perfect-web-clone-v4
 description: >-
-  Clone any live web page into a deployable Vite + React + Tailwind static
-  project that is clean BY CONSTRUCTION and pixel-perfect AS A MEASURED GATE.
-  Default route: extract the page, plan sections by the real `#main` children,
-  assemble a sandbox shell (with a deduped global cleaned stylesheet), then
-  dispatch one subagent per section to author clean JSX + local styles from the
-  captured data, build, and run the gate-driven self-heal loop
-  (`check_fingerprints` ∧ `check_weight` ∧ `score_fidelity`) — on any failure,
-  localize the worst region, repair that one section component, rebuild, and
-  re-gate until green or the budget is hit. Use whenever the user wants to clone,
-  copy, replicate, or "rebuild this site" from a URL. Two non-negotiable, joint
-  goals: cleanest-possible code AND pixel-perfect fidelity.
+  Reproduce a live website from its URL as a clean, deployable Vite + React
+  project by running the complete agent-driven Perfect Web Clone harness:
+  capture source evidence, plan the full page, author every section, implement
+  common interactions, build, compare, repair, and hand the measured result to
+  the user for review. Use whenever the user asks an agent to clone, copy,
+  reproduce, replicate, rebuild, or 复刻 a website or web page, including a
+  minimal request containing only an action and URL. The user gives one natural
+  language instruction; the current Claude Code/Codex agent runs the internal
+  multi-step loop through the deterministic pwc4 MCP tools.
 ---
 
-# Perfect Web Clone v4 — The Cloning Playbook
+# Perfect Web Clone v4
 
-> **★ North star (the guiding thesis).** Every requirement must first become a
-> **deterministic, evidence-backed gate**, and only then be satisfied — never by
-> "I think it looks close enough." The full guiding philosophy, the delivery
-> contract, decision log, and roadmap live in **`docs/delivery-strategy.md`** (the
-> canonical strategy doc). This SKILL is the operational playbook for it.
+## Operating model
 
-You are the brain. The `pwc4` MCP tools are pure, deterministic hands and eyes:
-they extract, plan sections, assemble, build, screenshot, scan, measure, and
-score. **No `pwc4` tool ever calls an LLM.** The *judgement* — authoring each
-section's clean component, and deciding *how* to repair a flagged component
-against a measured diff — is *yours* (you and the subagents you dispatch).
+The current agent is the harness runtime.
+Do not require a CLI, API, daemon, or separate orchestrator.
+The `pwc4` tools are deterministic hands and eyes; they capture, persist, build,
+render, replay, and measure. They never call another model. Use the current
+agent to understand the evidence, author code, and choose targeted repairs.
 
-> **THE IRON RULE.** Every `pwc4` tool and every gate is deterministic Python:
-> capture, plan, assemble, build, render, scan, measure, score — they NEVER call a
-> model. The brain (you + per-section subagents) appears in exactly two places:
-> **(1)** authoring each section into clean JSX from the captured section data,
-> and **(2)** the Layer-4 repair decision. Everywhere else is deterministic.
+A single natural-language request such as “复刻 https://example.com” authorizes
+the entire local reproduction workflow. Treat it as one user operation even
+though the harness performs many internal tool calls and repair iterations.
 
-> **TWO JOINT GOALS, TWO LAYERS.** "Clean" is born **upstream**, by construction:
-> each section subagent authors *our own* clean JSX + utility/local CSS from the
-> captured data — it NEVER pastes raw Shopify markup — over a deduped global
-> cleaned stylesheet, and the **fingerprint gate** enforces zero source
-> fingerprints. "Pixel-perfect" is enforced **downstream**: SSIM against the
-> captured reference rasters (Layer 4). The two goals live in different layers, so
-> they never fight over the same artifact. Both are *measured gates*, not matters
-> of diligence.
+Do not ask for routine confirmation when the request contains a usable URL.
+Infer that a full-page clone is the default.
+Continue across phases without returning control merely to announce progress or
+request ordinary implementation choices. Ask only when a missing fact would
+materially change scope, when credentials or new authority are required, or when
+the user must resolve an external blocker.
 
-All `pwc4` tools return `{"ok": bool, ...}` (build tools use `{"success": ...}`).
-Always check that flag and read `error` / `errors` before proceeding. Never
-fabricate a result you did not get back from a tool.
+Deployment is never implicit. Produce a local build and review URL by default;
+deploy only when the user explicitly asks.
 
-> **Default route vs. the experimental IR route.** The route below
-> (extract → plan sections → assemble shell → per-section subagents → build →
-> gates) is the **default and only supported delivery path** — it is what produces
-> high fidelity on real pages. The IR→codegen tools (`build_ir`,
-> `run_recognizers`, `generate_code`) are **experimental and OFF the default
-> path**: on real pages the multi-MB DOM cannot transit MCP context and codegen
-> currently emits empty shells. Do not route delivery through them unless you are
-> deliberately doing IR R&D. See the decision log in `docs/delivery-strategy.md`.
+Use one owning agent for the whole page so global visual context survives across
+sections. Do not delegate unless the user explicitly asks.
 
----
+## Non-negotiable execution contract
 
-## Phase 0 — Frame the job
+1. Run capture, planning, authoring, build, verification, repair, and handoff as
+   one continuous task.
+2. Inspect every `ok` or `success` flag and its error evidence. Never invent a
+   tool result.
+3. Preserve immutable raw evidence separately from normalized evidence. Refuse
+   to plan from an incomplete capture.
+4. Reproduce every planned top-level section and every independently required
+   critical region. Do not stop after the viewport or after a visually dominant
+   subset.
+5. Implement and replay every required common interaction: carousel, menu, tabs,
+   accordion/details, and other contracts discovered during capture.
+   A visually similar but inert control fails.
+6. Run gates in dependency order. A downstream score cannot override an
+   upstream structural or behavioral failure.
+7. Repair the smallest owning component identified by evidence, rebuild, and
+   re-run all affected gates.
+8. Never hide, waive silently, or average away a red gate.
+   A missing critical region cannot be offset by aggregate visual similarity.
+9. End only in `ready_for_user_review` or `failed_with_residuals`.
+   Only the user can accept the result.
 
-1. Confirm the target URL with the user. If they gave a vague request
-   ("clone this"), get the exact URL.
-2. Confirm scope: full-page clone is the default. Note explicit asks
-   (e.g. "also give me a Dockerfile", "deploy it").
-3. **Deployment is opt-in.** Do NOT deploy unless the user explicitly asks.
-   Default delivery is the local `dist/` bundle (the standing no-deploy rule).
+Read [references/harness-contract.md](references/harness-contract.md) before
+starting a new run or resuming one. It defines the progress ledger, terminal
+states, evidence vocabulary, and exact stop rules.
 
----
+## Continuous workflow
 
-## Phase 1 — Extract (Layer 0: capture ground truth)
+### 1. Resolve and resume
 
-Call **`pwc4 extract_page(url, options)`**.
+- Extract the target URL from the request. If none is present and it cannot be
+  recovered from the current browser/task context, ask for it.
+- Check the active sandbox for `.pwc/run.json`. Resume rather than restart when
+  its URL matches and its status is non-terminal. Start a fresh run when the URL
+  differs.
+- Record the current phase and evidence after every successful phase and after
+  every failure. The ledger is an audit trail, not a substitute for tool output.
 
-- Captures, per breakpoint (1440 / 768 / 375): DOM + computed styles + box
-  geometry + assets + fonts, **and the REFERENCE RASTERS** per breakpoint × key
-  state (initial, scrolled, hover/expanded). Triggers lazy-load, collects
-  video/iframe sources, dismisses overlays.
-- Returns `source_id` + a `summary`. **Record `source_id`** — it threads through
-  every later phase. The captured rasters are the immutable ground truth every
-  downstream artifact is judged against.
-- The `summary` now carries **`site_classification`** (`site_type` +
-  `can_clone_well` + a human `ceiling` advisory). **If `can_clone_well` is false**
-  (a `webgl_canvas` or `scroll_choreography` site whose visuals live in a runtime
-  layer), **tell the user the ceiling up front** — you can faithfully recover the
-  content but NOT the runtime-drawn/animated *look*. Do not promise pixel-perfect
-  fidelity on these. It also carries **`capture_residuals`** (e.g. significant
-  `<canvas>` main visuals) — surface them; never silently drop them.
-- **Capture completeness is upstream of everything.** Lazy images
-  (`data-src`/`srcset`/`{width}` templates), theme-relative fonts, and overlay
-  dismissal must be complete here — a fidelity gap you can't fix downstream starts
-  as a capture gap here. (Hardening tracked as Plan 1 in the strategy doc.)
-- If `ok` is false (bad URL, page won't load), report the error and stop. Do not
-  guess at page content you never extracted.
-- **Immediately after a successful extraction**, call **`pwc4 generate_manifest(source_id)`**
-  once — this writes the per-site state checklist (`checklist.json`) that the
-  verify phase's `verify_manifest` gate will replay on the live clone. Do it here
-  so the checklist is always present before Phase 6 runs.
+### 2. Capture trustworthy source evidence
 
----
+Call `pwc4 extract_page(url, options)`.
 
-## Phase 2 — Plan sections (by the real `#main` children)
+- Require `ok: true` and
+  `summary.capture_integrity.status == "passed"`.
+- Record `source_id`; use the same value for all later tools.
+- Surface `capture_residuals` and the `site_classification` ceiling. If the page
+  relies on WebGL, runtime canvas drawing, or scroll choreography that cannot be
+  captured faithfully, continue only within the measured ceiling and keep it as
+  a residual.
+- Stop with `failed_with_residuals` if source integrity remains red after the
+  extractor's retry budget. Never generate from guessed or partial content.
+- Immediately call `pwc4 generate_manifest(source_id)` so breakpoint, state, and
+  interaction expectations exist before code generation.
 
-Call **`pwc4 get_section_plan(source_id)`**.
+### 3. Plan the complete page
 
-- Returns the ordered section list — split by the page's **real `#main`
-  children**, not an arbitrary chunker. Each entry has a section id/name and its
-  source bbox/`bounds` (used later to map a failing raster band back to the
-  section that owns it).
-- This list is the unit of work: one section → one component → one subagent.
-- Record the order; `assemble_project` writes the shell in exactly this order.
+Call `pwc4 get_section_plan(source_id)`.
 
----
+- Use the ordered real `#main` children as section and repair units.
+- Treat every `required_structure` entry as a hard anchor, even when nested
+  inside a large parent section.
+- Review page geometry and source screenshots before authoring. Confirm that the
+  plan spans the captured document height and contains the prominent regions
+  visible in the raw evidence.
+- Record all planned section ids in `.pwc/run.json`.
 
-## Phase 3 — Assemble the shell FIRST (deterministic)
+### 4. Create the shell and author every section
 
-Call **`pwc4 assemble_project(source_id)`** **before** filling sections.
+Call `pwc4 assemble_project(source_id)` once to create the sandbox shell.
+Missing section files are expected on this first call. Assembly initializes
+`.pwc/run.json`; read, update, and rewrite that ledger through the sandbox tools
+as the agent advances.
 
-- This is the ONLY thing that writes the shared files (`App.jsx`, `index.css`,
-  routing) and **creates the sandbox** — section files are written *into* the
-  shell it creates, so it must run first. (This order is the reverse of older
-  drafts; follow this one.)
-- It seeds `index.css` with the Tailwind layers and emits the **deduped global
-  cleaned stylesheet** for the whole page as a static **`public/theme.css`**
-  linked from `index.html` (`<link rel="stylesheet" href="/theme.css">`), so
-  sections render styled rather than blank. (This is the P0 wiring; older drafts
-  injected it into `index.css` directly — the `public/theme.css` + `<link>` form
-  is current. Per-section local CSS from Phase 4 remains the fallback.)
-- It will report `missing_section_files` for every planned section — expected at
-  this point, because the subagents fill them in Phase 4.
+For each planned section, in order:
 
----
+1. Call `pwc4 get_section_data(source_id, section_id)`.
+2. Author clean semantic JSX and scoped local styles from the section evidence.
+3. Write only its namespaced component files with
+   `pwc4 sandbox_write_file(path, content, namespace)`.
+4. Mark the section complete in `.pwc/run.json`.
 
-## Phase 4 — Per-section subagents author clean components
+Maintain whole-page layout tokens across sections. Reuse localized assets from
+the capture. Never ship source-framework markup, source-specific class
+fingerprints, hotlinked media, or an image snapshot in place of real content.
+Use real text, images, links, video, and controls.
 
-For **each** section in the plan, dispatch a subagent. Each subagent owns exactly
-one section, writes only its own namespaced file, and works like this:
+Apply these authoring requirements:
 
-1. **`pwc4 get_section_data(source_id, section_id)`** — pull that section's DOM
-   subtree, computed styles / `css_rules`, geometry, content, and asset refs.
-2. **Author clean JSX + local styles from that data.** Write *our own* component
-   — semantic element + Tailwind utilities + a small local stylesheet derived from
-   `css_rules`. **Never paste raw Shopify markup, class names, or `original.css`.**
-   This is where "clean" is born by construction.
-3. **`pwc4 sandbox_write_file(path, content)`** — write the component into its
-   namespaced path in the shell.
+- Preserve sticky behavior and avoid clipping sticky ancestors.
+- Reconstruct footer columns from source layout geometry.
+- Render review widgets from captured review data.
+- Emit functional localized video elements.
+- Reveal recoverable lazy content instead of preserving an accidental empty
+  capture state.
+- Attach `data-pwc-critical="<anchor>"` to each required structural region.
+- Keep the assembly-owned `data-pwc-section` wrapper for every section.
 
-**Section authoring rules (these encode R6–R9 — get them right at authoring
-time, not as an afterthought):**
-- **sticky** — if the source element is `position:sticky`, keep it sticky and
-  ensure no ancestor clips overflow (no `overflow:hidden` on a containing block),
-  so it keeps following scroll.
-- **footer** — capture the explicit grid/flex container props (columns, gap) so
-  the footer can't disassemble; reconstruct columns from child bboxes if needed.
-- **reviews** — rebuild reviews as a **data-driven component from the extracted
-  review data** (judge.me / loox / yotpo / okendo). NEVER ship a static PNG of the
-  widget.
-- **video** — localize the media and emit a real `<video>`/player; promote lazy
-  `data-src` → `src`. Never leave a hotlink or a popup snapshot in place.
-- **captured `display:none` state** — prefer **revealing** lazy/hidden content
-  (e.g. product grids the theme hid at capture time) over faithfully shipping an
-  empty band; that is closer to the real site. Be consistent across sections.
+For each interaction contract:
 
-Dispatch sections **concurrently** when independent. A subagent that can't resolve
-an asset records it (a residual to surface), never invents one.
+- Implement its state transition and visible controlled surface.
+- Attach `data-pwc-interaction="<contract id>"` to the control.
+- Attach `data-pwc-controlled="<contract id>"` to the controlled surface where
+  applicable.
+- Support repeated activation where the source does, such as next/previous
+  carousel steps and open/close menu or accordion behavior.
 
----
+An unresolved asset, region, or behavior becomes an explicit residual.
 
-## Phase 5 — Build (deterministic, hard gate)
+### 5. Build before judging fidelity
 
-1. Re-run **`pwc4 assemble_project(source_id)`** to confirm nothing is missing —
-   `ok` is true only when `missing_section_files` is empty. If a component is
-   missing, finish that section (Phase 4) and re-assemble. Do not advance with
-   missing components.
-2. **`pwc4 build_project()`** — runs `npm run build`. **`success` MUST be true**
-   (exit code 0 *and* a `dist/` produced). If false, read `errors`/`stderr_tail`,
-   locate the cause, fix the offending **section component**, and rebuild.
-   Optionally use **`pwc4 get_build_errors()` / `pwc4 diagnose()`** for the
-   three-layer (terminal / browser / static) breakdown. **The build must pass
-   before verify — this is a hard gate.**
+Call `pwc4 assemble_project(source_id)` again.
 
----
+- Require no `missing_section_files`.
+- Call `pwc4 build_project()` and require `success: true` plus a produced
+  `dist/`.
+- On failure, use `pwc4 get_build_errors()` or `pwc4 diagnose()`, repair the
+  owning component, and rebuild.
 
-## Phase 6 — Verify (Layer 4: the gate-driven self-heal loop)
+Never run acceptance scoring against a broken or stale build.
 
-This loop is the heart of v4. It replaces eyeball judgement with **measured
-gates**. Because the architecture guarantees a clean, pixel-identical equivalent
-*exists*, this is a closed search that converges: build clean candidate → measure
-raster distance → repair the worst region → re-measure.
+### 6. Verify in gate order
 
-### The three deterministic gates (run every iteration)
+Start the local preview with `pwc4 start_preview()` and retain its URL for user
+review. Verify at the captured breakpoints and observable states.
 
-1. **`pwc4 check_fingerprints(dist_dir)`** (R1) — `ok` iff `total == 0` Shopify
-   traces (`shopify`, `myshopify`, `template--…__`, `data-shopify*`,
-   `original.css`, `shopify-section`) in `dist/`. Read `by_pattern` / `files` to
-   see exactly what leaked.
-2. **`pwc4 check_weight(dist_dir, budget_kb)`** (R3) — now reports **separate
-   code and asset budgets**: `code_kb`/`code_ok` (html+css+js+svg gzipped, target
-   50–80 KB) and `asset_kb`/`asset_ok` (images/fonts/video raw; only fails when
-   you pass `asset_budget_kb`). `ok` = `code_ok` ∧ `asset_ok`, so an image-heavy
-   store no longer false-fails on content weight when its code is clean. Read
-   `code_ok` for the real "is the code lightweight" judgment.
-3. **`pwc4 score_fidelity(ref_png, cand_png, threshold)`** (R4) — render the
-   built output at each breakpoint × state, then score SSIM vs the captured
-   reference raster. `ok` iff `score ≥ τ` (default 0.97). Carries
-   **`worst_regions`** (per-band SSIM, worst-first, each with a `y0`/`y1`
-   y-range).
+Run:
 
-> **R5 — beat the baseline.** Where a current-repo baseline render exists, also
-> run **`pwc4 compare_to_baseline(ref_png, new_png, baseline_png)`**; `ok` iff
-> the new output's fidelity is strictly better than the baseline's.
+1. Source integrity from extraction.
+2. Critical structure through `pwc4 score_clone_sections(source_id, url)`.
+3. Required interaction replay through
+   `pwc4 verify_manifest(source_id, url)`.
+4. Build cleanliness through `pwc4 check_fingerprints(dist_dir)`.
+5. Code/asset weight through `pwc4 check_weight(dist_dir, budget_kb)`.
+6. Per-section and per-state visual comparison from
+   `score_clone_sections`/`verify_manifest`; use
+   `pwc4 score_fidelity(...)` only for additional localization.
+7. `pwc4 compare_to_baseline(...)` when a valid same-source baseline exists.
 
-### The self-heal loop
+Do not treat one aggregate SSIM number as acceptance. Structure, interaction,
+and each required breakpoint/state remain individually visible in the result.
 
-Run the gates. **While any gate is red and budget remains:**
+### 7. Repair automatically
 
-1. **Localize.** Take the failing gate's evidence — `score_fidelity`'s
-   `worst_regions[0]` (lowest-SSIM band) for visual misses, `check_fingerprints`'
-   `files`/`by_pattern` for leaks, `check_weight`'s `by_type` for bloat.
-2. **Map region → section component.** Use the worst band's `y0`/`y1` against the
-   section `bounds` from the Phase-2 plan to find the section that owns it.
-   `bounds` are now filled from the captured DOM geometry (`section_geometry`),
-   so this mapping works directly. (If a section still has empty `bounds` — no
-   geometric match was found — fall back to matching the band against the rendered
-   section order manually.)
-3. **Repair THAT section component.** This is your act of judgement: given (the
-   diff/region, the section's component + captured data + computed style, the gate
-   evidence), decide how to fix that single component — adjust its layout / style /
-   tokens / asset wiring, or correct a sticky/footer/reviews/video mistake. Edit
-   that one section component, never a wall of raw source.
-4. **Rebuild** (Phase 5) just what changed.
-5. **Re-gate** (re-run all three). Loop.
+While a required gate is red and budget remains:
 
-### Gate-driven self-heal loop (run until green or 5 iterations)
+1. Select the earliest failed hard gate; within it select the worst measured
+   section or state.
+2. Map its evidence to the owning component using section bounds, interaction
+   ids, screenshot diffs, and diagnostic output.
+3. Read the current component and its captured section data.
+4. Make one evidence-based repair to that component or shared token when the
+   evidence proves the error is global.
+5. Rebuild and replay every affected structural, behavioral, and visual gate.
+6. Update `.pwc/run.json` with the attempt, measurement delta, and evidence
+   paths.
 
-1. `generate_manifest(source_id)` — once, right after extraction (Phase 1 above).
-2. After every build: `score_clone_sections(source_id, url)` (static per-section R4)
-   AND `verify_manifest(source_id, url)` (state checklist).
-3. If any section/state fails: pick the WORST item (lowest SSIM), open its
-   side-by-side evidence (`manifest_out/<id>_sbs.png`), repair ONLY that
-   section/interaction, rebuild, re-run step 2.
-4. Stop at all-green or after 5 iterations; report `report.html` + remaining
-   fails/waived items explicitly — never claim done while items are red.
+Use at most five repair attempts per breakpoint × state. Stop early after one
+non-improving retry followed by a second attempt that also fails to improve the
+same metric. Preserve the best measured candidate; do not leave a regression as
+the final artifact.
 
-### Exit / stop criteria (no infinite loops)
+### 8. Hand off honestly
 
-- **Exit (success):** `check_fingerprints.ok` ∧ `check_weight.ok` ∧
-  `score_fidelity.ok` (per breakpoint × state) — and, where applicable,
-  `compare_to_baseline.ok`.
-- **Iteration cap: at most 5 self-heal iterations per breakpoint × state.** On
-  hitting the cap with a gate still red, STOP looping for that target.
-- **No-progress guard:** if an iteration does not raise the failing gate's score
-  (e.g. SSIM did not improve), stop early rather than burn budget.
-- **Report residuals — never silent.** At the cap, list every remaining
-  residual (which gate, which region/section, the measured score vs τ) explicitly
-  to the user. Long-tail items (bespoke frame-by-frame animation, WebGL) are
-  flagged fallbacks, never silently dropped.
+Set `ready_for_user_review` only when:
 
----
+- capture integrity passed;
+- all planned sections and critical anchors exist materially;
+- all required common interactions replay successfully;
+- the production build passed;
+- fingerprints and required budgets passed;
+- required visual breakpoint/state gates passed; and
+- every claimed result has an evidence path or tool output.
 
-## Phase 7 — Deliver
+Otherwise set `failed_with_residuals` and list every residual with its gate,
+section/state, expected value, measured value, evidence, attempts, and reason for
+stopping.
 
-- **Default:** deliver the deployable static bundle `dist/` (exportable locally).
-  If asked, also produce a `Dockerfile` (nginx). Tell the user where `dist/` is
-  and summarize the gate results: fingerprints clean, weight within budget,
-  fidelity score per breakpoint × state, plus any residuals accepted at the cap.
-- **Deploy is opt-in and low-priority.** Only if the user explicitly asked,
-  deploy (Cloudflare Pages / `wrangler` only — no Vercel) and return the live URL.
-  **Never deploy by default.**
+Return the local review URL, source project path, `dist/` path, evidence/report
+paths, gate summary, and residuals. Say “ready for your review,” never “accepted”
+or “pixel-perfect.” The user's visual and functional review is the final
+decision.
 
----
+## Tool map
 
-## Tool quick-reference (all `pwc4`, all deterministic, zero LLM)
-
-| Phase | Tool |
+| Purpose | `pwc4` tools |
 |---|---|
-| 1 Extract | `extract_page(url, options)` |
-| 2 Plan | `get_section_plan(source_id)` |
-| 3 Assemble shell | `assemble_project(source_id)` |
-| 4 Per-section | `get_section_data(source_id, section_id)`, `sandbox_write_file(path, content)` |
-| 5 Build | `assemble_project(source_id)`, `build_project()`, `get_build_errors()`, `diagnose()` |
-| 6 Verify (gates) | `check_fingerprints(dist_dir)`, `check_weight(dist_dir, budget_kb)`, `score_fidelity(ref_png, cand_png, threshold)`, `compare_to_baseline(ref_png, new_png, baseline_png)`, `score_clone_sections(source_id, url)`, `verify_manifest(source_id, url)`, `preview_screenshot(...)` |
-| 7 Deliver | (default: `dist/`) — optional deploy |
-| — Experimental (OFF default path) | `build_ir`, `run_recognizers`, `generate_code` |
+| Capture and plan | `extract_page`, `generate_manifest`, `get_section_plan`, `get_section_data` |
+| Author and inspect | `assemble_project`, `sandbox_write_file`, `sandbox_read_file`, `sandbox_list_files` |
+| Build and diagnose | `build_project`, `get_build_errors`, `diagnose` |
+| Preview | `start_preview`, `preview_status`, `preview_screenshot` |
+| Verify | `score_clone_sections`, `verify_manifest`, `check_fingerprints`, `check_weight`, `score_fidelity`, `compare_to_baseline` |
+| Optional delivery | `deploy` only after an explicit user request |
 
-## Invariants (do not violate)
-
-- **The iron rule:** `pwc4` tools never call an LLM. The brain's judgement is in
-  two places only — per-section authoring (Phase 4) and the Layer-4 repair
-  decision (Phase 6); repair edits one section component, never raw source.
-- **Clean is born upstream, by construction.** Each section subagent authors our
-  own clean JSX from the captured data over a global cleaned stylesheet — it never
-  pastes Shopify markup, class names, or `original.css`. The fingerprint gate
-  enforces zero source fingerprints.
-- **Gates, not vibes.** Acceptance = `check_fingerprints` ∧ `check_weight` ∧
-  `score_fidelity` (∧ `compare_to_baseline` where a baseline exists), all green.
-- **Scope boundary:** the tool targets *visual* fidelity of interactive elements
-  in their captured states; full interactive behavior (accordions, variant
-  switching, timers) is the user's own to wire up.
-- The self-heal loop has a hard iteration cap (5 per breakpoint × state) and a
-  no-progress guard — never loop forever. Residuals are reported, never silent.
-- `npm run build` must pass before verify; the built artifact is what the gates
-  measure.
-- Never deploy unless explicitly asked.
-- Both goals are joint and non-negotiable: cleanest-possible code AND
-  pixel-perfect fidelity, each enforced as a measured gate.
-- The IR→codegen tools are experimental and OFF the default delivery path.
+The IR tools (`build_ir`, `run_recognizers`, `generate_code`) remain
+experimental and are not the default path for client work.

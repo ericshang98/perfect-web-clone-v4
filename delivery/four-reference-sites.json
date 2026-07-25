@@ -1,0 +1,310 @@
+{
+  "schema": 1,
+  "captured_at": "2026-07-24T01:41:25+08:00",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "thresholds": {
+    "delivery_fidelity": 0.72,
+    "strict_project_default": 0.97
+  },
+  "sites": [
+    {
+      "key": "reelshort",
+      "contract_url": "https://www.reelshort.com/es",
+      "source_id": "www.reelshort.com-1784826796-22e26a",
+      "capture_status": "pass",
+      "title": "ReelShort: Cada Segundo es Drama",
+      "page_height": 6450,
+      "total_elements": 3507,
+      "asset_counts": {
+        "images": 1985,
+        "scripts": 39,
+        "stylesheets": 13,
+        "fonts": 16
+      },
+      "section_count": 4,
+      "classification": "webgl_canvas",
+      "residuals": [
+        "A canvas node is present, but the contracted desktop reference is predominantly DOM poster grids.",
+        "The blank runtime QR canvas in the footer is represented by a CSS QR-like facsimile; runtime carousel, login, search, and player behavior remain outside the visual-clone scope.",
+        "Logical-band scoring leaves Hombre Lobo (0.7034) and footer (0.7101) just below 0.72, while the corrected recommended shelf scores 0.9339."
+      ],
+      "product_path": "showcase/products/reelshort",
+      "gates": {
+        "build": {
+          "ok": true,
+          "css_gzip_kb": 2.69,
+          "js_gzip_kb": 55.7
+        },
+        "audit": {
+          "ok": true,
+          "vulnerabilities": 0
+        },
+        "fingerprints": {
+          "ok": true,
+          "total": 0
+        },
+        "weight": {
+          "ok": true,
+          "code_kb": 57.246,
+          "code_budget_kb": 80,
+          "asset_kb": 8474.219
+        },
+        "links": {
+          "ok": true,
+          "accepted_urls_matched": 89,
+          "accepted_urls_total": 89,
+          "placeholder_count": 0
+        },
+        "fidelity": {
+          "ok": true,
+          "score": 0.9307849636500164,
+          "threshold": 0.72,
+          "strict_project_default_ok": false,
+          "candidate": "showcase/products/reelshort/shots/desktop_full.png",
+          "reference": "core/extractor/_sources/www.reelshort.com-1784826796-22e26a/screenshots/primary_full.png",
+          "side_by_side": "showcase/products/reelshort/shots/sidebyside.png"
+        },
+        "section_fidelity": {
+          "ok": true,
+          "aggregate_ok": true,
+          "all_sections_ok": false,
+          "score": 0.8192792868646644,
+          "threshold": 0.72,
+          "graded": 14,
+          "failing_bands": {
+            "Hombre Lobo": 0.7034237515634616,
+            "footer": 0.7101253192258956
+          },
+          "recommended_shelf": 0.933872367,
+          "worst_section": "Hombre Lobo"
+        }
+      }
+    },
+    {
+      "key": "livora",
+      "contract_url": "https://livora.co/products/painless-hair-removal-epilator-usb-rechargeable-trimmer-women-body-razor-face-leg-armpit-bikini-hand-pubic-shaver-hair-remover",
+      "source_id": "livora.co-1784826866-453146",
+      "capture_status": "pass",
+      "title": "SilkGlide Pro 2.0™ – Livora",
+      "page_height": 9188,
+      "total_elements": 2134,
+      "asset_counts": {
+        "images": 493,
+        "scripts": 45,
+        "stylesheets": 8,
+        "fonts": 4
+      },
+      "section_count": 16,
+      "classification": "shopify_store",
+      "residuals": [
+        "The full-page fidelity gate passes, while the lowest 16-band local SSIM is 0.2064 around the attachment/UGC-density region."
+      ],
+      "product_path": "showcase/products/livora",
+      "gates": {
+        "build": {
+          "ok": true,
+          "css_gzip_kb": 4.43,
+          "js_gzip_kb": 51.65
+        },
+        "audit": {
+          "ok": true,
+          "vulnerabilities": 0
+        },
+        "fingerprints": {
+          "ok": true,
+          "total": 0
+        },
+        "weight": {
+          "ok": true,
+          "code_kb": 54.907,
+          "code_budget_kb": 100,
+          "asset_kb": 18287.883
+        },
+        "links_and_assets": {
+          "ok": true,
+          "placeholder_links": 0,
+          "root_relative_links": 0,
+          "broken_images": 0,
+          "broken_videos": 0
+        },
+        "responsive": {
+          "ok": true,
+          "viewport_width": 390,
+          "horizontal_overflow": false,
+          "candidate": "showcase/products/livora/shots/mobile_390.png"
+        },
+        "fidelity": {
+          "ok": true,
+          "score": 0.7480433272172081,
+          "threshold": 0.72,
+          "strict_project_default_ok": false,
+          "candidate": "showcase/products/livora/shots/desktop_current.png",
+          "reference": "core/extractor/_sources/livora.co-1784826866-453146/screenshots/primary_full.png",
+          "side_by_side": "showcase/products/livora/shots/sidebyside.png",
+          "worst_local_band": 0.2063777345329444
+        }
+      }
+    },
+    {
+      "key": "kojeva",
+      "contract_url": "https://kojeva.com/products/kojeva-lymphatic-face-brush",
+      "source_id": "kojeva.com-1784828890-25edd7",
+      "capture_status": "pass",
+      "title": "Kojeva Lymphatic Face Brush",
+      "page_height": 6185,
+      "total_elements": 2072,
+      "asset_counts": {
+        "images": 202,
+        "scripts": 63,
+        "stylesheets": 35,
+        "fonts": 6
+      },
+      "section_count": 10,
+      "classification": "shopify_store",
+      "residuals": [
+        "The weighted 10-section fidelity gate passes, while the UGC (0.6123), Instant De-Puff (0.6691), and satisfaction (0.6929) sections remain below 0.72 individually."
+      ],
+      "product_path": "showcase/products/kojeva",
+      "gates": {
+        "build": {
+          "ok": true,
+          "css_gzip_kb": 4.26,
+          "js_gzip_kb": 51.76
+        },
+        "audit": {
+          "ok": true,
+          "vulnerabilities": 0
+        },
+        "fingerprints": {
+          "ok": true,
+          "total": 0
+        },
+        "weight": {
+          "ok": true,
+          "code_kb": 54.332,
+          "code_budget_kb": 100,
+          "asset_kb": 12041.409
+        },
+        "links": {
+          "ok": true,
+          "passed": 10,
+          "section_count": 10,
+          "placeholder_count": 0,
+          "root_relative_links": 0
+        },
+        "responsive": {
+          "ok": true,
+          "viewport_width": 390,
+          "scroll_width": 390,
+          "visible_navigation_links": 4,
+          "candidate": "showcase/products/kojeva/shots/mobile-390.png"
+        },
+        "fidelity": {
+          "ok": true,
+          "score": 0.7624058670575847,
+          "threshold": 0.72,
+          "strict_project_default_ok": false,
+          "candidate": "showcase/products/kojeva/shots/desktop.png",
+          "reference": "core/extractor/_sources/kojeva.com-1784828890-25edd7/screenshots/primary_full.png",
+          "side_by_side": "showcase/products/kojeva/shots/sidebyside.png"
+        },
+        "section_fidelity": {
+          "ok": true,
+          "aggregate_ok": true,
+          "all_sections_ok": false,
+          "score": 0.7616662138642658,
+          "threshold": 0.72,
+          "failing_sections": {
+            "ugc": 0.6123,
+            "instant_de_puff": 0.6691,
+            "satisfaction": 0.6929
+          }
+        }
+      }
+    },
+    {
+      "key": "trykojiva",
+      "contract_url": "https://trykojiva.com/brush",
+      "source_id": "trykojiva.com-1784828343-ab1ef0",
+      "capture_status": "pass",
+      "title": "Linfae™ | Lymphatic Face Sculpting Brush - Depuff & Define in 60s",
+      "page_height": 8432,
+      "total_elements": 820,
+      "asset_counts": {
+        "images": 37,
+        "scripts": 26,
+        "stylesheets": 3,
+        "fonts": 0
+      },
+      "section_count": 5,
+      "classification": "static",
+      "residuals": [
+        "The clean rebuild passes the 0.72 full-page delivery threshold narrowly at 0.7204; the weighted logical-section score is 0.6670.",
+        "The long product/content (0.6558) and customer-review (0.6354) sections remain below the section threshold.",
+        "The responsive mobile layout is overflow-free but is not graded against a separate mobile reference raster."
+      ],
+      "product_path": "showcase/products/trykojiva",
+      "gates": {
+        "build": {
+          "ok": true,
+          "css_gzip_kb": 5.4,
+          "js_gzip_kb": 53.36
+        },
+        "audit": {
+          "ok": true,
+          "vulnerabilities": 0
+        },
+        "fingerprints": {
+          "ok": true,
+          "total": 0
+        },
+        "weight": {
+          "ok": true,
+          "code_kb": 57.627,
+          "code_budget_kb": 100,
+          "asset_kb": 22967.144
+        },
+        "links": {
+          "ok": true,
+          "passed": 5,
+          "section_count": 5,
+          "anchor_count": 18,
+          "unique_targets": 14,
+          "placeholder_count": 0
+        },
+        "responsive": {
+          "ok": true,
+          "viewport_width": 390,
+          "scroll_width": 390,
+          "page_height": 10300,
+          "candidate": "showcase/products/trykojiva/shots/mobile_clean.png"
+        },
+        "fidelity": {
+          "ok": true,
+          "score": 0.7204336258826767,
+          "threshold": 0.72,
+          "strict_project_default_ok": false,
+          "candidate": "showcase/products/trykojiva/shots/desktop_clean.png",
+          "reference": "core/extractor/_sources/trykojiva.com-1784828343-ab1ef0/screenshots/primary_full.png",
+          "side_by_side": "showcase/products/trykojiva/shots/sidebyside_clean.png"
+        },
+        "section_fidelity": {
+          "ok": false,
+          "score": 0.666958890269867,
+          "threshold": 0.72,
+          "sections": {
+            "header": 0.9238202181429758,
+            "product_and_content": 0.65575633533589,
+            "reviews": 0.6353692443591547,
+            "footer": 0.8998638076981005
+          },
+          "worst_section": "reviews",
+          "residual_recorded": true
+        }
+      }
+    }
+  ]
+}

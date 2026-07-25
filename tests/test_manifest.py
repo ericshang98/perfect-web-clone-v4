@@ -15,6 +15,7 @@ from core.manifest import (
     save_manifest,
     update_status,
     validate_state,
+    interaction_states,
 )
 
 
@@ -40,7 +41,7 @@ def test_new_manifest_shape():
     assert m["url"] == "https://example.com"
     assert m["breakpoints"] == [1440, 375]
     assert m["states"] == []
-    assert m["schema"] == 1
+    assert m["schema"] == 2
 
 
 def test_validate_state_ok():
@@ -108,3 +109,45 @@ def test_baseline_states_follow_scroll_positions():
 def test_baseline_states_short_page_yields_at_least_initial():
     states = baseline_states(page_height=500, viewport=(1440, 900), breakpoint=1440)
     assert states and states[0]["trigger"] == [{"kind": "scroll", "y": 0}]
+
+
+def test_interaction_contracts_become_required_verifiable_states_without_raster_ref():
+    contracts = [
+        {
+            "id": "next",
+            "kind": "carousel",
+            "target": "#next",
+            "action": "click",
+            "controlled": None,
+            "required": True,
+            "expect": {
+                "observable": "selected_slide_or_visible_content_changes"
+            },
+        },
+        {
+            "id": "menu",
+            "kind": "menu",
+            "target": "#menu",
+            "action": "click",
+            "controlled": "#nav",
+            "required": True,
+            "expect": {
+                "observable": "aria_expanded_and_menu_visibility_toggle"
+            },
+        },
+    ]
+
+    states = interaction_states(contracts, breakpoint=1440)
+
+    assert {state["interaction_kind"] for state in states} == {"carousel", "menu"}
+    assert all(state["channel"] == "interaction" for state in states)
+    assert all(state["required"] is True for state in states)
+    assert all(validate_state(state) == [] for state in states)
+    assert all("ref" not in state["expect"] for state in states)
+    assert states[0]["trigger"] == [
+        {"kind": "click", "target": '[data-pwc-interaction="next"]'}
+    ]
+    assert states[0]["source_target"] == "#next"
+    assert states[1]["expect"]["controlled"] == (
+        '[data-pwc-controlled="menu"]'
+    )

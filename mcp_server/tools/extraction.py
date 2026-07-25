@@ -1,7 +1,7 @@
 """
-Extraction / chunking MCP tools for Perfect Web Clone v3.
+Extraction / chunking MCP tools for Perfect Web Clone v4.
 
-Pure, deterministic wrappers around the v3 ``core`` assets. **No LLM, no
+Pure, deterministic wrappers around the v4 ``core`` assets. **No LLM, no
 Anthropic / OpenAI / any model API, no judgement.** Every "thinking" step
 (sectioning quality, "does it look like the original") belongs to Claude Code;
 these tools only render, persist, slice and return data.
@@ -21,8 +21,8 @@ Three tools are exposed here, to be registered by ``server.py`` with
 
     get_section_data(source_id, name) -> dict
         Return the full, self-contained data for one section (raw_html, styles,
-        css_rules, text, headings, images, links) so a per-section Claude Code
-        subagent can rebuild only its own chunk.
+        css_rules, text, headings, images, links) so the owning agent can
+        rebuild that isolated section.
 
 Design notes
 ------------
@@ -42,7 +42,19 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List, Optional
 
-from core import anim_normalize, asset_localizer, capture_residuals, css_matcher, embed_handler, layout_detect, output_sanitizer, section_chunker, section_geometry, site_classifier
+from core import (
+    anim_normalize,
+    asset_localizer,
+    capture_residuals,
+    css_matcher,
+    embed_handler,
+    layout_detect,
+    output_sanitizer,
+    section_chunker,
+    section_geometry,
+    site_classifier,
+    structure_contract,
+)
 from core.extractor import (
     ExtractOptions,
     extract_page as _core_extract_page,
@@ -105,14 +117,18 @@ def _render_sections_md(source_id: str, plan: Dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _persist_plan(source_id: str, plan: Dict[str, Any], full_sections: List[Dict[str, Any]]) -> Dict[str, str]:
+def _persist_plan(
+    source_id: str,
+    plan: Dict[str, Any],
+    full_sections: List[Dict[str, Any]],
+) -> Dict[str, str]:
     """Persist the chunking as durable, reusable records.
 
     Writes three files into the source dir:
       * ``sections.json``      — lightweight plan (no full_html); also the source
         of truth ``assemble_project`` reads, so chunking stays consistent.
       * ``sections_full.json`` — full sections WITH each section's real cleaned
-        ``full_html`` + images/links, which the per-section subagents read.
+        ``full_html`` + images/links, which the owning agent reads per section.
       * ``sections.md``        — human-readable record (table + tasks).
     Best-effort: a write failure never breaks planning.
     """
@@ -196,8 +212,38 @@ def _load_embed_snapshots(source_id: str) -> Dict[str, str]:
         return {}
 
 
+def _normalize_section_animation_states(
+    full_sections: List[Dict[str, Any]],
+    raw_html: str,
+) -> int:
+    """Reveal frozen content only for positively identified scroll choreography.
+
+    Ordinary sites deliberately hide drawers, dialogs, menus, and inactive
+    slides. Removing every inline ``display:none`` made those rest-state UI
+    elements appear in static clones. Scroll-choreography pages are the narrow
+    case that needs reveal normalization because their primary content is often
+    frozen in a pre-animation state.
+
+    Returns the number of hiding declarations removed.
+    """
+    classification = site_classifier.classify_site(raw_html or "", {})
+    if classification.get("site_type") != "scroll_choreography":
+        return 0
+
+    total = 0
+    for sec in full_sections:
+        html = sec.get("full_html")
+        if not html:
+            continue
+        sec["full_html"], revealed = anim_normalize.reveal_animation_states(html)
+        if revealed:
+            sec["hidden_revealed"] = revealed
+            total += revealed
+    return total
+
+
 def _task_description(sec: Dict[str, Any]) -> str:
-    """Converter-style brief for the per-section subagent (1:1 faithful, no invention)."""
+    """Converter-style brief for the owning agent (1:1 faithful, no invention)."""
     n_img = len(sec.get("images") or [])
     n_link = len(sec.get("links") or [])
     has_css = bool(sec.get("css_rules"))
@@ -208,6 +254,18 @@ def _task_description(sec: Dict[str, Any]) -> str:
         if has_css
         else ""
     )
+    required = sec.get("critical_regions") or []
+    structure_clause = ""
+    if required:
+        anchors = ", ".join(
+            f'{item["kind"]} as data-pwc-critical="{item["anchor"]}"'
+            for item in required
+        )
+        structure_clause = (
+            f" HARD STRUCTURE REQUIREMENTS: reproduce {anchors}; these nested "
+            "regions are independently measured and cannot be omitted or replaced "
+            "with filler height."
+        )
     return (
         f"Reproduce the '{sec['name']}' section (type: {sec['section_type']}) as a React "
         f"component `{sec['component_name']}`, written ONLY inside `{sec['base_path']}`. "
@@ -216,8 +274,8 @@ def _task_description(sec: Dict[str, Any]) -> str:
         f"{n_img} image URLs and ALL {n_link} link hrefs EXACTLY as given in `links`. "
         f"NEVER fabricate a link: no `#`, no `javascript:`, no invented URLs — every "
         f"anchor must point to its real href (verify_links will reject the section "
-        f"otherwise).{css_clause} Preserve the original structure, order, layout and "
-        f"styling. Do not invent content. Do not touch shared files."
+        f"otherwise).{css_clause}{structure_clause} Preserve the original structure, "
+        f"order, layout and styling. Do not invent content. Do not touch shared files."
     )
 
 
@@ -228,6 +286,7 @@ def _full_to_plan_entry(sec: Dict[str, Any]) -> Dict[str, Any]:
         "component_name": sec["component_name"], "section_type": sec["section_type"],
         "base_path": sec["base_path"], "component_path": sec["component_path"],
         "bounds": sec.get("bounds", {}), "order": sec.get("order", 0),
+        "critical_regions": sec.get("critical_regions", []),
         "estimated_tokens": sec.get("estimated_tokens", 0),
         "counts": {
             "images": len(sec.get("images") or []),
@@ -237,6 +296,39 @@ def _full_to_plan_entry(sec: Dict[str, Any]) -> Dict[str, Any]:
         },
         "task_description": _task_description(sec),
     }
+
+
+def _attach_structure_requirements(
+    source_id: str,
+    full_sections: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Attach standalone critical-region hooks to their owning plan sections."""
+
+    try:
+        store = SourceStore(source_id)
+        raw_path = store.dir / "evidence" / "raw_structure.json"
+        if not raw_path.is_file():
+            return []
+        raw = json.loads(raw_path.read_text(encoding="utf-8"))
+        viewport_height = float((raw.get("viewport") or {}).get("height") or 0)
+        requirements = structure_contract.build_structure_requirements(
+            raw.get("regions") or [],
+            full_sections,
+            viewport_height=viewport_height,
+        )
+        by_owner: Dict[str, List[Dict[str, Any]]] = {}
+        for item in requirements:
+            owner = item.get("owner_section")
+            if owner:
+                by_owner.setdefault(str(owner), []).append(item)
+        for section in full_sections:
+            section["critical_regions"] = by_owner.get(
+                str(section.get("name") or ""),
+                [],
+            )
+        return requirements
+    except Exception:  # noqa: BLE001 — verification still fails closed later.
+        return []
 
 
 def _assembly_template(full_sections: List[Dict[str, Any]], title: str, url: str) -> Dict[str, Any]:
@@ -274,17 +366,18 @@ def _compute_plan(source_id: str):
     # localization AND per-section fidelity scoring). Deterministic, no LLM.
     if dom_tree:
         section_geometry.attach_bounds(full_sections, dom_tree)
-    # Reveal content that a scroll/reveal site froze invisible at capture time
-    # (opacity:0 / display:none / blur / offscreen transforms on the real content).
-    # Without this a scroll-choreographed clone renders blank. Records how many
-    # hiding declarations were neutralized per section (a residual signal).
-    for sec in full_sections:
-        if sec.get("full_html"):
-            sec["full_html"], revealed = anim_normalize.reveal_animation_states(sec["full_html"])
-            if revealed:
-                sec["hidden_revealed"] = revealed
+        full_sections = section_geometry.filter_hidden_identified_sections(
+            full_sections, dom_tree
+        )
+        for order, sec in enumerate(full_sections):
+            sec["order"] = order
+    required_structure = _attach_structure_requirements(source_id, full_sections)
+    # Reveal frozen content only on pages whose capture positively identifies
+    # scroll choreography. Shopify/static pages contain deliberate hidden UI
+    # (drawers, dialogs, inactive slides) that must remain hidden at rest.
+    _normalize_section_animation_states(full_sections, raw_html)
     # Attach each section's real CSS subset (hover/animation/transition/@media
-    # + the variables it uses) so its sub-agent can reproduce interaction and
+    # + the variables it uses) so the owning agent can reproduce interaction and
     # responsive behavior instead of guessing. Deterministic, no LLM.
     css_json = _load_css(source_id)
     if css_json:
@@ -319,6 +412,7 @@ def _compute_plan(source_id: str):
         "source_url": url, "page_title": title,
         "section_count": len(full_sections),
         "sections": [_full_to_plan_entry(s) for s in full_sections],
+        "required_structure": required_structure,
         "assembly_template": _assembly_template(full_sections, title, url),
     }
     return plan, full_sections
@@ -432,8 +526,8 @@ def get_section_plan(source_id: str) -> Dict[str, Any]:
 
     Loads the persisted extraction for ``source_id`` and runs the pure-logic
     ``core.section_analyzer`` (v2's "session chunking" ace card — **no LLM**) to
-    split the page into independently-clonable sections. Claude Code uses this
-    plan to dispatch one Task subagent per section.
+    split the page into independently-clonable sections. The owning agent uses
+    the plan to author every section while preserving whole-page context.
 
     Args:
         source_id: The id returned by ``extract_page``.
@@ -470,6 +564,29 @@ def get_section_plan(source_id: str) -> Dict[str, Any]:
         return _err("source_id is required and must be a non-empty string.")
     source_id = source_id.strip()
 
+    # Fail closed at the evidence boundary.  A plan derived from an incomplete
+    # or legacy-unvalidated reference only makes later visual scoring circular.
+    store = SourceStore(source_id)
+    if not store.exists():
+        return _err(
+            f"unknown source_id {source_id!r}; run extract_page first.",
+            source_id=source_id,
+        )
+    manifest = store.read_manifest()
+    integrity = (manifest.capture_integrity if manifest else {}) or {}
+    status = integrity.get("status", "unknown")
+    if status != "passed":
+        return _err(
+            (
+                "source capture integrity is unknown; recapture with extract_page "
+                "before section planning."
+                if status == "unknown"
+                else "source capture integrity failed; section planning is prohibited."
+            ),
+            source_id=source_id,
+            capture_integrity={"status": status, **integrity},
+        )
+
     try:
         plan, full_sections = _compute_plan(source_id)
     except KeyError:
@@ -481,7 +598,7 @@ def get_section_plan(source_id: str) -> Dict[str, Any]:
         return _err(f"section planning failed: {exc}", source_id=source_id)
 
     # Record the chunking durably (lightweight plan + full sections + md) so the
-    # user can review/reuse it and the subagents + assembler read a single source.
+    # user can review/reuse it and the owning agent + assembler read one source.
     persisted = _persist_plan(source_id, plan, full_sections)
 
     return {"ok": True, "persisted": persisted, **plan}
@@ -497,9 +614,9 @@ def get_section_data(source_id: str, name: str) -> Dict[str, Any]:
 
     Loads the persisted extraction for ``source_id`` and asks the deterministic
     ``core.section_analyzer`` (**no LLM**) for *only* the section identified by
-    ``name`` (as listed in ``get_section_plan``). A per-section Claude Code
-    subagent calls this to get its own chunk — raw_html, styles, css_rules, text,
-    headings, images, links — with no cross-section context.
+    ``name`` (as listed in ``get_section_plan``). The owning agent calls this
+    for one isolated repair/authoring unit — raw_html, styles, css_rules, text,
+    headings, images, and links — while retaining whole-page context.
 
     Args:
         source_id: The id returned by ``extract_page``.

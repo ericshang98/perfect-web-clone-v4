@@ -28,6 +28,7 @@ _UNSTICK = (
 
 _MEASURE = """() => {
   const bounds = {};
+  const critical_bounds = {};
   document.querySelectorAll('[data-pwc-section]').forEach(el => {
     const r = el.getBoundingClientRect();
     bounds[el.getAttribute('data-pwc-section')] = {
@@ -37,7 +38,20 @@ _MEASURE = """() => {
       height: r.height,
     };
   });
-  return { bounds, page_height: document.documentElement.scrollHeight };
+  document.querySelectorAll('[data-pwc-critical]').forEach(el => {
+    const r = el.getBoundingClientRect();
+    critical_bounds[el.getAttribute('data-pwc-critical')] = {
+      x: r.x + window.scrollX,
+      y: r.y + window.scrollY,
+      width: r.width,
+      height: r.height,
+    };
+  });
+  return {
+    bounds,
+    critical_bounds,
+    page_height: document.documentElement.scrollHeight
+  };
 }"""
 
 
@@ -89,6 +103,7 @@ def capture_clone(
     Returns ``{png, page_height, bounds: {name: {x, y, width, height}}}``.
     """
     from playwright.sync_api import sync_playwright
+    from core.extractor.dom_scripts import FORCE_LOAD_IMAGES_JS
 
     with sync_playwright() as p:
         browser = p.chromium.launch()
@@ -98,6 +113,10 @@ def capture_clone(
         )
         page.goto(url, wait_until="networkidle", timeout=60_000)
         page.wait_for_timeout(settle_ms)
+        # Full-page screenshots do not automatically scroll through lazy image
+        # bands. Force the clone's already-local image URLs to decode so a valid
+        # lower-page section is not scored as a black placeholder.
+        page.evaluate(FORCE_LOAD_IMAGES_JS)
         page.evaluate(_UNSTICK)
         measured = page.evaluate(_MEASURE)
         page.screenshot(path=out_png, full_page=True)
@@ -107,4 +126,5 @@ def capture_clone(
         "png": out_png,
         "page_height": float(measured["page_height"]),
         "bounds": measured["bounds"],
+        "critical_bounds": measured["critical_bounds"],
     }

@@ -94,7 +94,6 @@ DOM_TREE_JS = r"""(params) => {
         if (depth > maxDepth) return null;
         const styles = window.getComputedStyle(el);
         const isVisible = isElementVisible(el, styles);
-        if (!includeHidden && !isVisible) return null;
         const rect = el.getBoundingClientRect();
 
         const styleObj = {};
@@ -117,6 +116,12 @@ DOM_TREE_JS = r"""(params) => {
             if (childInfo) children.push(childInfo);
             childIndex++;
         }
+        // A zero-size wrapper can still contain visible page content. Custom
+        // elements and `display: contents` wrappers are common around sticky
+        // headers; returning before visiting their children erased the entire
+        // header from dom.json. A truly hidden subtree still collapses to zero
+        // children because its descendants inherit the hidden computed state.
+        if (!includeHidden && !isVisible && children.length === 0) return null;
         return {
             tag: el.tagName.toLowerCase(),
             id: el.id || null,
@@ -391,6 +396,314 @@ BLOCKS_JS = r"""(params) => {
 }"""
 
 
+# Immutable source evidence inventory.  This runs before and after any
+# stabilization mutation.  It deliberately treats opacity:0 as structural when
+# the element still has layout geometry: a carousel can be sampled during its
+# cross-fade, and opacity must not make an entire Hero disappear from evidence.
+CAPTURE_INVENTORY_JS = r"""() => {
+  const vw = window.innerWidth || 1;
+  const vh = window.innerHeight || 1;
+  const pageHeight = Math.max(
+    document.documentElement ? document.documentElement.scrollHeight : 0,
+    document.body ? document.body.scrollHeight : 0
+  );
+  const esc = (value) => {
+    try { return CSS.escape(String(value)); }
+    catch (e) { return String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&'); }
+  };
+  const selectorFor = (el) => {
+    if (!el || !el.tagName) return '';
+    if (el.id) return '#' + esc(el.id);
+    const testId = el.getAttribute('data-testid');
+    if (testId) return '[data-testid="' + String(testId).replace(/"/g, '\\"') + '"]';
+    const parts = [];
+    let node = el;
+    while (node && node.nodeType === 1 && node !== document.body && parts.length < 12) {
+      if (node.id) {
+        parts.unshift('#' + esc(node.id));
+        return parts.join(' > ');
+      }
+      let part = node.tagName.toLowerCase();
+      const stableClasses = Array.from(node.classList || [])
+        .filter(c => c && !/\d{4,}|^(active|open|selected|current)$/i.test(c))
+        .slice(0, 2);
+      if (stableClasses.length) part += '.' + stableClasses.map(esc).join('.');
+      const parent = node.parentElement;
+      if (parent) {
+        const peers = Array.from(parent.children).filter(x => x.tagName === node.tagName);
+        if (peers.length > 1) part += ':nth-of-type(' + (peers.indexOf(node) + 1) + ')';
+      }
+      parts.unshift(part);
+      node = parent;
+    }
+    return 'body > ' + parts.join(' > ');
+  };
+  const descriptor = (el) => [
+    el.getAttribute('aria-label') || '',
+    el.getAttribute('title') || '',
+    el.id || '',
+    el.className || '',
+    el.textContent || ''
+  ].join(' ').replace(/\s+/g, ' ').trim().slice(0, 240);
+  const fingerprintFor = (el, index) => {
+    if (el.id) return 'id:' + el.id;
+    const role = el.getAttribute('role');
+    const label = (el.getAttribute('aria-label') || '').trim().slice(0, 80);
+    if (role && label) return 'role:' + role + ':label:' + label;
+    const heading = el.querySelector('h1,h2,h3');
+    const headingText = heading ? (heading.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+    if (headingText) return 'heading:' + headingText;
+    const classes = Array.from(el.classList || [])
+      .filter(c => c && !/\d{4,}|^(active|open|selected|current)$/i.test(c))
+      .slice(0, 3).join('.');
+    if (classes) return 'class:' + el.tagName.toLowerCase() + ':' + classes;
+    return 'path:' + selectorFor(el) + ':index:' + index;
+  };
+  const rectFor = (el) => {
+    const r = el.getBoundingClientRect();
+    const y = r.top + window.scrollY;
+    return {x:r.x, y, width:r.width, height:r.height, top:y,
+            right:r.right, bottom:y + r.height, left:r.left};
+  };
+  const structurallyVisible = (el) => {
+    let cs;
+    try { cs = getComputedStyle(el); } catch (e) { return false; }
+    if (cs.display === 'none' || cs.visibility === 'hidden') return false;
+    const r = el.getBoundingClientRect();
+    return r.width >= 1 && r.height >= 1;
+  };
+
+  const candidates = new Set();
+  const promotedCarouselBands = new WeakSet();
+  document.querySelectorAll(
+    'header,main,footer,nav,section,[role="banner"],[role="main"],' +
+    '[role="contentinfo"],[role="navigation"],[class*="hero" i],' +
+    '[class*="banner" i],[class*="carousel" i],[class*="swiper" i]'
+  ).forEach(el => candidates.add(el));
+  const shells = [
+    document.body,
+    document.querySelector('main'),
+    document.querySelector('#app'),
+    document.querySelector('#root'),
+    document.querySelector('#__next')
+  ].filter(Boolean);
+  shells.forEach(shell => Array.from(shell.children || []).forEach(el => candidates.add(el)));
+
+  // Promote a standalone carousel band even when the production markup uses
+  // nothing but anonymous <div>s. Pagination dots are a strong structural
+  // anchor: climb from a repeated group of small clickable siblings to the
+  // nearest wide, media-bearing document band. This is intentionally done
+  // before region classification so a Hero nested inside a page shell is not
+  // represented only by the whole-page wrapper.
+  document.querySelectorAll('[class*="cursor-pointer"]').forEach(dot => {
+    const r = dot.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2 || r.width > 64 || r.height > 32) return;
+    const group = dot.parentElement;
+    if (!group) return;
+    const peerDots = Array.from(group.children).filter(peer => {
+      if (!String(peer.className || '').includes('cursor-pointer')) return false;
+      const pr = peer.getBoundingClientRect();
+      return pr.width >= 2 && pr.height >= 2 && pr.width <= 64 && pr.height <= 32;
+    });
+    if (peerDots.length < 2) return;
+    let band = group.parentElement;
+    for (let depth = 0; band && depth < 10 && band !== document.body; depth++) {
+      const br = band.getBoundingClientRect();
+      const hasMedia = !!band.querySelector(
+        'img,picture,video,canvas,[style*="background-image"]'
+      );
+      const wideBand = br.width >= vw * 0.6 &&
+        br.height >= vh * 0.16 && br.height <= vh * 1.35 &&
+        br.top + window.scrollY < vh * 1.8;
+      if (wideBand && hasMedia) {
+        candidates.add(band);
+        promotedCarouselBands.add(band);
+        break;
+      }
+      band = band.parentElement;
+    }
+  });
+
+  const regions = [];
+  let index = 0;
+  for (const el of candidates) {
+    if (!structurallyVisible(el)) continue;
+    const rect = rectFor(el);
+    if (rect.width < vw * 0.2 || rect.height < 24) continue;
+    const tag = el.tagName.toLowerCase();
+    const role = (el.getAttribute('role') || '').toLowerCase();
+    const position = getComputedStyle(el).position;
+    const names = descriptor(el).toLowerCase();
+    const hasHeading = !!el.querySelector('h1,h2,h3,[role="heading"]');
+    const hasMedia = !!el.querySelector('img,picture,video,canvas,svg,[style*="background-image"]');
+    const controls = el.querySelectorAll('button,[role="button"],[role="tab"],summary').length;
+    const heroNamed = promotedCarouselBands.has(el) ||
+      /(hero|banner|carousel|swiper|slideshow)/i.test(names);
+    const heroShaped = rect.width >= vw * 0.5 && rect.height >= vh * 0.16 &&
+      hasMedia && (hasHeading || controls > 0) && rect.y < vh * 1.5;
+    let kind = 'section';
+    if (tag === 'header' || role === 'banner') kind = 'header';
+    else if (tag === 'footer' || role === 'contentinfo') kind = 'footer';
+    else if (tag === 'nav' || role === 'navigation') kind = 'navigation';
+    else if (heroNamed || heroShaped) kind = 'hero';
+    else if (tag === 'main' || role === 'main') kind = 'main';
+    const detachedSlide = (position === 'absolute' || position === 'fixed') &&
+      kind === 'hero' && !['header','footer','nav','main','section'].includes(tag);
+    const semanticCritical = ['header','footer','navigation','main'].includes(kind) ||
+      (kind === 'hero' && !detachedSlide);
+    const largeContent = !detachedSlide &&
+      rect.width >= vw * 0.5 && rect.height >= vh * 0.18 &&
+      (hasMedia || hasHeading || controls > 0);
+    regions.push({
+      fingerprint: fingerprintFor(el, index++),
+      selector: selectorFor(el),
+      kind,
+      tag,
+      role: role || null,
+      position,
+      rect,
+      critical: semanticCritical || largeContent,
+      signals: {heading:hasHeading, media:hasMedia, controls},
+      text: (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160)
+    });
+  }
+  regions.sort((a,b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x || b.rect.height - a.rect.height);
+
+  const interactions = [];
+  const seen = new Set();
+  const addInteraction = (el, kind, observable, controlledId) => {
+    const target = selectorFor(el);
+    const key = kind + ':' + target;
+    if (!target || seen.has(key) || !structurallyVisible(el)) return;
+    seen.add(key);
+    const id = 'interaction-' + (interactions.length + 1);
+    interactions.push({
+      id,
+      kind,
+      target,
+      clone_target: '[data-pwc-interaction="' + id + '"]',
+      action: 'click',
+      controlled: controlledId ? '#' + esc(controlledId) : null,
+      clone_controlled: controlledId
+        ? '[data-pwc-controlled="' + id + '"]' : null,
+      required: true,
+      expect: {observable}
+    });
+  };
+
+  document.querySelectorAll('details > summary').forEach(
+    el => addInteraction(el, 'accordion', 'details_open_toggles', null)
+  );
+  document.querySelectorAll('[role="tab"]').forEach(el => {
+    // Replay a tab that can produce an observable transition. Clicking the
+    // already-selected tab proves nothing about clone behavior.
+    if (el.getAttribute('aria-selected') !== 'true') {
+      addInteraction(el, 'tab', 'aria_selected_and_panel_change', el.getAttribute('aria-controls'));
+    }
+  });
+  document.querySelectorAll('button,[role="button"],a').forEach(el => {
+    const desc = descriptor(el);
+    const controls = el.getAttribute('aria-controls');
+    const expanded = el.hasAttribute('aria-expanded');
+    if (/(next|previous|prev|slide|carousel|swiper|siguiente|anterior)/i.test(desc)) {
+      addInteraction(el, 'carousel', 'selected_slide_or_visible_content_changes', controls);
+      return;
+    }
+    if (controls && expanded) {
+      const controlled = document.getElementById(controls);
+      const menuLike = controlled && (
+        controlled.tagName.toLowerCase() === 'nav' ||
+        controlled.getAttribute('role') === 'menu' ||
+        /(menu|nav)/i.test(descriptor(controlled) + ' ' + desc)
+      );
+      addInteraction(
+        el,
+        menuLike ? 'menu' : 'accordion',
+        menuLike ? 'aria_expanded_and_menu_visibility_toggle' :
+          'aria_expanded_and_panel_visibility_toggle',
+        controls
+      );
+    }
+  });
+  // Some production carousels expose pagination as clickable <div>s with no
+  // ARIA. Keep this conservative: a small clickable element is a carousel dot
+  // only when at least two small clickable siblings form a pagination group.
+  const processedDotGroups = new WeakSet();
+  document.querySelectorAll('[class*="cursor-pointer"]').forEach(el => {
+    const r = el.getBoundingClientRect();
+    if (r.width < 2 || r.height < 2 || r.width > 64 || r.height > 32) return;
+    const parent = el.parentElement;
+    if (!parent || processedDotGroups.has(parent)) return;
+    const peerDots = Array.from(parent.children).filter(peer => {
+      if (!String(peer.className || '').includes('cursor-pointer')) return false;
+      const pr = peer.getBoundingClientRect();
+      return pr.width >= 2 && pr.height >= 2 && pr.width <= 64 && pr.height <= 32;
+    });
+    if (peerDots.length >= 2) {
+      processedDotGroups.add(parent);
+      const signature = peer => {
+        const pr = peer.getBoundingClientRect();
+        const cs = getComputedStyle(peer);
+        return [
+          Math.round(pr.width), Math.round(pr.height),
+          cs.backgroundColor, cs.opacity
+        ].join(':');
+      };
+      const counts = new Map();
+      peerDots.forEach(peer => {
+        const sig = signature(peer);
+        counts.set(sig, (counts.get(sig) || 0) + 1);
+      });
+      const majoritySignature = Array.from(counts.entries())
+        .sort((a,b) => b[1] - a[1])[0][0];
+      const explicitlyActive = peer => (
+        peer.getAttribute('aria-selected') === 'true' ||
+        peer.getAttribute('aria-current') === 'true' ||
+        /(^|\s)(active|selected|current)(\s|$)/i.test(String(peer.className || ''))
+      );
+      const replayTarget = peerDots.find(peer => (
+        !explicitlyActive(peer) && signature(peer) === majoritySignature
+      )) || peerDots.find(peer => !explicitlyActive(peer));
+      if (!replayTarget) return;
+      addInteraction(
+        replayTarget,
+        'carousel',
+        'selected_slide_or_visible_content_changes',
+        null
+      );
+    }
+  });
+  // Frameworks sometimes implement a nav popover trigger as an anonymous div
+  // with delegated React/Vue click handling and no ARIA. Recognize only a
+  // compact, explicitly named menu/download control inside header navigation;
+  // links are excluded because replay must never navigate away.
+  document.querySelectorAll(
+    '[class*="nav_item" i],[class*="menu-button" i],' +
+    '[class*="download" i][class*="btn" i]'
+  ).forEach(el => {
+    if (el.tagName === 'A' || el.closest('a[href]')) return;
+    if (!el.closest('header,nav,[role="navigation"]')) return;
+    const r = el.getBoundingClientRect();
+    if (r.width < 20 || r.height < 20 || r.width > 240 || r.height > 120) return;
+    if (!/(download|descargar|menu|menú)/i.test(descriptor(el))) return;
+    addInteraction(
+      el,
+      'menu',
+      'menu_or_overlay_visibility_toggle',
+      null
+    );
+  });
+
+  return {
+    viewport: {width:vw, height:vh},
+    page: {width:Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
+           height:pageHeight},
+    regions,
+    interactions
+  };
+}"""
+
+
 # Rest-state baking — the deterministic cure for "static clone of a JS page".
 # Run AFTER the page has loaded + settled (JS has run, widgets are at rest), just
 # before serializing the DOM. It freezes the *rendered* state into inline styles
@@ -410,6 +723,22 @@ REST_STATE_BAKE_JS = r"""() => {
   const LAYOUT = new Set(['flex','inline-flex','grid','inline-grid']);
   const vw = window.innerWidth, vh = window.innerHeight;
   let hidden = 0, containers = 0, items = 0;
+  const hiddenElements = [];
+  const recordHidden = (el, reason, cs) => {
+    if (hiddenElements.length >= 100) return;
+    const r = el.getBoundingClientRect();
+    hiddenElements.push({
+      reason,
+      tag: el.tagName.toLowerCase(),
+      id: el.id || null,
+      classes: Array.from(el.classList || []).slice(0, 8),
+      rect: {x:r.x, y:r.top + window.scrollY, width:r.width, height:r.height},
+      display: cs.display,
+      visibility: cs.visibility,
+      opacity: cs.opacity,
+      position: cs.position
+    });
+  };
   const all = document.querySelectorAll('body *');
   for (const el of all) {
     let cs;
@@ -419,7 +748,26 @@ REST_STATE_BAKE_JS = r"""() => {
     // display:none, visibility:hidden, and opacity:0 (drawers/modals/search/
     // dropdowns commonly use the latter two). Freeze them OUT so the static clone
     // never paints them — this is what kills the stray header/overlay fragments.
-    const invisible = d === 'none' || cs.visibility === 'hidden' || parseFloat(cs.opacity) === 0;
+    const opacityZero = parseFloat(cs.opacity) === 0;
+    const visibilityHidden = cs.visibility === 'hidden';
+    let preserveLayoutHidden = false;
+    if ((opacityZero || visibilityHidden) && d !== 'none') {
+      const r = el.getBoundingClientRect();
+      const tag = el.tagName.toLowerCase();
+      const structuralTag = ['header','main','footer','nav','section'].includes(tag);
+      const contentBearing = !!(el.querySelector && el.querySelector(
+        'img,picture,video,canvas,h1,h2,h3,button,[role="button"]'
+      ));
+      // A large in-flow carousel/Hero may be sampled during a cross-fade.
+      // Converting that transient opacity into display:none collapses a whole
+      // document band. Keep its geometry; the post-capture integrity gate will
+      // reject any mutation that still loses it.
+      const inFlow = cs.position === 'static' || cs.position === 'relative' || cs.position === 'sticky';
+      preserveLayoutHidden = inFlow && r.width >= vw * 0.4 && r.height >= vh * 0.12 &&
+        (structuralTag || contentBearing);
+    }
+    const invisible = d === 'none' ||
+      ((visibilityHidden || opacityZero) && !preserveLayoutHidden);
     if (invisible) {
       const p = el.parentElement;
       // Only bake on the TOP of a hidden subtree (parent still hidden-free), to
@@ -430,6 +778,8 @@ REST_STATE_BAKE_JS = r"""() => {
         pInvisible = pcs.display === 'none' || pcs.visibility === 'hidden' || parseFloat(pcs.opacity) === 0;
       }
       if (!pInvisible) {
+        recordHidden(el, opacityZero ? 'opacity-zero' :
+          (d === 'none' ? 'display-none' : 'visibility-hidden'), cs);
         el.style.setProperty('display', 'none', 'important');
         hidden++;
       }
@@ -446,7 +796,14 @@ REST_STATE_BAKE_JS = r"""() => {
       const r = el.getBoundingClientRect();
       const z = parseInt(cs.zIndex, 10);
       const bigCentral = r.width >= vw * 0.4 && r.height >= vh * 0.3 && r.top > vh * 0.05;
-      if (bigCentral && (Number.isNaN(z) ? true : z >= 50)) {
+      // A tall sticky product/details column commonly has z-index:auto and is
+      // ordinary in-flow page content. Only treat sticky content as an overlay
+      // when it is explicitly elevated; fixed surfaces may legitimately omit z.
+      const elevatedOverlay = pos === 'fixed'
+        ? (Number.isNaN(z) ? true : z >= 50)
+        : (!Number.isNaN(z) && z >= 50);
+      if (bigCentral && elevatedOverlay) {
+        recordHidden(el, 'elevated-overlay', cs);
         el.style.setProperty('display', 'none', 'important');
         hidden++;
         continue;
@@ -496,7 +853,7 @@ REST_STATE_BAKE_JS = r"""() => {
       }
     }
   }
-  return { hidden, containers, items };
+  return { hidden, containers, items, hiddenElements };
 }"""
 
 
@@ -529,6 +886,10 @@ DISMISS_OVERLAYS_JS = r"""() => {
   document.querySelectorAll(CLOSE_SEL.join(',')).forEach(el=>{
     if (el.tagName === 'A' || el.closest('a[href]')) return;       // never navigate
     if (el.hasAttribute && el.hasAttribute('href')) return;
+    // A <button> without an explicit type defaults to submit inside a form.
+    // Search drawers often label that control "Close search"; clicking it would
+    // navigate the crawler to /search and replace the page being captured.
+    if (el.tagName === 'BUTTON' && el.form && el.type === 'submit') return;
     const r = el.getBoundingClientRect();
     if (r.width > 0 && r.width < 80 && r.height < 80) { fire(el); closed++; }
   });

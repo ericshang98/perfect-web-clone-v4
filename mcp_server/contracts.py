@@ -1,20 +1,20 @@
 """
-Section isolation contracts for Perfect Web Clone v3.
+Section isolation contracts for Perfect Web Clone v4.
 
-This module is the v3 distillation of v2's ``backend/agent/task_contract.py``.
+This module is the v4 distillation of v2's ``backend/agent/task_contract.py``.
 v2 wrapped path-isolation inside a stateful ``TaskContract`` dataclass that also
-carried section data, acceptance criteria, prompt generation, etc. In v3 the
+carried section data, acceptance criteria, prompt generation, etc. In v4 the
 *only* thing the tool layer needs is the **pure, deterministic path-isolation
 check**: given a section's ``namespace`` and a requested write ``path``, decide
 whether the write is allowed.
 
-Design rules (matching the v3 spec, section 7 "分块隔离契约"):
+Design rules:
 
-* Every section subagent owns exactly one directory:
-  ``src/components/sections/{namespace}/`` and may only write inside it.
+* The owning agent writes each section only inside its isolated directory:
+  ``src/components/sections/{namespace}/``.
 * Shared / assembly files (``App.jsx``, ``main.jsx``, ``index.css``,
   ``package.json``, ``vite.config.js`` …) are NEVER writable by a section
-  subagent — they are produced by the deterministic ``assemble_project`` tool.
+  authoring step — they are produced by deterministic ``assemble_project``.
 * Only a small set of file extensions are permitted (``.jsx``, ``.css``,
   ``.js``, ``.ts``, ``.tsx``, image assets).
 
@@ -26,10 +26,10 @@ from __future__ import annotations
 import posixpath
 import re
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List
 
 # ---------------------------------------------------------------------------
-# Constants — the shared contract every section subagent must respect.
+# Constants — the shared contract every section authoring step must respect.
 # ---------------------------------------------------------------------------
 
 #: Root directory (relative to the project root) under which each section lives.
@@ -37,7 +37,7 @@ from typing import List, Optional
 #: ``src/components/sections/hero/``.
 SECTIONS_ROOT = "src/components/sections"
 
-#: File extensions a section subagent is allowed to create.
+#: File extensions a section authoring step is allowed to create.
 ALLOWED_EXTENSIONS = (
     ".jsx",
     ".tsx",
@@ -53,7 +53,7 @@ ALLOWED_EXTENSIONS = (
     ".gif",
 )
 
-#: Shared / assembly-owned files that no section subagent may write.
+#: Shared / assembly-owned files that no section authoring step may write.
 #: Matched by basename anywhere, and by exact relative path.
 SHARED_FILES = (
     "src/App.jsx",
@@ -181,7 +181,7 @@ def validate_write_path(namespace: str, path: str) -> ValidationResult:
     if not norm:
         return ValidationResult(ok=False, error=f"Path resolves to empty: {path!r}.")
 
-    # 3. Shared / assembly-owned files are off-limits to section subagents.
+    # 3. Shared / assembly-owned files are off-limits to section authoring.
     basename = posixpath.basename(norm)
     for shared in SHARED_FILES:
         if norm == shared or basename == posixpath.basename(shared):
@@ -189,7 +189,7 @@ def validate_write_path(namespace: str, path: str) -> ValidationResult:
                 ok=False,
                 error=(
                     f"{norm!r} is a shared/assembly file owned by "
-                    f"assemble_project(); section subagents must not write it. "
+                    f"assemble_project(); section authoring must not write it. "
                     f"Write only inside {section_dir(namespace)}/."
                 ),
             )

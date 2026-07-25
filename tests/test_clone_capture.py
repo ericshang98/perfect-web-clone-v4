@@ -65,7 +65,9 @@ _PAGE = """<!doctype html><html><head><style>
   [data-pwc-section="hero"]{height:600px;background:#ace}
   [data-pwc-section="footer"]{height:800px;background:#eca}
 </style></head><body>
-  <div data-pwc-section="hero">HERO</div>
+  <div data-pwc-section="hero">
+    <div data-pwc-critical="hero-1" style="height:600px">HERO</div>
+  </div>
   <div data-pwc-section="footer">FOOTER</div>
 </body></html>"""
 
@@ -90,6 +92,7 @@ def test_capture_clone_measures_bounds_and_full_page_raster(tmp_path):
     assert abs(b["hero"]["height"] - 600) <= 2
     assert abs(b["footer"]["y"] - 600) <= 2
     assert abs(b["footer"]["height"] - 800) <= 2
+    assert abs(res["critical_bounds"]["hero-1"]["height"] - 600) <= 2
 
     img = Image.open(out_png)
     assert abs(img.height - 1400) <= 4  # device_scale_factor=1 → raster px == CSS px

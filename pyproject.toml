@@ -1,7 +1,7 @@
 [project]
 name = "perfect-web-clone-v4"
 version = "0.1.0"
-description = "Perfect Web Clone v3 — a deterministic MCP toolbelt for web cloning, driven entirely by Claude Code as the brain."
+description = "Perfect Web Clone v4 — an agent-facing web-cloning Harness with deterministic MCP hands and eyes."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

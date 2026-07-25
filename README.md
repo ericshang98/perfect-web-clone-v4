@@ -6,18 +6,55 @@ A complete rebuild of the web-cloning system that uses **Claude Code as the brai
 The North Star is **fidelity** — cloning a page so it looks as close to the original as
 possible. Deployment is a side effect of producing build-grade output, not a goal.
 
-## What v3 is
+## Agent-facing Harness
 
-v3 is a Python MCP server (built on the official `mcp` package, `FastMCP`, exposed over
+Perfect Web Clone is a Harness for Claude Code, Codex, and equivalent coding
+agents. The user gives the agent one natural-language request, for example
+`复刻 https://example.com`, and the loaded Skill requires that same agent to
+continue through capture, full-page authoring, interaction implementation,
+build, measured comparison, repair, and review handoff.
+
+There is no separate user-facing CLI or cloning API. The connected agent is the
+runtime and decision-maker; the `pwc4` MCP server supplies deterministic capture,
+filesystem, browser, build, replay, and measurement tools. “One request” means
+one user operation, not one model call—the agent may perform multiple internal
+tool calls and repair iterations without asking the user to manage the workflow.
+
+Every run maintains `.pwc/run.json`, and a new source automatically receives a
+clean sandbox so a prior website's components cannot leak into the next clone.
+The Harness may report `ready_for_user_review` or
+`failed_with_residuals`; only the user accepts the result.
+
+## Four-reference acceptance run
+
+The current client delivery run covers ReelShort, Livora, Kojeva, and TryKojiva.
+Its machine-readable capture identities, fresh build results, link/weight checks,
+responsive checks, fidelity scores, exact evidence paths, and unresolved local
+visual residuals are recorded in:
+
+- `delivery/four-reference-sites.json`
+- `delivery/four-reference-sites.md`
+
+The ledger is historical evidence, not an acceptance verdict. Numeric visual
+scores are diagnostics only: a missing critical region or required common
+interaction is now a hard failure, and final acceptance always belongs to the
+user.
+
+## What v4 is
+
+v4 is a Python MCP server (built on the official `mcp` package, `FastMCP`, exposed over
 **stdio**) plus a Claude Code **Skill** that scripts the seven-phase clone workflow:
 
-1. **Extract** — `extract_page(url)` runs Playwright, captures DOM/CSS/assets/themes, returns a `source_id`.
+1. **Extract** — `extract_page(url)` captures immutable raw evidence, compares
+   it with the normalized derivative, discovers common interactions, and
+   retries structural inconsistencies up to three times.
 2. **Section plan** — `get_section_plan(source_id)` returns the deterministic chunking plan.
-3. **Parallel reproduction** — Claude Code spawns one native Task subagent per section; each writes only its own `sections/{namespace}/`.
+3. **Single-agent reproduction** — one owning agent keeps whole-page context while writing each isolated `sections/{namespace}/` component. Sections are repair units; delegation is opt-in.
 4. **Assemble** — `assemble_project(source_id)` deterministically wires up `App.jsx` / routes / `index.css`.
 5. **Preview self-check (dev)** — start a Vite dev server, screenshot, compare to the original, iterate.
 6. **Production self-check (build)** — `npm run build` must pass; re-screenshot the build output.
-7. **Deliver** — produce a deploy-grade `dist/` (optional Dockerfile / Cloudflare Pages deploy).
+7. **Review handoff** — produce a deploy-grade `dist/` and report
+   `ready_for_user_review`; the user makes the acceptance decision.
 
 ### The iron rule
 
@@ -33,8 +70,8 @@ v2 (in `../perfect-web-clone_V2`) is a FastAPI + Next.js app with a hand-written
 (`claude_agent.py`, `worker_agent.py`, `worker_manager.py`, `memory_sdk.py`, a giant
 `mcp_tools.py`, Master/Worker orchestration).
 
-v2's winning idea — **"session chunking → reproduce per chunk"** — is fully preserved in v3.
-What v3 drops is the hand-written harness: instead of maintaining our own agent loop, message
+v2's winning idea — **"session chunking → reproduce per chunk"** — is fully preserved in v4.
+What v4 drops is the hand-written harness: instead of maintaining our own agent loop, message
 format, retries, context compression, and concurrency orchestration, **we let Claude Code be the
 brain.**
 

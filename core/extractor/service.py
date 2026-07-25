@@ -20,7 +20,7 @@ import base64
 import logging
 import re
 from datetime import datetime
-from typing import Optional
+from typing import Any, Dict, List, Optional
 from urllib.parse import urljoin, urlparse
 
 from playwright.async_api import (
@@ -33,6 +33,7 @@ from playwright.async_api import (
 
 from . import dom_scripts as js
 from . import robustness
+from ..capture_integrity import assess_capture_integrity
 from ..png_dims import png_css_height_b64
 from .. import scroll_capture
 from .models import (
@@ -192,47 +193,128 @@ class ExtractorService:
                 primary = "light" if current == ThemeMode.LIGHT else "dark"
                 await theme_mod.apply_theme(page, primary)
 
+                # Establish the SAME settled state for DOM/raw serialization and
+                # the reference raster. Previously this ran only after raw_html
+                # was frozen, so a hydrating React page could serialize a hidden
+                # product panel and paint it visible moments later in the PNG.
+                try:
+                    await page.evaluate(js.DISMISS_OVERLAYS_JS)
+                    await robustness.eval_budgeted(
+                        page.evaluate(js.FORCE_LOAD_IMAGES_JS),
+                        8.0,
+                        fallback=None,
+                        label="force_imgs",
+                    )
+                    await asyncio.sleep(0.4)
+                except Exception as e:  # noqa: BLE001 — prep is best-effort.
+                    logger.warning("pre-serialization prep failed: %s", e)
+
                 eval_s = opts.eval_timeout_ms / 1000
                 metadata = await self._extract_metadata(page, url, load_ms)
                 dom_tree = await self._extract_dom_tree(
                     page, opts.max_depth, opts.include_hidden, timeout_s=eval_s
                 )
                 assets = await self._extract_assets(page, timeout_s=eval_s)
+                # Immutable evidence boundary: inventory, HTML and rasters are
+                # recorded BEFORE rest-state baking mutates the live DOM.
+                raw_structure: Dict[str, Any] = await robustness.eval_budgeted(
+                    page.evaluate(js.CAPTURE_INVENTORY_JS),
+                    eval_s,
+                    fallback={},
+                    label="raw_capture_inventory",
+                )
+                interactions = list((raw_structure or {}).get("interactions") or [])
+                raw_html = await page.content()
+                raw_html = _rewrite_next_images(raw_html, url)
+                raw_initial_b64 = (
+                    await self._screenshot(page, full_page=False)
+                    if opts.include_screenshot
+                    else None
+                )
+                raw_full_b64 = (
+                    await self._screenshot(page, full_page=True)
+                    if opts.full_page_screenshot
+                    else None
+                )
                 # Freeze the at-rest rendered state into inline styles BEFORE
                 # serializing, so the static clone reproduces what the live page
                 # looked like (closed overlays stay closed, JS-laid-out columns
                 # keep their size) without shipping the source JS. Best-effort:
                 # a failure here must never abort extraction.
+                baked: Dict[str, Any] = {}
                 try:
                     baked = await page.evaluate(js.REST_STATE_BAKE_JS)
                     logger.info("rest-state bake: %s", baked)
                 except Exception as e:  # noqa: BLE001
                     logger.warning("rest-state bake failed: %s", e)
-                raw_html = await page.content()
-                # Resolve Next.js image-proxy srcs to real CDN urls so they match
-                # downloaded assets (otherwise they stay broken /_next/image refs).
-                raw_html = _rewrite_next_images(raw_html, url)
-                style_summary = self._compute_style_summary(dom_tree) if dom_tree else None
 
-                # Pre-capture prep so the REFERENCE raster is valid: re-dismiss
-                # timer-driven popups (e.g. a delayed newsletter overlay) and force
-                # above-fold images to paint. A defective baseline (popup over a
-                # black hero) would make the fidelity gate punish a correct clone.
+                # Re-dismiss timer-driven popups that may have appeared while
+                # serializing, then inventory the exact normalized state that
+                # will be painted.  This derivative is accepted only when it is
+                # structurally consistent with immutable raw evidence.
                 try:
                     await page.evaluate(js.DISMISS_OVERLAYS_JS)
-                    await robustness.eval_budgeted(
-                        page.evaluate(js.FORCE_LOAD_IMAGES_JS), 8.0, fallback=None, label="force_imgs"
-                    )
-                    await asyncio.sleep(0.4)
                 except Exception as e:  # noqa: BLE001 — prep is best-effort.
                     logger.warning("pre-capture prep failed: %s", e)
 
+                normalized_structure: Dict[str, Any] = await robustness.eval_budgeted(
+                    page.evaluate(js.CAPTURE_INVENTORY_JS),
+                    eval_s,
+                    fallback={},
+                    label="normalized_capture_inventory",
+                )
+                normalized_html = await page.content()
+                normalized_html = _rewrite_next_images(normalized_html, url)
+                style_summary = self._compute_style_summary(dom_tree) if dom_tree else None
+
                 screenshot_b64 = (
-                    await self._screenshot(page) if opts.include_screenshot else None
+                    await self._screenshot(page, full_page=False)
+                    if opts.include_screenshot
+                    else None
                 )
                 full_b64 = (
-                    await self._screenshot(page) if opts.full_page_screenshot else None
+                    await self._screenshot(page, full_page=True)
+                    if opts.full_page_screenshot
+                    else None
                 )
+
+                raster_h = None
+                if full_b64:
+                    try:
+                        raster_h = png_css_height_b64(full_b64, metadata.page_width)
+                    except Exception as e:  # noqa: BLE001
+                        logger.warning("raster height read failed: %s", e)
+                raw_page = (raw_structure or {}).get("page") or {}
+                normalized_page = (normalized_structure or {}).get("page") or {}
+                capture_integrity = assess_capture_integrity(
+                    pre_regions=(raw_structure or {}).get("regions") or [],
+                    post_regions=(normalized_structure or {}).get("regions") or [],
+                    pre_page_height=raw_page.get("height") or metadata.page_height,
+                    post_page_height=normalized_page.get("height") or metadata.page_height,
+                    raster_height=raster_h,
+                    viewport_width=metadata.viewport_width,
+                    viewport_height=metadata.viewport_height,
+                )
+                capture_integrity["normalization_mutations"] = baked
+                if not capture_integrity.get("ok"):
+                    return ExtractionResult(
+                        success=False,
+                        message="capture integrity failed",
+                        error="capture_integrity_failed",
+                        metadata=metadata,
+                        dom_tree=dom_tree,
+                        assets=assets,
+                        raw_html=raw_html,
+                        normalized_html=normalized_html,
+                        raw_structure=raw_structure or {},
+                        normalized_structure=normalized_structure or {},
+                        interactions=interactions,
+                        capture_integrity=capture_integrity,
+                        raw_initial_b64=raw_initial_b64,
+                        raw_full_b64=raw_full_b64,
+                        screenshot_b64=screenshot_b64,
+                        full_b64=full_b64,
+                    )
 
                 # Reconcile page_height with the ground-truth raster: _extract_metadata
                 # read scrollHeight BEFORE lazy-load/scroll-reveal, and scroll sites
@@ -242,7 +324,6 @@ class ExtractorService:
                 # authoritative page_height when it's taller.
                 if full_b64:
                     try:
-                        raster_h = png_css_height_b64(full_b64, metadata.page_width)
                         if raster_h and raster_h > (metadata.page_height or 0):
                             metadata.page_height = int(raster_h)
                     except Exception as e:  # noqa: BLE001 — advisory metric, never fatal.
@@ -307,10 +388,15 @@ class ExtractorService:
                     style_summary=style_summary,
                     assets=assets,
                     raw_html=raw_html,
+                    normalized_html=normalized_html,
                     css_data=css_data,
                     downloaded_resources=downloaded,
                     embeds=embeds,
                     blocks=blocks,
+                    raw_structure=raw_structure or {},
+                    normalized_structure=normalized_structure or {},
+                    interactions=interactions,
+                    capture_integrity=capture_integrity,
                     theme_detection=theme_detection,
                     current_theme=current,
                     light_mode_data=light_data,
@@ -318,6 +404,8 @@ class ExtractorService:
                     # transient base64 carried on the result for the caller to persist
                     screenshot_b64=screenshot_b64,
                     full_b64=full_b64,
+                    raw_initial_b64=raw_initial_b64,
+                    raw_full_b64=raw_full_b64,
                     scroll_state_b64s=scroll_state_b64s,
                 )
             finally:
@@ -589,8 +677,8 @@ class ExtractorService:
             except Exception:  # noqa: BLE001
                 pass
 
-    async def _screenshot(self, page: Page) -> str:
-        data = await page.screenshot(type="png", full_page=True)
+    async def _screenshot(self, page: Page, full_page: bool = True) -> str:
+        data = await page.screenshot(type="png", full_page=full_page)
         return base64.b64encode(data).decode("utf-8")
 
     @staticmethod

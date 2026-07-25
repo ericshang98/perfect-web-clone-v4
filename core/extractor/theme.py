@@ -87,6 +87,10 @@ _RESTORE_ORIGINAL_JS = r"""(original) => {
 # done from Python). Shared by detection and the main service.
 APPLY_THEME_JS = r"""(theme) => {
     const html = document.documentElement, body = document.body;
+    // Some storefronts replace the document during hydration/navigation. A
+    // brief body-less document is valid; signal the caller to retry instead of
+    // throwing on body.classList and aborting the whole extraction.
+    if (!html || !body) return false;
     const darkClasses = ['dark', 'dark-mode', 'dark-theme', 'theme-dark'];
     const lightClasses = ['light', 'light-mode', 'light-theme', 'theme-light'];
     if (theme === 'dark') {
@@ -101,6 +105,7 @@ APPLY_THEME_JS = r"""(theme) => {
         html.setAttribute('data-color-scheme', 'light');
         html.style.colorScheme = 'light';
     }
+    return true;
 }"""
 
 
@@ -171,7 +176,13 @@ async def apply_theme(page: Page, theme: ThemeMode | str) -> None:
     """Switch the page into `theme` via both emulate_media and class/attr toggling."""
     theme_str = theme.value if isinstance(theme, ThemeMode) else theme
     await page.emulate_media(color_scheme=theme_str)
-    await page.evaluate(APPLY_THEME_JS, theme_str)
+    for _ in range(4):
+        try:
+            if await page.evaluate(APPLY_THEME_JS, theme_str):
+                break
+        except Exception as exc:  # noqa: BLE001 — transient navigation/hydration.
+            logger.debug("apply theme retry after transient document: %s", exc)
+        await asyncio.sleep(0.25)
     await asyncio.sleep(0.3)
 
 

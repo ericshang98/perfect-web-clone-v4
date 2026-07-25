@@ -71,6 +71,8 @@ Layer 0–3 与所有门禁是**纯 Python，从不调模型**：抓取、分段
 **范围边界（客户原话）**：视觉保真是第一优先；**交互行为（手风琴、变体切换、倒计时）由客户
 自己后期手搓**。因此工具对 R6–R9 只负责**所截关键态的视觉还原**，不负责完整的行为等价。
 
+> 上述为历史范围记录。2026-07-24 的新决策已覆盖它：常见交互属于当前必做范围，见下方决策日志。
+
 ### 里程碑 → 付款（固定价 $4,000）
 - **M1（40%）= 已完成**：单 URL「明显更好」已过、定金已到账。
 - **M2（30%）= 端到端跑通**：4 个 URL 都过 `fingerprint` ∧ `weight` ∧ `fidelity ≥ τ`。
@@ -92,6 +94,20 @@ Layer 0–3 与所有门禁是**纯 Python，从不调模型**：抓取、分段
   页面上同时产出 clean + fidelity？没过，于是换路。不是拍脑袋，是门禁判的。
 - **对 `architecture.md` 的影响**：标注 Layer 1–3 当前由「分段 + 子 Agent 自转」承担；门禁
   （Layer 4）与可行性论证（§1）不变。
+
+### 2026-07-24 — 双证据结构门禁；常见交互纳入硬验收；用户拥有最终判定
+- **事件**：ReelShort 原始 DOM 中存在约 484px 的 Hero 轮播，但静止化后的引用截图缺失该区域；
+  克隆继续复刻这份残缺引用并得到虚高分。
+- **决策**：抓取先保存不可变 raw DOM/结构/截图，再保存 normalized derivative；二者结构不一致时
+  自动重抓，最多 3 次，仍失败则禁止分段和生成。
+- **硬门禁顺序**：source capture integrity → critical structure → required common interactions →
+  visual fidelity。关键区域或必需交互失败时，任何平均分都不能覆盖失败。
+- **交互范围 B**：轮播切换、菜单、Tabs、Accordion/details 必须发现、复刻并重放验证；登录、
+  支付、下单、后端媒体服务等完整业务流程不在本阶段。
+- **结果归属**：机器只能输出 `ready_for_user_review`，不得自称验收、完成或替用户判定。
+- **设计与计划**：
+  `docs/superpowers/specs/2026-07-24-structural-integrity-interactions-design.md`；
+  `docs/superpowers/plans/2026-07-24-structural-integrity-interactions.md`。
 
 ---
 

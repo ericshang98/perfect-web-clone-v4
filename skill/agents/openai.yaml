@@ -1,0 +1,7 @@
+interface:
+  display_name: "Perfect Web Clone v4"
+  short_description: "复刻完整网站，并自动实现交互、验证、修复后交给用户审阅"
+  default_prompt: "Use $perfect-web-clone-v4 to reproduce this website from its URL and continue through the complete measured review workflow."
+
+policy:
+  allow_implicit_invocation: true

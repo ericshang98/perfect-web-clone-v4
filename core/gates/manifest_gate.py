@@ -16,6 +16,10 @@ from typing import Any, Dict, List, Optional
 from PIL import Image
 
 from core.gates.fidelity import ssim_images
+from core.gates.interaction import (
+    snapshot_interaction,
+    verify_interaction_change,
+)
 from core.manifest import update_status
 from core.trigger_replay import replay_triggers
 
@@ -78,20 +82,38 @@ def verify_manifest(manifest: Dict[str, Any], clone_url: Optional[str],
                 page = browser.new_page(viewport={"width": vw, "height": vh},
                                         device_scale_factor=1)
                 page.goto(clone_url, wait_until="networkidle", timeout=60_000)
+                before = (
+                    snapshot_interaction(page, s)
+                    if s.get("channel") == "interaction"
+                    else None
+                )
                 replay_triggers(page, s["trigger"])
                 page.wait_for_timeout(_SETTLE_MS)
                 shot = out / f"{s['id']}.png"
                 page.screenshot(path=str(shot))  # viewport raster = ref geometry
-                ref = base / s["expect"]["ref"]
-                if not ref.is_file():
-                    row.update(status="pending", reason=f"missing ref {ref}")
+                if s.get("channel") == "interaction":
+                    after = snapshot_interaction(page, s)
+                    observed = verify_interaction_change(s, before or {}, after)
+                    row.update(
+                        status="pass" if observed["ok"] else "fail",
+                        observable=observed["observable"],
+                        before=observed["before"],
+                        after=observed["after"],
+                        shot=str(shot),
+                    )
+                    if not observed["ok"]:
+                        row["reason"] = observed["reason"]
                 else:
-                    score = ssim_images(str(ref), str(shot))
-                    ok = score >= float(s["expect"].get("ssim", 0.97))
-                    sbs = out / f"{s['id']}_sbs.png"
-                    _side_by_side(str(ref), str(shot), sbs)
-                    row.update(status="pass" if ok else "fail", ssim=score,
-                               ref=str(ref), shot=str(shot), sbs=str(sbs))
+                    ref = base / s["expect"]["ref"]
+                    if not ref.is_file():
+                        row.update(status="pending", reason=f"missing ref {ref}")
+                    else:
+                        score = ssim_images(str(ref), str(shot))
+                        ok = score >= float(s["expect"].get("ssim", 0.97))
+                        sbs = out / f"{s['id']}_sbs.png"
+                        _side_by_side(str(ref), str(shot), sbs)
+                        row.update(status="pass" if ok else "fail", ssim=score,
+                                   ref=str(ref), shot=str(shot), sbs=str(sbs))
             except Exception as exc:  # noqa: BLE001 — a state must never kill the run
                 row.update(status="fail", reason=f"replay error: {exc}")
             finally:

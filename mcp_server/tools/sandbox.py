@@ -1,5 +1,5 @@
 """
-Sandbox MCP tools for Perfect Web Clone v3.
+Sandbox MCP tools for Perfect Web Clone v4.
 
 This module exposes the BoxLite sandbox (``core.boxlite``) to Claude Code as a
 set of MCP tools over stdio. It is a thin, **purely deterministic** wrapper: it
@@ -20,7 +20,8 @@ Tools registered by :func:`register`:
 
 * ``sandbox_write_file(path, content, namespace?)`` — write into the sandbox,
   gated by ``contracts.validate_write_path`` when a ``namespace`` is supplied so
-  a section subagent cannot write outside ``src/components/sections/{namespace}/``.
+  section authoring cannot write outside
+  ``src/components/sections/{namespace}/``.
 * ``sandbox_read_file(path)`` — read a text file from the sandbox.
 * ``sandbox_list_files(glob?)`` — list files matching a glob.
 * ``sandbox_exec(cmd, timeout?, background?)`` — run a shell command in the
@@ -95,8 +96,8 @@ async def sandbox_write_file(
 ) -> Dict[str, Any]:
     """Write ``content`` to ``path`` inside the sandbox.
 
-    Isolation gate: when ``namespace`` is provided (i.e. the caller is a section
-    subagent), the write is first validated by
+    Isolation gate: when ``namespace`` is provided, the section-scoped write is
+    first validated by
     ``contracts.validate_write_path(namespace, path)``. That deterministic check
     enforces the section contract:
 
@@ -109,7 +110,7 @@ async def sandbox_write_file(
     is returned so Claude Code can self-correct.
 
     When ``namespace`` is omitted the write is unrestricted — reserved for
-    deterministic assembly/setup tools, not for section subagents.
+    deterministic assembly/setup and harness-ledger writes, not section code.
 
     Args:
         path: Project-relative write path (e.g.

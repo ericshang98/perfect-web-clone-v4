@@ -70,6 +70,148 @@ def test_residual_states_are_skipped_but_reported(tmp_path):
     assert {r["id"]: r["status"] for r in rows}["s_800_scroll_0"] == "pending"
 
 
+def test_verify_manifest_replays_required_menu_interaction(tmp_path):
+    pytest.importorskip("playwright.sync_api")
+    clone = tmp_path / "menu.html"
+    clone.write_text(
+        """
+        <button id="menu-button" aria-controls="site-menu"
+                aria-expanded="false">Menu</button>
+        <nav id="site-menu" style="display:none">Navigation</nav>
+        <script>
+          document.querySelector('#menu-button').addEventListener('click', event => {
+            const button = event.currentTarget;
+            const menu = document.querySelector('#site-menu');
+            const open = button.getAttribute('aria-expanded') !== 'true';
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+            menu.style.display = open ? 'block' : 'none';
+          });
+        </script>
+        """,
+        encoding="utf-8",
+    )
+    m = new_manifest(clone.as_uri(), [800])
+    add_state(
+        m,
+        {
+            "id": "i_800_menu",
+            "section": "header",
+            "breakpoint": 800,
+            "trigger": [{"kind": "click", "target": "#menu-button"}],
+            "expect": {
+                "observable": "aria_expanded_and_menu_visibility_toggle",
+                "controlled": "#site-menu",
+            },
+            "channel": "interaction",
+            "interaction_kind": "menu",
+            "required": True,
+            "evidence": None,
+            "stability": "stable",
+            "status": "pending",
+        },
+    )
+
+    out = verify_manifest(
+        m,
+        clone_url=clone.as_uri(),
+        base_dir=tmp_path,
+        out_dir=tmp_path / "out-menu",
+    )
+
+    assert out["summary"]["ok"] is True
+    assert out["states"][0]["status"] == "pass"
+    assert out["states"][0]["observable"] == "aria_expanded_and_menu_visibility_toggle"
+
+
+def test_broken_required_menu_interaction_is_a_hard_failure(tmp_path):
+    pytest.importorskip("playwright.sync_api")
+    clone = tmp_path / "broken-menu.html"
+    clone.write_text(
+        """
+        <button id="menu-button" aria-controls="site-menu"
+                aria-expanded="false">Menu</button>
+        <nav id="site-menu" style="display:none">Navigation</nav>
+        """,
+        encoding="utf-8",
+    )
+    m = new_manifest(clone.as_uri(), [800])
+    add_state(
+        m,
+        {
+            "id": "i_800_menu",
+            "section": "header",
+            "breakpoint": 800,
+            "trigger": [{"kind": "click", "target": "#menu-button"}],
+            "expect": {
+                "observable": "aria_expanded_and_menu_visibility_toggle",
+                "controlled": "#site-menu",
+            },
+            "channel": "interaction",
+            "interaction_kind": "menu",
+            "required": True,
+            "evidence": None,
+            "stability": "stable",
+            "status": "pending",
+        },
+    )
+
+    out = verify_manifest(
+        m,
+        clone_url=clone.as_uri(),
+        base_dir=tmp_path,
+        out_dir=tmp_path / "out-broken-menu",
+    )
+
+    assert out["summary"]["ok"] is False
+    assert out["states"][0]["status"] == "fail"
+
+
+def test_verify_manifest_replays_required_native_accordion(tmp_path):
+    pytest.importorskip("playwright.sync_api")
+    clone = tmp_path / "accordion.html"
+    clone.write_text(
+        """
+        <details>
+          <summary data-pwc-interaction="shipping">Shipping</summary>
+          <p>Tomorrow</p>
+        </details>
+        """,
+        encoding="utf-8",
+    )
+    m = new_manifest(clone.as_uri(), [800])
+    add_state(
+        m,
+        {
+            "id": "i_800_shipping",
+            "section": "faq",
+            "breakpoint": 800,
+            "trigger": [
+                {
+                    "kind": "click",
+                    "target": '[data-pwc-interaction="shipping"]',
+                }
+            ],
+            "expect": {"observable": "details_open_toggles"},
+            "channel": "interaction",
+            "interaction_kind": "accordion",
+            "required": True,
+            "evidence": None,
+            "stability": "stable",
+            "status": "pending",
+        },
+    )
+
+    out = verify_manifest(
+        m,
+        clone_url=clone.as_uri(),
+        base_dir=tmp_path,
+        out_dir=tmp_path / "out-accordion",
+    )
+
+    assert out["summary"]["ok"] is True
+    assert out["states"][0]["status"] == "pass"
+
+
 @pytest.mark.skipif(os.environ.get("RUN_LIVE") != "1", reason="RUN_LIVE=1 only")
 def test_verify_manifest_passes_matching_clone_and_fails_wrong_one(tmp_path):
     pytest.importorskip("playwright.sync_api")

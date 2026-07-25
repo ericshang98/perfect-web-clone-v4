@@ -14,7 +14,15 @@ import pytest
 def _make_source(root, sid):
     d = root / sid
     d.mkdir()
-    (d / "manifest.json").write_text("{}", encoding="utf-8")
+    (d / "manifest.json").write_text(
+        json.dumps(
+            {
+                "success": True,
+                "capture_integrity": {"ok": True, "status": "passed"},
+            }
+        ),
+        encoding="utf-8",
+    )
     (d / "raw.html").write_text(
         "<html><body>"
         '<header class="site-head"><a href="/shop">Shop</a></header>'

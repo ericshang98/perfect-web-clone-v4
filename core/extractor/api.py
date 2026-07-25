@@ -21,6 +21,7 @@ plain Python (e.g. an MCP tool handler). `aextract_page` is the async form.
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Union
@@ -70,7 +71,16 @@ async def aextract_page(
     store.ensure_dirs()
 
     service = _get_service()
-    result: ExtractionResult = await service.extract(url, opts)
+    result: ExtractionResult
+    for attempt in range(1, opts.max_capture_attempts + 1):
+        result = await service.extract(url, opts)
+        result.capture_attempts = attempt
+        integrity_status = (result.capture_integrity or {}).get("status")
+        if result.success:
+            break
+        if integrity_status not in {"failed", "unknown"}:
+            break
+        _persist_failed_attempt(store, result, attempt)
     result.source_id = source_id
 
     if not result.success:
@@ -80,6 +90,8 @@ async def aextract_page(
             title="",
             success=False,
             error=result.error,
+            capture_attempts=result.capture_attempts,
+            capture_integrity=_compact_integrity(result.capture_integrity),
             storage_dir=str(store.dir),
         )
         store.write_json("summary.json", summary)
@@ -105,7 +117,20 @@ def extract_page(
 # read back
 # --------------------------------------------------------------------------- #
 
-_VALID_PARTS = {"summary", "manifest", "dom", "css", "css_dark", "blocks", "raw_html", "files"}
+_VALID_PARTS = {
+    "summary",
+    "manifest",
+    "dom",
+    "css",
+    "css_dark",
+    "blocks",
+    "raw_html",
+    "normalized_html",
+    "capture_integrity",
+    "structure",
+    "interactions",
+    "files",
+}
 
 
 def get_source(
@@ -144,6 +169,40 @@ def get_source(
         out["blocks"] = store.read_blocks()
     if "raw_html" in wanted:
         out["raw_html"] = store.read_raw_html()
+    if "normalized_html" in wanted:
+        path = store.dir / "normalized.html"
+        out["normalized_html"] = (
+            path.read_text(encoding="utf-8") if path.is_file() else None
+        )
+    if "capture_integrity" in wanted:
+        path = store.dir / "capture_integrity.json"
+        out["capture_integrity"] = (
+            json.loads(path.read_text(encoding="utf-8"))
+            if path.is_file()
+            else None
+        )
+    if "structure" in wanted:
+        raw_path = store.dir / "evidence" / "raw_structure.json"
+        normalized_path = store.dir / "evidence" / "normalized_structure.json"
+        out["structure"] = {
+            "raw": (
+                json.loads(raw_path.read_text(encoding="utf-8"))
+                if raw_path.is_file()
+                else None
+            ),
+            "normalized": (
+                json.loads(normalized_path.read_text(encoding="utf-8"))
+                if normalized_path.is_file()
+                else None
+            ),
+        }
+    if "interactions" in wanted:
+        path = store.dir / "interactions.json"
+        out["interactions"] = (
+            json.loads(path.read_text(encoding="utf-8"))
+            if path.is_file()
+            else None
+        )
     if "files" in wanted:
         out["files"] = _file_index(store)
     return out
@@ -205,6 +264,17 @@ def _persist(store: SourceStore, result: ExtractionResult) -> None:
     if result.raw_html:
         store.write_text("raw.html", result.raw_html)
         result.raw_html = None  # large; available via raw.html
+    if result.normalized_html:
+        store.write_text("normalized.html", result.normalized_html)
+        result.normalized_html = None
+    if result.raw_structure:
+        store.write_json("evidence/raw_structure.json", result.raw_structure)
+    if result.normalized_structure:
+        store.write_json("evidence/normalized_structure.json", result.normalized_structure)
+    if result.interactions:
+        store.write_json("interactions.json", {"interactions": result.interactions})
+    if result.capture_integrity:
+        store.write_json("capture_integrity.json", result.capture_integrity)
     if result.dom_tree:
         store.write_json("dom.json", result.dom_tree)
     if result.css_data:
@@ -217,8 +287,16 @@ def _persist(store: SourceStore, result: ExtractionResult) -> None:
     result.full_page_screenshot_path = _save_shot(
         store, "screenshots/primary_full.png", result.full_b64
     )
+    result.raw_initial_screenshot_path = _save_shot(
+        store, "evidence/raw_initial.png", result.raw_initial_b64
+    )
+    result.raw_full_page_screenshot_path = _save_shot(
+        store, "evidence/raw_full.png", result.raw_full_b64
+    )
     result.screenshot_b64 = None
     result.full_b64 = None
+    result.raw_initial_b64 = None
+    result.raw_full_b64 = None
 
     # Per-scroll-state rasters (scroll-choreographed / canvas sites).
     if result.scroll_state_b64s:
@@ -263,6 +341,26 @@ def _persist(store: SourceStore, result: ExtractionResult) -> None:
     store.write_json("manifest.json", result)
 
 
+def _persist_failed_attempt(
+    store: SourceStore, result: ExtractionResult, attempt: int
+) -> None:
+    """Retain diagnostic evidence without promoting a failed attempt."""
+    prefix = f"attempts/{attempt:02d}"
+    if result.capture_integrity:
+        store.write_json(f"{prefix}/capture_integrity.json", result.capture_integrity)
+    if result.raw_structure:
+        store.write_json(f"{prefix}/raw_structure.json", result.raw_structure)
+    if result.normalized_structure:
+        store.write_json(f"{prefix}/normalized_structure.json", result.normalized_structure)
+    if result.raw_html:
+        store.write_text(f"{prefix}/raw.html", result.raw_html)
+    if result.normalized_html:
+        store.write_text(f"{prefix}/normalized.html", result.normalized_html)
+    _save_shot(store, f"{prefix}/raw_initial.png", result.raw_initial_b64)
+    _save_shot(store, f"{prefix}/raw_full.png", result.raw_full_b64)
+    _save_shot(store, f"{prefix}/normalized_full.png", result.full_b64)
+
+
 def _persist_themed(store: SourceStore, theme: str, td: Optional[ThemedData]) -> None:
     if not td:
         return
@@ -289,6 +387,11 @@ def _file_index(store: SourceStore) -> Dict[str, str]:
     index: Dict[str, str] = {}
     candidates = {
         "raw_html": "raw.html",
+        "normalized_html": "normalized.html",
+        "raw_structure": "evidence/raw_structure.json",
+        "normalized_structure": "evidence/normalized_structure.json",
+        "capture_integrity": "capture_integrity.json",
+        "interactions": "interactions.json",
         "dom": "dom.json",
         "css": "css.json",
         "css_dark": "themes/dark/css.json",
@@ -299,6 +402,8 @@ def _file_index(store: SourceStore) -> Dict[str, str]:
         "screenshot_primary_full": "screenshots/primary_full.png",
         "screenshot_light": "screenshots/light.png",
         "screenshot_dark": "screenshots/dark.png",
+        "screenshot_raw_initial": "evidence/raw_initial.png",
+        "screenshot_raw_full": "evidence/raw_full.png",
     }
     for name, rel in candidates.items():
         if (store.dir / rel).is_file():
@@ -319,6 +424,8 @@ def _build_summary(store: SourceStore, result: ExtractionResult, url: str) -> So
         url=url,
         title=md.title if md else "",
         success=True,
+        capture_attempts=result.capture_attempts,
+        capture_integrity=_compact_integrity(result.capture_integrity),
         viewport={"width": md.viewport_width, "height": md.viewport_height} if md else {},
         page_width=md.page_width if md else 0,
         page_height=md.page_height if md else 0,
@@ -346,3 +453,24 @@ def _build_summary(store: SourceStore, result: ExtractionResult, url: str) -> So
         files=_file_index(store),
         storage_dir=str(store.dir),
     )
+
+
+def _compact_integrity(report: Dict[str, Any]) -> Dict[str, Any]:
+    """Keep MCP summaries small; full mutation evidence remains on disk."""
+    if not report:
+        return {}
+    mutations = report.get("normalization_mutations") or {}
+    return {
+        "ok": report.get("ok"),
+        "status": report.get("status", "unknown"),
+        "issues": report.get("issues") or [],
+        "missing_critical": report.get("missing_critical") or [],
+        "collapsed_critical": report.get("collapsed_critical") or [],
+        "metrics": report.get("metrics") or {},
+        "normalization_mutations": {
+            "hidden": mutations.get("hidden", 0),
+            "containers": mutations.get("containers", 0),
+            "items": mutations.get("items", 0),
+            "details_path": "capture_integrity.json",
+        },
+    }

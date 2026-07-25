@@ -329,12 +329,16 @@ class ExtractionResult(BaseModel):
     # source directory (e.g. "screenshots/light.png").
     screenshot_path: Optional[str] = None
     full_page_screenshot_path: Optional[str] = None
+    raw_initial_screenshot_path: Optional[str] = None
+    raw_full_page_screenshot_path: Optional[str] = None
     # Persisted per-scroll-state raster paths (scroll-choreographed sites only).
     scroll_state_paths: List[str] = Field(default_factory=list)
 
     # Transient base64 carriers (service -> api). Excluded from the manifest.
     screenshot_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
     full_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+    raw_initial_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+    raw_full_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
     # Transient per-scroll-state base64 rasters (service -> api).
     scroll_state_b64s: List[str] = Field(default_factory=list, exclude=True, repr=False)
 
@@ -342,6 +346,7 @@ class ExtractionResult(BaseModel):
     style_summary: Optional[StyleSummary] = None
     assets: Optional[PageAssets] = None
     raw_html: Optional[str] = None
+    normalized_html: Optional[str] = None
     css_data: Optional[CSSData] = None
     downloaded_resources: Optional[DownloadedResources] = None
 
@@ -353,6 +358,13 @@ class ExtractionResult(BaseModel):
 
     # Rule-based candidate blocks (raw material for Claude-Code sectioning).
     blocks: List[DomBlock] = Field(default_factory=list)
+
+    # Immutable source evidence and the derivative capture integrity report.
+    raw_structure: Dict[str, Any] = Field(default_factory=dict)
+    normalized_structure: Dict[str, Any] = Field(default_factory=dict)
+    interactions: List[Dict[str, Any]] = Field(default_factory=list)
+    capture_integrity: Dict[str, Any] = Field(default_factory=dict)
+    capture_attempts: int = 1
 
     # Theme
     theme_detection: Optional[ThemeDetectionResult] = None
@@ -387,6 +399,9 @@ class ExtractOptions(BaseModel):
     capture_embeds: bool = True  # screenshot cross-origin widget iframes
     detect_theme: bool = True
     extract_blocks: bool = True
+    # A structurally inconsistent capture is retried, never silently promoted.
+    # Three is the hard upper bound selected for the fail-closed policy.
+    max_capture_attempts: int = Field(default=3, ge=1, le=3)
 
     # Resource download caps (kept identical in spirit to v2).
     max_images: int = 150   # image-heavy stores (e.g. Shopify) reference 100+ originals
@@ -408,6 +423,8 @@ class SourceSummary(BaseModel):
     title: str
     success: bool = True
     error: Optional[str] = None
+    capture_attempts: int = 0
+    capture_integrity: Dict[str, Any] = Field(default_factory=dict)
 
     viewport: Dict[str, int] = Field(default_factory=dict)
     page_width: int = 0

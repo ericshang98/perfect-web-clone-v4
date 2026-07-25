@@ -1,11 +1,11 @@
-"""Fidelity-gate MCP tools for Perfect Web Clone v3.
+"""Fidelity-gate MCP tools for Perfect Web Clone v4.
 
 Deterministic verification that the generated clone kept what the extractor
-captured. The first gate here is **real links**: a section sub-agent must
+captured. The first gate here is **real links**: the owning agent must
 reproduce the section's real ``href``s, not fabricate ``#`` / ``javascript:``
 placeholders. ``verify_links`` reads each generated component from the sandbox
 and reports, per section, whether every real navigational link survived — so the
-orchestrator can re-dispatch any section that dropped them.
+owning agent can repair any section that dropped them.
 
 THE IRON RULE: no LLM here. This is filesystem reads + string checks (the
 matching/aggregation logic lives in ``core.link_verifier``). All judgement
@@ -25,7 +25,7 @@ import anyio
 from core import asset_verifier, clone_capture, link_verifier
 from core.boxlite import get_sandbox
 from core.extractor.storage import SourceStore
-from core.gates import fidelity
+from core.gates import fidelity, structure as structure_gate
 
 
 def _err(message: str, **extra: Any) -> Dict[str, Any]:
@@ -126,7 +126,7 @@ async def verify_links(source_id: str) -> Dict[str, Any]:
 
     Args:
         source_id: The id from ``extract_page`` (after ``get_section_plan`` and
-            the section sub-agents have written their components).
+            the owning agent has written the section components).
 
     Returns:
         ``{"ok", "source_id", "section_count", "passed", "failing",
@@ -240,6 +240,16 @@ async def score_clone_sections(
             f"no section data for {source_id!r}; run get_section_plan first.",
             source_id=source_id,
         )
+    extraction_manifest = store.read_manifest()
+    source_integrity = (
+        extraction_manifest.capture_integrity if extraction_manifest else {}
+    ) or {}
+    if source_integrity.get("status") != "passed":
+        return _err(
+            "source capture integrity is not passed; recapture before scoring.",
+            source_id=source_id,
+            capture_integrity=source_integrity or {"status": "unknown"},
+        )
     try:
         ref_sections = json.loads(full_path.read_text(encoding="utf-8")).get(
             "sections", []
@@ -259,6 +269,15 @@ async def score_clone_sections(
             "(primary_full.png); re-run extract_page.",
             source_id=source_id,
         )
+    required_structure = []
+    light_plan_path = store.dir / "sections.json"
+    if light_plan_path.is_file():
+        try:
+            required_structure = json.loads(
+                light_plan_path.read_text(encoding="utf-8")
+            ).get("required_structure", [])
+        except Exception:  # noqa: BLE001 — empty falls through to legacy gate.
+            required_structure = []
 
     # Reference CSS page height: summary.json when present; otherwise the
     # raster's own pixel height (extraction rasters are DPR=1).
@@ -277,11 +296,35 @@ async def score_clone_sections(
         with Image.open(ref_png) as im:
             ref_page_height = float(im.height)
 
+    raw_structure_path = store.dir / "evidence" / "raw_structure.json"
+    if not raw_structure_path.is_file():
+        return _err(
+            "immutable raw structure evidence is missing; recapture before scoring.",
+            source_id=source_id,
+        )
+    try:
+        raw_structure = json.loads(raw_structure_path.read_text(encoding="utf-8"))
+    except Exception as exc:  # noqa: BLE001
+        return _err(
+            f"could not read immutable raw structure evidence: {exc}",
+            source_id=source_id,
+        )
+
     cap = await capture_clone_sections(url=url, out_png=out_png)
     if not cap.get("ok"):
         return cap
 
     match = clone_capture.match_sections(ref_sections, cap["bounds"])
+    structure = structure_gate.verify_structure(
+        source_regions=raw_structure.get("regions") or [],
+        planned_sections=ref_sections,
+        candidate_bounds=cap["bounds"],
+        source_page_height=(raw_structure.get("page") or {}).get("height")
+        or ref_page_height,
+        candidate_page_height=cap["page_height"],
+        requirements=required_structure,
+        candidate_critical_bounds=cap.get("critical_bounds") or {},
+    )
     try:
         result = fidelity.score_by_section(
             str(ref_png),
@@ -304,13 +347,19 @@ async def score_clone_sections(
     )
     # A plan section the clone never measured is a dropped/renamed section —
     # that must fail the gate, not silently vanish from the aggregate.
-    result["ok"] = bool(result["ok"]) and not match["unmatched_ref"]
+    result["ok"] = (
+        bool(result["ok"])
+        and not match["unmatched_ref"]
+        and bool(structure.get("ok"))
+    )
     result["unmatched_ref"] = match["unmatched_ref"]
     result["unmatched_cand"] = match["unmatched_cand"]
     result["png"] = cap["png"]
     result["ref_png"] = str(ref_png)
     result["url"] = cap["url"]
     result["source_id"] = source_id
+    result["capture_integrity"] = source_integrity
+    result["structure"] = structure
     return result
 
 
@@ -375,9 +424,52 @@ async def generate_manifest(source_id: str) -> Dict[str, Any]:
             source_id=source_id,
         )
 
+    extraction_manifest = store.read_manifest()
+    integrity = (
+        extraction_manifest.capture_integrity if extraction_manifest else {}
+    ) or {}
+    if integrity.get("status") != "passed":
+        return _err(
+            "source capture integrity is not passed; recapture before generating a checklist.",
+            source_id=source_id,
+            capture_integrity=integrity or {"status": "unknown"},
+        )
+
     m = mf.new_manifest(meta.get("source_url", ""), [vw])
     for st in mf.baseline_states(page_h, (vw, vh), vw):
         mf.add_state(m, st)
+    interactions_path = store.dir / "interactions.json"
+    interactions = []
+    if interactions_path.is_file():
+        try:
+            interactions = json.loads(
+                interactions_path.read_text(encoding="utf-8")
+            ).get("interactions", [])
+        except Exception as exc:  # noqa: BLE001
+            return _err(
+                f"could not read interactions.json: {exc}",
+                source_id=source_id,
+            )
+    for st in mf.interaction_states(interactions, vw):
+        mf.add_state(m, st)
+
+    raw_structure_path = store.dir / "evidence" / "raw_structure.json"
+    if raw_structure_path.is_file():
+        try:
+            raw_structure = json.loads(raw_structure_path.read_text(encoding="utf-8"))
+            m["structure"] = {
+                "critical_regions": [
+                    region
+                    for region in raw_structure.get("regions", [])
+                    if region.get("critical")
+                ],
+                "page": raw_structure.get("page") or {},
+            }
+        except Exception as exc:  # noqa: BLE001
+            return _err(
+                f"could not read raw structure evidence: {exc}",
+                source_id=source_id,
+            )
     checklist_path = store.dir / "checklist.json"
     mf.save_manifest(m, checklist_path)
 
@@ -392,6 +484,9 @@ async def generate_manifest(source_id: str) -> Dict[str, Any]:
         "ok": True,
         "source_id": source_id,
         "states": len(m["states"]),
+        "interactions": sum(
+            1 for state in m["states"] if state.get("channel") == "interaction"
+        ),
         "checklist": str(checklist_path),
         "refs": refs_summary,
     }
@@ -448,7 +543,7 @@ async def verify_manifest(source_id: str, url: str) -> Dict[str, Any]:
     report_path = store.dir / "report.html"
     render_report(m, result["states"], result["summary"], report_path)
     return {
-        "ok": True,
+        "ok": bool(result["summary"].get("ok")),
         "source_id": source_id,
         **result,
         "report": str(report_path),

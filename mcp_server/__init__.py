@@ -1,4 +1,4 @@
-"""Perfect Web Clone v3 — MCP server package.
+"""Perfect Web Clone v4 — MCP server package.
 
 This package exposes the deterministic MCP toolbelt that Claude Code drives to
 clone web pages. The single ``FastMCP`` instance lives in :mod:`mcp_server.server`

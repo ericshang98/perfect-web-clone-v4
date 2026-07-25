@@ -46,6 +46,35 @@ def store(tmp_path, monkeypatch):
                     "page_height": 4000}),
         encoding="utf-8",
     )
+    (st.dir / "manifest.json").write_text(
+        json.dumps(
+            {
+                "success": True,
+                "capture_integrity": {"ok": True, "status": "passed"},
+            }
+        ),
+        encoding="utf-8",
+    )
+    (st.dir / "interactions.json").write_text(
+        json.dumps(
+            {
+                "interactions": [
+                    {
+                        "id": "menu",
+                        "kind": "menu",
+                        "target": "#menu-button",
+                        "action": "click",
+                        "controlled": "#site-menu",
+                        "required": True,
+                        "expect": {
+                            "observable": "aria_expanded_and_menu_visibility_toggle"
+                        },
+                    }
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
     # Synthetic full-page screenshot so refs materialization succeeds
     screenshots_dir = st.dir / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
@@ -67,13 +96,20 @@ def test_generate_manifest_writes_baseline_checklist(store):
     assert m["url"] == "https://example.com"
     assert out["states"] == len(m["states"])
     assert out["states"] > 0
-    assert all(s["channel"] == "baseline" for s in m["states"])
+    assert any(s["channel"] == "baseline" for s in m["states"])
+    assert any(s["channel"] == "interaction" for s in m["states"])
+    assert out["interactions"] == 1
 
 
 def test_generate_manifest_does_not_overwrite_extraction_manifest(store):
     """generate_manifest must NOT write to manifest.json (extraction metadata)."""
     # Write a sentinel extraction manifest to confirm it is untouched
-    sentinel = {"sentinel": True, "url": "original-extraction-data"}
+    sentinel = {
+        "sentinel": True,
+        "url": "original-extraction-data",
+        "success": True,
+        "capture_integrity": {"ok": True, "status": "passed"},
+    }
     (store.dir / "manifest.json").write_text(
         json.dumps(sentinel), encoding="utf-8"
     )
@@ -109,6 +145,17 @@ def test_generate_manifest_returns_checklist_path(store):
     assert out["ok"] is True
     assert "checklist" in out
     assert str(store.dir / "checklist.json") == out["checklist"]
+
+
+def test_generate_manifest_blocks_unvalidated_source(store):
+    (store.dir / "manifest.json").write_text(
+        json.dumps({"success": True, "capture_integrity": {"status": "unknown"}})
+    )
+
+    out = asyncio.run(verify_tools.generate_manifest(source_id="src_test"))
+
+    assert out["ok"] is False
+    assert "integrity" in out["error"].lower()
 
 
 def test_generate_manifest_refs_materialized(store):

@@ -1,6 +1,332 @@
-// ProductSection — deterministic faithful reconstruction (cleaned HTML + global theme CSS)
-const __html = "<section class=\"bg-white\" id=\"product-section\"><div class=\"max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-10\"><div class=\"grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12\" style=\"display: grid;\"><div class=\"flex flex-col-reverse lg:flex-row gap-4\" style=\"display: flex; width: 644px; max-width: 100%;\"><div class=\"flex lg:flex-col gap-2 overflow-x-auto lg:overflow-y-auto lg:max-h-[520px] scrollbar-hide\" style=\"display: flex;\"><button class=\"flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all border-[#ECAE51]\"><img alt=\"Product view 1\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/linfae-product-main.webp\"/></button><button class=\"flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all border-gray-200 hover:border-gray-300\"><img alt=\"Product view 2\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/linfae-product-features.webp\"/></button><button class=\"flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all border-gray-200 hover:border-gray-300\"><img alt=\"Product view 3\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/dnSEXXWwSLDWNzdC.webp\"/></button><button class=\"flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all border-gray-200 hover:border-gray-300\"><img alt=\"Product view 4\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/bfcUJdQZGylSUIno.webp\"/></button><button class=\"flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all border-gray-200 hover:border-gray-300\"><img alt=\"Product view 5\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/bhalocHrMPBknkst.webp\"/></button></div><div class=\"flex-1 rounded-xl overflow-hidden bg-[#f9f9f9]\" style=\"width: 548px; max-width: 100%;\"><img alt=\"Linfae Lymphatic Face Brush\" class=\"w-full h-auto object-contain aspect-square\" fetchpriority=\"high\" src=\"/assets/images/linfae-product-main.webp\"/></div></div><div class=\"flex flex-col gap-5 lg:sticky lg:top-24 lg:self-start\" style=\"display: none !important;\"><div class=\"flex items-center justify-between border-b border-gray-100 pb-2 mb-1\"><div class=\"flex items-center gap-2\"><div class=\"relative flex-shrink-0\"><img alt=\"Melissa K. Lerm\" class=\"w-8 h-8 rounded-full object-cover object-top\" src=\"/assets/images/JmacTtwXjCYPoWBE.jpeg\" style=\"filter: grayscale(100%);\"/><span class=\"absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center\"><svg class=\"w-2 h-2\" fill=\"white\" viewbox=\"0 0 12 12\"><path d=\"M2 6l3 3 5-5\" fill=\"none\" stroke=\"white\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\"></path></svg></span></div><p class=\"text-[12px] text-gray-600\">Recommended by <strong class=\"text-black\">Melissa K. Lerm</strong><span class=\"text-gray-400 mx-1\">|</span><span class=\"text-gray-500\">Esthetician</span></p></div><span class=\"text-[18px] leading-none\">\ud83c\uddf0\ud83c\uddf7</span></div><h1 class=\"text-xl lg:text-2xl font-medium text-black\" style=\"font-family: Trirong, serif;\">Linfae Lymphatic Face Brush</h1><div class=\"flex items-center gap-2\"><div class=\"flex\"><svg class=\"lucide lucide-star\" fill=\"#ECAE51\" height=\"16\" stroke=\"#ECAE51\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon></svg><svg class=\"lucide lucide-star\" fill=\"#ECAE51\" height=\"16\" stroke=\"#ECAE51\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon></svg><svg class=\"lucide lucide-star\" fill=\"#ECAE51\" height=\"16\" stroke=\"#ECAE51\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon></svg><svg class=\"lucide lucide-star\" fill=\"#ECAE51\" height=\"16\" stroke=\"#ECAE51\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon></svg><svg class=\"lucide lucide-star\" fill=\"#ECAE51\" height=\"16\" stroke=\"#ECAE51\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\" viewbox=\"0 0 24 24\" width=\"16\" xmlns=\"http://www.w3.org/2000/svg\"><polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"></polygon></svg></div><span class=\"text-sm text-gray-600\">4.8/5 Stars (3,000+ Reviews)</span></div><div class=\"py-2\"><div class=\"pb-3\"><div class=\"flex items-start gap-4\"><img alt=\"Jessica M., CA\" class=\"w-14 h-14 rounded-full object-cover flex-shrink-0\" src=\"/assets/images/Screenshot_2025-12-07_021109.png\"/><div class=\"flex-1 min-w-0\"><p class=\"text-[13px] text-gray-700 leading-snug\">Puffiness gone in week one. Hubby noticed without me saying a word.</p><p class=\"text-[12px] text-gray-400 mt-1.5 italic\">Jessica M., CA</p></div></div><div class=\"flex items-center justify-center gap-3 mt-4\"><button aria-label=\"Previous review\" class=\"w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors\"><svg class=\"w-4 h-4 text-gray-500\" fill=\"currentColor\" viewbox=\"0 0 20 20\"><path clip-rule=\"evenodd\" d=\"M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z\" fill-rule=\"evenodd\"></path></svg></button><button aria-label=\"Review 1\" class=\"w-2.5 h-2.5 rounded-full transition-colors bg-gray-800\"></button><button aria-label=\"Review 2\" class=\"w-2.5 h-2.5 rounded-full transition-colors bg-gray-300\"></button><button aria-label=\"Review 3\" class=\"w-2.5 h-2.5 rounded-full transition-colors bg-gray-300\"></button><button aria-label=\"Next review\" class=\"w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center hover:bg-gray-50 transition-colors\"><svg class=\"w-4 h-4 text-gray-500\" fill=\"currentColor\" viewbox=\"0 0 20 20\"><path clip-rule=\"evenodd\" d=\"M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z\" fill-rule=\"evenodd\"></path></svg></button></div></div><div class=\"pb-2 text-center\"><p class=\"text-[15px] font-semibold text-black\">Your double chin isn't fat \u2014 <span class=\"text-[#ECAE51] italic\">it's trapped fluid.</span></p><p class=\"text-[13px] text-gray-500 mt-1\">This brush drains it in <strong>3 minutes.</strong></p></div></div><div class=\"flex items-center gap-3 mt-2\" id=\"product-plans\"><div class=\"flex-1 h-px bg-gray-300\"></div><h3 class=\"text-[15px] font-bold text-black whitespace-nowrap\" style=\"font-family: Trirong, serif;\">Buy More, Save More</h3><div class=\"flex-1 h-px bg-gray-300\"></div></div><div class=\"flex flex-col gap-5\"><button class=\"relative w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-all text-left border-gray-200 bg-white hover:border-gray-300\"><div class=\"w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 border-gray-300\"></div><div class=\"flex flex-col gap-0.5 flex-1\"><div class=\"flex items-center gap-2 flex-wrap\"><span class=\"text-[16px] font-bold text-black\" style=\"font-family: Trirong, serif;\">Buy 1</span></div></div><div class=\"text-right flex-shrink-0\"><div class=\"text-[18px] font-bold text-black\" style=\"font-family: Trirong, serif;\">$24.95</div><div class=\"text-[13px] text-gray-400 line-through\">$49.95</div></div></button><button class=\"relative w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-all text-left border-gray-600 bg-white shadow-sm\"><span class=\"absolute -top-3 right-5 bg-[#ECAE51] text-white text-[11px] font-bold px-3 py-1 rounded-md tracking-wide\">Most Popular</span><div class=\"w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 border-gray-600\"><div class=\"w-2.5 h-2.5 rounded-full bg-gray-600\"></div></div><div class=\"flex flex-col gap-0.5 flex-1\"><div class=\"flex items-center gap-2 flex-wrap\"><span class=\"text-[16px] font-bold text-black\" style=\"font-family: Trirong, serif;\">Buy 2 Get 1 FREE</span><span class=\"bg-[#ECAE51] text-white text-[10px] font-bold px-2 py-0.5 rounded\">SAVE 40%</span></div><span class=\"absolute -bottom-3.5 right-4 bg-[#e8547a] text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow-md tracking-wide z-10\">+ 3 FREE GIFTS</span></div><div class=\"text-right flex-shrink-0\"><div class=\"text-[18px] font-bold text-black\" style=\"font-family: Trirong, serif;\">$44.95</div><div class=\"text-[13px] text-gray-400 line-through\">$74.85</div></div></button><button class=\"relative w-full flex items-center gap-4 px-5 py-4 rounded-2xl border-2 transition-all text-left border-gray-200 bg-white hover:border-gray-300\"><div class=\"w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 border-gray-300\"></div><div class=\"flex flex-col gap-0.5 flex-1\"><div class=\"flex items-center gap-2 flex-wrap\"><span class=\"text-[16px] font-bold text-black\" style=\"font-family: Trirong, serif;\">Buy 3 Get 2 FREE</span><span class=\"bg-[#ECAE51] text-white text-[10px] font-bold px-2 py-0.5 rounded\">SAVE 65%+</span></div><span class=\"absolute -bottom-3.5 right-4 bg-[#e8547a] text-white text-[11px] font-bold px-3 py-1 rounded-lg shadow-md tracking-wide z-10\">+ 4 FREE GIFTS</span></div><div class=\"text-right flex-shrink-0\"><div class=\"text-[18px] font-bold text-black\" style=\"font-family: Trirong, serif;\">$64.95</div><div class=\"text-[13px] text-gray-400 line-through\">$180.00</div></div></button></div><div class=\"mt-2\"><h4 class=\"text-[15px] sm:text-[22px] font-bold mb-4 text-center whitespace-nowrap\" style=\"color: rgb(232, 84, 122); font-family: Trirong, serif;\">\ud83c\udf81 Free Gifts If You Order Now</h4><div class=\"grid grid-cols-4 gap-2\"><div class=\"flex flex-col items-center gap-0\"><div class=\"text-[10px] font-bold px-2 py-1 rounded-lg leading-tight text-center shadow-sm w-full mb-0 bg-[#e8547a] text-white\">$19.95 Value</div><div class=\"w-full rounded-b-2xl overflow-hidden transition-all duration-300 shadow-sm\"><div class=\"relative w-full aspect-square bg-[#fce8ef]\"><img alt=\"FREE Depuff 7 Days Guide\" class=\"w-full h-full object-cover\" src=\"/assets/images/hf_20260325_062146_b23832eb-b2d8-4063-8bdd-25cc740531c2_5c23f75b.jpeg\"/></div></div><div class=\"w-full px-1 pt-1.5 pb-0.5 text-center\"><span class=\"text-[10px] leading-tight font-semibold block text-[#c0395a]\">FREE Depuff 7 Days Guide</span></div></div><div class=\"flex flex-col items-center gap-0\"><div class=\"text-[10px] font-bold px-2 py-1 rounded-lg leading-tight text-center shadow-sm w-full mb-0 bg-[#e8547a] text-white\">$5.95 Value</div><div class=\"w-full rounded-b-2xl overflow-hidden transition-all duration-300 shadow-sm\"><div class=\"relative w-full aspect-square bg-[#fce8ef]\"><img alt=\"Free Express Shipping\" class=\"w-full h-full object-cover\" src=\"/assets/images/pasted_file_hKc5VY_image_16b6f1ce.png\"/></div></div><div class=\"w-full px-1 pt-1.5 pb-0.5 text-center\"><span class=\"text-[10px] leading-tight font-semibold block text-[#c0395a]\">Free Express Shipping</span></div></div><div class=\"flex flex-col items-center gap-0\"><div class=\"text-[10px] font-bold px-2 py-1 rounded-lg leading-tight text-center shadow-sm w-full mb-0 bg-[#e8547a] text-white\">$24.95 Value</div><div class=\"w-full rounded-b-2xl overflow-hidden transition-all duration-300 shadow-sm\"><div class=\"relative w-full aspect-square bg-[#fce8ef]\"><img alt=\"FREE Linfae\u2122 Brush\" class=\"w-full h-full object-cover\" src=\"/assets/images/linfae-product-main.webp\"/></div></div><div class=\"w-full px-1 pt-1.5 pb-0.5 text-center\"><span class=\"text-[10px] leading-tight font-semibold block text-[#c0395a]\">FREE Linfae\u2122 Brush</span></div></div><div class=\"flex flex-col items-center gap-0\"><div class=\"text-[10px] font-bold px-2 py-1 rounded-lg leading-tight text-center shadow-sm w-full mb-0 bg-gray-400 text-white\">\u00a329.95 Value</div><div class=\"w-full rounded-b-2xl overflow-hidden transition-all duration-300\"><div class=\"relative w-full aspect-square bg-gray-100\"><div class=\"w-full h-full flex flex-col items-center justify-center gap-1\"><svg class=\"w-10 h-10 text-gray-400\" fill=\"none\" stroke=\"currentColor\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2.5\" viewbox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><rect height=\"28\" rx=\"3\" width=\"48\" x=\"8\" y=\"28\"></rect><rect height=\"10\" rx=\"2\" width=\"56\" x=\"4\" y=\"18\"></rect><line x1=\"32\" x2=\"32\" y1=\"18\" y2=\"56\"></line><path d=\"M32 18c0 0-8-10 0-14 4-2 8 2 8 6s-8 8-8 8z\"></path><path d=\"M32 18c0 0 8-10 0-14-4-2-8 2-8 6s8 8 8 8z\"></path></svg><span class=\"text-[10px] font-bold text-gray-500 italic\">Locked</span></div></div></div><div class=\"w-full px-1 pt-1.5 pb-0.5 text-center\"><span class=\"text-[10px] leading-tight font-semibold block text-gray-400\">FREE Face Sculpt Wrap</span></div></div></div><p class=\"text-center text-[13px] text-gray-500 mt-3 font-medium\">Order Within <span class=\"text-[#e8547a] font-bold\">09:51</span> To Claim Your FREE Gifts</p></div><button class=\"w-full bg-[#ECAE51] hover:bg-[#d9a048] text-white font-semibold py-4 px-8 rounded-lg text-[15px] tracking-wide transition-colors uppercase\">Add to Cart</button><div class=\"max-w-[600px] mx-auto px-4 pt-4 pb-2\"><div class=\"flex items-center gap-3 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow-sm\"><div class=\"flex -space-x-3\"><img alt=\"Jade\" class=\"w-10 h-10 rounded-full object-cover border-2 border-white\" src=\"/assets/images/Screenshot_2025-12-07_021039.png\"/><img alt=\"Emma\" class=\"w-10 h-10 rounded-full object-cover border-2 border-white\" src=\"/assets/images/Screenshot_2025-12-07_021056.png\"/></div><div><div class=\"flex items-center gap-1\"><span class=\"text-[14px] font-bold text-black\">Jade, Emma</span><svg class=\"w-4 h-4\" fill=\"#3b82f6\" viewbox=\"0 0 20 20\"><path clip-rule=\"evenodd\" d=\"M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\" fill-rule=\"evenodd\"></path></svg></div><p class=\"text-[12px] text-gray-500\">and 57,000+ love our Korean skincare products</p></div></div></div><div class=\"border-t border-gray-200 mt-2\"><div class=\"border-b border-gray-200\"><button class=\"w-full flex items-center justify-between py-4 text-left\"><span class=\"text-[14px] font-semibold text-black\">Is this right for you?</span><span class=\"text-xl text-gray-400 ml-4 flex-shrink-0\">+</span></button></div><div class=\"border-b border-gray-200\"><button class=\"w-full flex items-center justify-between py-4 text-left\"><span class=\"text-[14px] font-semibold text-black\">Description</span><span class=\"text-xl text-gray-400 ml-4 flex-shrink-0\">+</span></button></div><div class=\"border-b border-gray-200\"><button class=\"w-full flex items-center justify-between py-4 text-left\"><span class=\"text-[14px] font-semibold text-black\">Ingredients</span><span class=\"text-xl text-gray-400 ml-4 flex-shrink-0\">+</span></button></div><div class=\"border-b border-gray-200\"><button class=\"w-full flex items-center justify-between py-4 text-left\"><span class=\"text-[14px] font-semibold text-black\">Use Cases</span><span class=\"text-xl text-gray-400 ml-4 flex-shrink-0\">+</span></button></div><div class=\"border-b border-gray-200\"><button class=\"w-full flex items-center justify-between py-4 text-left\"><span class=\"text-[14px] font-semibold text-black\">How to Use (Quick)</span><span class=\"text-xl text-gray-400 ml-4 flex-shrink-0\">+</span></button></div></div><div class=\"mx-2 my-4 lg:max-w-[420px] lg:mx-auto\"><div class=\"rounded-2xl overflow-hidden border border-gray-200\" style=\"display: grid; grid-template-columns: 38% 62%;\"><div class=\"relative overflow-hidden\" style=\"min-height: 180px;\"><img alt=\"Melissa K. Lerm, Esthetician\" class=\"absolute inset-0 w-full h-full object-cover lg:object-contain lg:bg-[#f5f5f5] object-top lg:object-center\" loading=\"lazy\" src=\"/assets/images/pasted_file_wyOk0n_image_6e5c9348.webp\" style=\"filter: grayscale(100%); display: block;\"/></div><div class=\"bg-white px-3 py-3 flex flex-col justify-center gap-2\"><h3 class=\"text-[12px] font-black text-black leading-snug\" style=\"font-family: Inter, sans-serif; font-weight: 900;\">Melissa K. Lerm, Esthetician: Why The K Glow Brush Works</h3><p class=\"text-[10px] text-gray-700 leading-relaxed\">\u201cThe K Glow Brush works because it addresses the real problem, stagnant face fluids. The textured bristles physically move that buildup out, which is why you see instant sculpting. Daily use trains your system to drain efficiently on its own.\u201d</p><p class=\"text-[10px] font-bold text-black\">Melissa K. Lerm, Esthetician</p></div></div></div></div></div></div></section><section class=\"bg-white py-8 border-y border-gray-100 overflow-hidden\"><p class=\"text-[11px] font-bold tracking-[0.2em] text-gray-400 uppercase text-center mb-6\">AS SEEN ON</p><div class=\"relative overflow-hidden\"><div class=\"flex items-center gap-12\" style=\"animation: 20s linear 0s infinite normal none running asSeenTicker; width: max-content; display: flex;\"><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_86_7cb32dbe.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_87_5723e1a6.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_88_c8dc28d8.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_89_1fa665b6.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_90_0b35c16c.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_91_f1ed1cf2.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_86_7cb32dbe.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_87_5723e1a6.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_88_c8dc28d8.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_89_1fa665b6.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_90_0b35c16c.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_91_f1ed1cf2.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_86_7cb32dbe.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_87_5723e1a6.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_88_c8dc28d8.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_89_1fa665b6.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_90_0b35c16c.png\"/><img alt=\"Media logo\" class=\"h-10 w-auto object-contain hover:opacity-80 transition-all\" loading=\"lazy\" src=\"/assets/images/logo_91_f1ed1cf2.png\"/></div></div></section><section class=\"bg-white py-8\"><div class=\"max-w-[600px] mx-auto px-4\"><img alt=\"5 Reasons The K Glow Brush Transforms Your Face\" class=\"w-full h-auto rounded-2xl shadow-sm\" loading=\"lazy\" src=\"/assets/images/171d8e10-6f5c-4f74-b3cd-4be804982429_2e3d0341.webp\"/></div></section><section class=\"bg-white py-16\"><div class=\"max-w-[1100px] mx-auto px-4\"><div class=\"flex flex-col lg:flex-row items-center gap-12\" style=\"display: flex;\"><div class=\"lg:w-1/2 w-full\" style=\"width: 534px; max-width: 100%;\"><h2 class=\"text-[28px] md:text-[36px] font-bold text-black leading-tight mb-4\" style=\"font-family: Trirong, serif;\">Give your face the secret boost it's been waiting for.</h2><p class=\"text-[14px] text-gray-500 mb-5\">How the K Glow\u2122 Brush helps you:</p><ul class=\"flex flex-col gap-3 mb-6\" style=\"display: flex;\"><li class=\"flex items-center gap-3 text-[14px] text-black font-medium\" style=\"display: flex;\"><span class=\"w-5 h-5 rounded-full bg-[#ECAE51] flex items-center justify-center flex-shrink-0\" style=\"display: flex;\"><svg class=\"w-3 h-3\" fill=\"none\" style=\"width: 12px; height: 12px; flex: 0 0 auto;\" viewbox=\"0 0 12 12\"><polyline points=\"2,6 5,9 10,3\" stroke=\"white\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\"></polyline></svg></span>Instant de-puffing and sculpting</li><li class=\"flex items-center gap-3 text-[14px] text-black font-medium\" style=\"display: flex;\"><span class=\"w-5 h-5 rounded-full bg-[#ECAE51] flex items-center justify-center flex-shrink-0\" style=\"display: flex;\"><svg class=\"w-3 h-3\" fill=\"none\" style=\"width: 12px; height: 12px; flex: 0 0 auto;\" viewbox=\"0 0 12 12\"><polyline points=\"2,6 5,9 10,3\" stroke=\"white\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\"></polyline></svg></span>Defined, lifted jawline</li><li class=\"flex items-center gap-3 text-[14px] text-black font-medium\" style=\"display: flex;\"><span class=\"w-5 h-5 rounded-full bg-[#ECAE51] flex items-center justify-center flex-shrink-0\" style=\"display: flex;\"><svg class=\"w-3 h-3\" fill=\"none\" style=\"width: 12px; height: 12px; flex: 0 0 auto;\" viewbox=\"0 0 12 12\"><polyline points=\"2,6 5,9 10,3\" stroke=\"white\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\"></polyline></svg></span>Reduce under eye bags instantly</li><li class=\"flex items-center gap-3 text-[14px] text-black font-medium\" style=\"display: flex;\"><span class=\"w-5 h-5 rounded-full bg-[#ECAE51] flex items-center justify-center flex-shrink-0\" style=\"display: flex;\"><svg class=\"w-3 h-3\" fill=\"none\" style=\"width: 12px; height: 12px; flex: 0 0 auto;\" viewbox=\"0 0 12 12\"><polyline points=\"2,6 5,9 10,3\" stroke=\"white\" stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"2\"></polyline></svg></span>Set your skin tone for the day</li></ul><blockquote class=\"border-l-4 border-[#ECAE51] pl-4 text-[13px] text-gray-600 italic leading-relaxed mb-3\">\"I've tried every face roller and tool out there, so I know what actually works. This isn't the same. The textured bristles genuinely drain fluid\u2014my face looks sculpted, not puffy. I use it for 3 minutes every morning.\"</blockquote><div class=\"flex items-center gap-2 mb-6\" style=\"display: flex;\"><svg class=\"w-4 h-4\" fill=\"#ECAE51\" style=\"width: 16px; height: 16px; flex: 0 0 auto;\" viewbox=\"0 0 20 20\"><path d=\"M10 2a8 8 0 100 16A8 8 0 0010 2zm3.707 6.293a1 1 0 00-1.414-1.414L9 10.172 7.707 8.879a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z\"></path></svg><span class=\"text-[12px] font-bold text-[#ECAE51] tracking-wide\">VERIFIED BUYER</span></div><a class=\"inline-block bg-black text-white font-bold text-[14px] px-10 py-4 rounded-xl tracking-wide hover:bg-gray-900 transition-colors\" href=\"#product-plans\">GET YOURS NOW!</a></div><div class=\"lg:w-[30%] w-full\" style=\"width: 320px; max-width: 100%; flex: 0 0 auto;\"><div class=\"relative select-none cursor-col-resize rounded-2xl overflow-hidden shadow-lg\" style=\"user-select: none;\"><div class=\"absolute inset-0 overflow-hidden\" style=\"width: 50%;\"></div><div class=\"absolute top-3 left-3 bg-black/70 text-white text-[11px] font-bold px-3 py-1 rounded tracking-wider pointer-events-none\">BEFORE</div><div class=\"absolute top-3 right-3 bg-black/70 text-white text-[11px] font-bold px-3 py-1 rounded tracking-wider pointer-events-none\">AFTER</div><div class=\"absolute top-0 bottom-0 w-0.5 bg-white shadow-lg pointer-events-none\" style=\"left: 50%; transform: translateX(-50%);\"><div class=\"absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center\" style=\"display: flex;\"><svg class=\"w-5 h-5\" fill=\"none\" stroke=\"#374151\" stroke-width=\"2\" style=\"width: 20px; height: 20px; flex: 0 0 auto;\" viewbox=\"0 0 24 24\"><path d=\"M8 9l-3 3 3 3M16 9l3 3-3 3\"></path></svg></div></div></div></div></div></div></section><div class=\"py-2 px-4\" style=\"background: linear-gradient(90deg, rgb(212, 168, 67) 0%, rgb(232, 192, 96) 40%, rgb(212, 168, 67) 100%);\"><div class=\"max-w-[600px] mx-auto flex justify-between items-center\" style=\"display: flex;\"><div class=\"flex items-center gap-1.5 text-white\" style=\"display: flex;\"><svg class=\"w-5 h-5 flex-shrink-0 opacity-90\" fill=\"white\" style=\"width: 20px; height: 20px; flex: 0 0 auto;\" viewbox=\"0 0 32 32\"><ellipse cx=\"8\" cy=\"10\" rx=\"3\" ry=\"4\"></ellipse><ellipse cx=\"16\" cy=\"7\" rx=\"3\" ry=\"4\"></ellipse><ellipse cx=\"24\" cy=\"10\" rx=\"3\" ry=\"4\"></ellipse><ellipse cx=\"5\" cy=\"17\" rx=\"2.5\" ry=\"3.5\"></ellipse><ellipse cx=\"27\" cy=\"17\" rx=\"2.5\" ry=\"3.5\"></ellipse><path d=\"M16 13c-5 0-10 4-10 9 0 3 2 5 5 5 1.5 0 3-1 5-1s3.5 1 5 1c3 0 5-2 5-5 0-5-5-9-10-9z\"></path></svg><div class=\"flex flex-col\" style=\"display: flex;\"><span class=\"text-[9px] font-bold tracking-[0.08em] uppercase leading-tight text-white\">CRUELTY-</span><span class=\"text-[9px] font-bold tracking-[0.08em] uppercase leading-tight text-white\">FREE</span></div></div><div class=\"flex items-center gap-1.5 text-white\" style=\"display: flex;\"><svg class=\"w-5 h-5 flex-shrink-0 opacity-90\" fill=\"none\" stroke=\"white\" stroke-width=\"1.8\" style=\"width: 20px; height: 20px; flex: 0 0 auto;\" viewbox=\"0 0 24 24\"><path d=\"M12 2C12 2 5 10 5 15a7 7 0 0014 0C19 10 12 2 12 2z\"></path></svg><div class=\"flex flex-col\" style=\"display: flex;\"><span class=\"text-[9px] font-bold tracking-[0.08em] uppercase leading-tight text-white\">SUITABLE FOR</span><span class=\"text-[9px] font-bold tracking-[0.08em] uppercase leading-tight text-white\">SENSITIVE SKIN</span></div></div><div class=\"flex items-center gap-1.5 text-white\" style=\"display: flex;\"><svg class=\"w-5 h-5 flex-shrink-0 opacity-90\" fill=\"none\" stroke=\"white\" stroke-width=\"1.8\" style=\"width: 20px; height: 20px; flex: 0 0 auto;\" viewbox=\"0 0 24 24\"><path d=\"M9 3h6M9 3v7L4 19a1 1 0 00.9 1.5h14.2A1 1 0 0020 19l-5-9V3\"></path><line x1=\"6\" x2=\"18\" y1=\"14\" y2=\"14\"></line></svg><div class=\"flex flex-col\" style=\"display: flex;\"><span class=\"text-[9px] font-bold tracking-[0.08em] uppercase leading-tight text-white\">NO HARSH</span><span class=\"text-[9px] font-bold tracking-[0.08em] uppercase leading-tight text-white\">CHEMICALS</span></div></div></div></div><section class=\"bg-white py-16\"><div class=\"max-w-[1200px] mx-auto\"><h2 class=\"text-[22px] md:text-[28px] font-bold text-black text-center mb-2 px-4\" style=\"font-family: Trirong, serif;\">57,000+ people have discovered their best routine yet.</h2><p class=\"text-[14px] text-gray-500 text-center mb-8 px-4\">The confidence that comes from healthy, radiant skin at every age.</p><div class=\"overflow-hidden relative mb-3\"><div class=\"flex gap-2\" style=\"animation: 30s linear 0s infinite normal none running socialScroll; width: max-content; display: flex;\"><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 1\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-06_220012.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 2\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-06_220101.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 4\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020246.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 5\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020335.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 6\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020351.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 7\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020549.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 8\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020633.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 1\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-06_220012.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 2\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-06_220101.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 4\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020246.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 5\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020335.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 6\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020351.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 7\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020549.png\"/></div><div class=\"flex-shrink-0 overflow-hidden\" style=\"width: 220px; height: 280px; max-width: 100%; flex: 0 0 auto;\"><img alt=\"Customer 8\" class=\"w-full h-full object-cover\" loading=\"lazy\" src=\"/assets/images/Screenshot_2025-12-07_020633.png\"/></div></div></div><div class=\"flex justify-center mb-12 px-4\" style=\"display: flex;\"><div class=\"bg-white shadow-md rounded-xl px-6 py-3 text-center\"><p class=\"text-[13px] font-semibold text-black\">Loved by <span class=\"text-[#ECAE51]\">57,000+</span> people around the world</p></div></div><div class=\"flex flex-col items-center gap-5 max-w-xs mx-auto w-full\" style=\"display: flex;\"><div class=\"flex items-center gap-4 w-full\" style=\"display: flex; width: 320px; max-width: 100%;\"><div class=\"flex-shrink-0 relative w-14 h-14\"><svg class=\"w-14 h-14 -rotate-90\" style=\"width: 56px; height: 56px; flex: 0 0 auto;\" viewbox=\"0 0 36 36\"><circle cx=\"18\" cy=\"18\" fill=\"none\" r=\"15.9\" stroke=\"#e5e7eb\" stroke-width=\"3\"></circle><circle cx=\"18\" cy=\"18\" fill=\"none\" r=\"15.9\" stroke=\"#1a1a1a\" stroke-dasharray=\"93 7\" stroke-linecap=\"round\" stroke-width=\"3\"></circle></svg><span class=\"absolute inset-0 flex items-center justify-center text-[12px] font-bold text-black\" style=\"display: flex;\">93%</span></div><p class=\"text-[13px] text-gray-700 leading-snug\">saw visible <strong>reduction in face bloat and puffiness*</strong></p></div><div class=\"flex items-center gap-4 w-full\" style=\"display: flex; width: 320px; max-width: 100%;\"><div class=\"flex-shrink-0 relative w-14 h-14\"><svg class=\"w-14 h-14 -rotate-90\" style=\"width: 56px; height: 56px; flex: 0 0 auto;\" viewbox=\"0 0 36 36\"><circle cx=\"18\" cy=\"18\" fill=\"none\" r=\"15.9\" stroke=\"#e5e7eb\" stroke-width=\"3\"></circle><circle cx=\"18\" cy=\"18\" fill=\"none\" r=\"15.9\" stroke=\"#1a1a1a\" stroke-dasharray=\"89 11\" stroke-linecap=\"round\" stroke-width=\"3\"></circle></svg><span class=\"absolute inset-0 flex items-center justify-center text-[12px] font-bold text-black\" style=\"display: flex;\">89%</span></div><p class=\"text-[13px] text-gray-700 leading-snug\">reported a <strong>more defined and sculpted jawline*</strong></p></div><div class=\"flex items-center gap-4 w-full\" style=\"display: flex; width: 320px; max-width: 100%;\"><div class=\"flex-shrink-0 relative w-14 h-14\"><svg class=\"w-14 h-14 -rotate-90\" style=\"width: 56px; height: 56px; flex: 0 0 auto;\" viewbox=\"0 0 36 36\"><circle cx=\"18\" cy=\"18\" fill=\"none\" r=\"15.9\" stroke=\"#e5e7eb\" stroke-width=\"3\"></circle><circle cx=\"18\" cy=\"18\" fill=\"none\" r=\"15.9\" stroke=\"#1a1a1a\" stroke-dasharray=\"94 6\" stroke-linecap=\"round\" stroke-width=\"3\"></circle></svg><span class=\"absolute inset-0 flex items-center justify-center text-[12px] font-bold text-black\" style=\"display: flex;\">94%</span></div><p class=\"text-[13px] text-gray-700 leading-snug\">noticed <strong>tighter, lifted skin around cheeks and jaw*</strong></p></div><p class=\"text-[10px] text-gray-400 mt-1 text-center\">Results based on 200 customers actively using this product.</p></div></div></section><div class=\"bg-[#ECAE51] py-6 px-4\"><div class=\"max-w-[700px] mx-auto flex justify-around items-center\" style=\"display: flex;\"><div class=\"text-center text-white\"><p class=\"text-[22px] font-bold\">57K+</p><p class=\"text-[11px] text-white/80 uppercase tracking-wide\">Customers</p></div><div class=\"text-center text-white\"><p class=\"text-[22px] font-bold\">120K+</p><p class=\"text-[11px] text-white/80 uppercase tracking-wide\">Skincare Sold</p></div><div class=\"text-center text-white\"><p class=\"text-[22px] font-bold\">1.1K</p><p class=\"text-[11px] text-white/80 uppercase tracking-wide\">5 Star Ratings</p></div></div></div><section class=\"bg-white py-8\"><div class=\"max-w-[600px] mx-auto px-4\"><h2 class=\"text-[22px] md:text-[26px] font-bold text-black leading-tight mb-3\" style=\"font-family: Trirong, serif;\">30 DAY MONEY-BACK GUARANTEE</h2><p class=\"text-[14px] text-gray-600 leading-relaxed mb-3\">We're so confident the Linfae Brush will reduce your double chin and sculpt your jawline that we'll give you 30 days to try it risk-free.</p><blockquote class=\"border-l-4 border-[#ECAE51] pl-4 text-[13px] text-[#ECAE51] font-semibold italic leading-relaxed mb-4\">If you don't see a sharper, more defined face\u2014send it back for a full refund.</blockquote><div class=\"flex justify-center mb-4\" style=\"display: flex;\"><img alt=\"Linfae Brush\" class=\"max-w-[180px] w-full h-auto object-contain drop-shadow-md\" loading=\"lazy\" src=\"/assets/images/brush_top_view_kglow_d596118e.webp\"/></div><div class=\"mt-6 text-center\"><a class=\"inline-block bg-black text-white font-bold text-[15px] px-10 py-4 rounded-xl tracking-wide hover:bg-gray-900 transition-colors\" href=\"#product-plans\">GET YOURS NOW!</a></div></div></section><section class=\"bg-[#F4F3E8] py-14 lg:py-20\"><div class=\"max-w-[800px] mx-auto px-4 sm:px-6 lg:px-8\"><h2 class=\"text-3xl lg:text-4xl font-medium text-black text-center mb-10\" style=\"font-family: Trirong, serif;\">Frequently Asked Questions</h2><div class=\"space-y-0\"><div class=\"border-b border-black/10\"><button class=\"w-full flex items-center justify-between py-5 text-left group\" style=\"display: flex;\"><span class=\"text-[15px] font-semibold text-black pr-4\">How does the Linfae Lymphatic Face Brush work?</span><span class=\"text-2xl text-black/40 flex-shrink-0 transition-transform duration-200\" style=\"transform: none;\">+</span></button><div class=\"overflow-hidden transition-all duration-300 max-h-0\"><p class=\"text-sm text-black/70 leading-relaxed pr-8\">The brush uses hundreds of ultra-fine bristles to gently stimulate your face's lymphatic system. This helps drain excess fluid, reduce puffiness, and improve circulation \u2014 all in just 90 seconds a day.</p></div></div><div class=\"border-b border-black/10\"><button class=\"w-full flex items-center justify-between py-5 text-left group\" style=\"display: flex;\"><span class=\"text-[15px] font-semibold text-black pr-4\">Is it safe for sensitive skin?</span><span class=\"text-2xl text-black/40 flex-shrink-0 transition-transform duration-200\" style=\"transform: none;\">+</span></button><div class=\"overflow-hidden transition-all duration-300 max-h-0\"><p class=\"text-sm text-black/70 leading-relaxed pr-8\">Absolutely. The bristles are medical-grade nylon at just 0.05mm diameter \u2014 softer than most facial cleansing brushes. It's designed to be gentle enough for sensitive and mature skin.</p></div></div><div class=\"border-b border-black/10\"><button class=\"w-full flex items-center justify-between py-5 text-left group\" style=\"display: flex;\"><span class=\"text-[15px] font-semibold text-black pr-4\">How often should I use it?</span><span class=\"text-2xl text-black/40 flex-shrink-0 transition-transform duration-200\" style=\"transform: none;\">+</span></button><div class=\"overflow-hidden transition-all duration-300 max-h-0\"><p class=\"text-sm text-black/70 leading-relaxed pr-8\">For best results, use it once daily in the morning on clean, dry skin. Each session takes about 90 seconds. You can also use it before applying skincare products to enhance absorption.</p></div></div><div class=\"border-b border-black/10\"><button class=\"w-full flex items-center justify-between py-5 text-left group\" style=\"display: flex;\"><span class=\"text-[15px] font-semibold text-black pr-4\">When will I see results?</span><span class=\"text-2xl text-black/40 flex-shrink-0 transition-transform duration-200\" style=\"transform: none;\">+</span></button><div class=\"overflow-hidden transition-all duration-300 max-h-0\"><p class=\"text-sm text-black/70 leading-relaxed pr-8\">Most users notice reduced puffiness after the very first use. For jawline sculpting and long-term benefits, consistent daily use for 2-4 weeks is recommended.</p></div></div><div class=\"border-b border-black/10\"><button class=\"w-full flex items-center justify-between py-5 text-left group\" style=\"display: flex;\"><span class=\"text-[15px] font-semibold text-black pr-4\">Do I need to use it with oils or serums?</span><span class=\"text-2xl text-black/40 flex-shrink-0 transition-transform duration-200\" style=\"transform: none;\">+</span></button><div class=\"overflow-hidden transition-all duration-300 max-h-0\"><p class=\"text-sm text-black/70 leading-relaxed pr-8\">No! The Linfae brush is designed to be used on clean, dry skin \u2014 no products needed. This makes it mess-free and perfect for your morning routine.</p></div></div><div class=\"border-b border-black/10\"><button class=\"w-full flex items-center justify-between py-5 text-left group\" style=\"display: flex;\"><span class=\"text-[15px] font-semibold text-black pr-4\">What is your return policy?</span><span class=\"text-2xl text-black/40 flex-shrink-0 transition-transform duration-200\" style=\"transform: none;\">+</span></button><div class=\"overflow-hidden transition-all duration-300 max-h-0\"><p class=\"text-sm text-black/70 leading-relaxed pr-8\">We offer a 30-day money-back guarantee. If you're not completely satisfied, contact us for a full refund \u2014 no questions asked.</p></div></div></div><div class=\"text-center mt-10\"><a class=\"inline-block bg-black text-white font-bold text-base px-12 py-4 rounded-full hover:bg-black/85 transition-colors duration-200 tracking-wide\" href=\"#product-plans\">GET OFFER</a></div></div></section>";
+import { useState } from 'react'
+import { CheckIcon, Stars } from '../../Icons.jsx'
+import {
+  asset,
+  benefits,
+  faqs,
+  galleryImages,
+  gifts,
+  mediaLogos,
+  productDetails,
+  purchasePlans,
+  resultStats,
+  socialImages,
+} from '../../../data.js'
+
+function ProductGallery() {
+  const [activeImage, setActiveImage] = useState(0)
+
+  return (
+    <div className="product-gallery">
+      <div className="product-thumbnails" aria-label="Product images">
+        {galleryImages.map(([image, alt], index) => (
+          <button
+            className={activeImage === index ? 'thumbnail thumbnail--active' : 'thumbnail'}
+            key={image}
+            type="button"
+            aria-label={`Show product image ${index + 1}`}
+            aria-pressed={activeImage === index}
+            onClick={() => setActiveImage(index)}
+          >
+            <img src={asset(image)} alt={alt} loading={index === 0 ? 'eager' : 'lazy'} />
+          </button>
+        ))}
+      </div>
+      <div className="product-gallery__stage">
+        <img
+          src={asset(galleryImages[activeImage][0])}
+          alt={galleryImages[activeImage][1]}
+          fetchPriority="high"
+        />
+      </div>
+    </div>
+  )
+}
+
+function PurchasePlan({ plan, selected, onSelect }) {
+  return (
+    <button
+      className={selected ? 'purchase-plan purchase-plan--selected' : 'purchase-plan'}
+      type="button"
+      aria-pressed={selected}
+      onClick={onSelect}
+    >
+      {plan.badge && <span className="purchase-plan__badge">{plan.badge}</span>}
+      <span className="radio"><span /></span>
+      <span className="purchase-plan__name">
+        <strong>{plan.name}</strong>
+        {plan.saving && <small>{plan.saving}</small>}
+        {plan.gift && <em>{plan.gift}</em>}
+      </span>
+      <span className="purchase-plan__price">
+        <strong>{plan.price}</strong>
+        <del>{plan.compareAt}</del>
+      </span>
+    </button>
+  )
+}
+
+function GiftCard({ gift }) {
+  return (
+    <article className={gift.locked ? 'gift-card gift-card--locked' : 'gift-card'}>
+      <span className="gift-card__value">{gift.value}</span>
+      <div className="gift-card__visual">
+        {gift.image ? (
+          <img src={asset(gift.image)} alt={gift.label} loading="lazy" />
+        ) : (
+          <span className="locked-gift" aria-hidden="true">♙<small>Locked</small></span>
+        )}
+      </div>
+      <strong>{gift.label}</strong>
+    </article>
+  )
+}
+
+function ProductDetails() {
+  return (
+    <div className="product-details">
+      {productDetails.map(([title, text]) => (
+        <details key={title}>
+          <summary>{title}<span aria-hidden="true">+</span></summary>
+          <p>{text}</p>
+        </details>
+      ))}
+    </div>
+  )
+}
+
+function ProductInfo() {
+  const [selectedPlan, setSelectedPlan] = useState(1)
+  const [cartMessage, setCartMessage] = useState('')
+
+  return (
+    <div className="product-info">
+      <div className="expert-line">
+        <span className="expert-avatar">
+          <img src={asset('JmacTtwXjCYPoWBE.jpeg')} alt="Melissa K. Lerm" />
+          <span aria-hidden="true">✓</span>
+        </span>
+        <p>Recommended by <strong>Melissa K. Lerm</strong><i>|</i>Esthetician</p>
+        <span aria-label="Korea">🇰🇷</span>
+      </div>
+
+      <h1>Linfae Lymphatic Face Brush</h1>
+      <div className="product-rating">
+        <Stars />
+        <span>4.8/5 Stars (3,000+ Reviews)</span>
+      </div>
+
+      <div className="featured-review">
+        <img src={asset('Screenshot_2025-12-07_021109.png')} alt="Jessica M., CA" />
+        <div>
+          <p>Puffiness gone in week one. Hubby noticed without me saying a word.</p>
+          <small>Jessica M., CA</small>
+        </div>
+      </div>
+      <div className="review-dots" aria-label="Featured review 1 of 3">
+        <button type="button" aria-label="Previous review">‹</button>
+        <span className="active" />
+        <span />
+        <span />
+        <button type="button" aria-label="Next review">›</button>
+      </div>
+      <p className="fluid-callout">
+        Your double chin isn't fat — <em>it's trapped fluid.</em>
+        <small>This brush drains it in <strong>3 minutes.</strong></small>
+      </p>
+
+      <div className="divider-title" id="product-plans"><span />Buy More, Save More<span /></div>
+      <div className="purchase-plans">
+        {purchasePlans.map((plan, index) => (
+          <PurchasePlan
+            key={plan.name}
+            plan={plan}
+            selected={selectedPlan === index}
+            onSelect={() => setSelectedPlan(index)}
+          />
+        ))}
+      </div>
+
+      <section className="gift-offer" aria-labelledby="gift-title">
+        <h2 id="gift-title">🎁 Free Gifts If You Order Now</h2>
+        <div className="gift-grid">
+          {gifts.map((gift) => <GiftCard gift={gift} key={gift.label} />)}
+        </div>
+        <p>Order Within <strong>09:52</strong> To Claim Your FREE Gifts</p>
+      </section>
+
+      <button
+        className="add-to-cart"
+        type="button"
+        onClick={() => setCartMessage(`${purchasePlans[selectedPlan].name} selected`)}
+      >
+        Add to Cart
+      </button>
+      <p className="visually-hidden" aria-live="polite">{cartMessage}</p>
+
+      <div className="community-proof">
+        <span>
+          <img src={asset('Screenshot_2025-12-07_021039.png')} alt="Jade" />
+          <img src={asset('Screenshot_2025-12-07_021056.png')} alt="Emma" />
+        </span>
+        <p><strong>Jade, Emma <b>●</b></strong>and 57,000+ love our Korean skincare products</p>
+      </div>
+
+      <ProductDetails />
+
+      <article className="expert-card">
+        <img src={asset('pasted_file_wyOk0n_image_6e5c9348.webp')} alt="Melissa K. Lerm, Esthetician" />
+        <div>
+          <h2>Melissa K. Lerm, Esthetician: Why The K Glow Brush Works</h2>
+          <p>“The K Glow Brush works because it addresses the real problem, stagnant face fluids. The textured bristles physically move that buildup out, which is why you see instant sculpting. Daily use trains your system to drain efficiently on its own.”</p>
+          <strong>Melissa K. Lerm, Esthetician</strong>
+        </div>
+      </article>
+    </div>
+  )
+}
+
+function MediaStrip() {
+  const logos = [...mediaLogos, ...mediaLogos, ...mediaLogos]
+  return (
+    <section className="media-strip" aria-label="Press mentions">
+      <p>As seen on</p>
+      <div>
+        {logos.map((logo, index) => (
+          <img src={asset(logo)} alt="" aria-hidden="true" key={`${logo}-${index}`} />
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function BenefitsSection() {
+  return (
+    <section className="benefits-section">
+      <div className="benefits-section__inner">
+        <div className="benefit-copy">
+          <h2>Give your face the secret<br />boost it's been waiting for.</h2>
+          <p>How the K Glow™ Brush helps you:</p>
+          <ul>
+            {benefits.map((benefit) => (
+              <li key={benefit}><CheckIcon />{benefit}</li>
+            ))}
+          </ul>
+          <blockquote>"I've tried every face roller and tool out there, so I know what actually works. This isn't the same. The textured bristles genuinely drain fluid—my face looks sculpted, not puffy. I use it for 3 minutes every morning."</blockquote>
+          <p className="verified"><span>●</span> VERIFIED BUYER</p>
+          <a className="black-button" href="#product-plans">GET YOURS NOW!</a>
+        </div>
+        <figure className="comparison">
+          <img src={asset('Untitled_design_19.png')} alt="After using the Linfae brush" />
+          <span className="comparison__before">
+            <img src={asset('Untitled_design_18.png')} alt="Before using the Linfae brush" />
+          </span>
+          <figcaption><span>Before</span><span>After</span></figcaption>
+          <i aria-hidden="true">↔</i>
+        </figure>
+      </div>
+    </section>
+  )
+}
+
+function TrustBar() {
+  return (
+    <div className="trust-bar">
+      <span>♣ <strong>CRUELTY-<br />FREE</strong></span>
+      <span>♧ <strong>SUITABLE FOR<br />SENSITIVE SKIN</strong></span>
+      <span>♙ <strong>NO HARSH<br />CHEMICALS</strong></span>
+    </div>
+  )
+}
+
+function ResultsSection() {
+  return (
+    <section className="results-section">
+      <h2>57,000+ people have discovered their best routine yet.</h2>
+      <p>The confidence that comes from healthy, radiant skin at every age.</p>
+      <div className="social-gallery">
+        {socialImages.map((image, index) => (
+          <img src={asset(image)} alt={`Linfae customer ${index + 1}`} loading="eager" key={image} />
+        ))}
+      </div>
+      <p className="loved-card">Loved by <strong>57,000+</strong> people around the world</p>
+      <div className="result-stats">
+        {resultStats.map(([percent, text]) => (
+          <div className="result-stat" key={percent}>
+            <span style={{ '--percent': percent }}>{percent}%</span>
+            <p>{text}</p>
+          </div>
+        ))}
+        <small>Results based on 200 customers actively using this product.</small>
+      </div>
+    </section>
+  )
+}
+
+function NumberStrip() {
+  return (
+    <section className="number-strip" aria-label="Linfae customer statistics">
+      <p><strong>57K+</strong><span>Customers</span></p>
+      <p><strong>120K+</strong><span>Skincare Sold</span></p>
+      <p><strong>1.1K</strong><span>5 Star Ratings</span></p>
+    </section>
+  )
+}
+
+function GuaranteeSection() {
+  return (
+    <section className="guarantee-section">
+      <div>
+        <h2>30 DAY MONEY-BACK GUARANTEE</h2>
+        <p>We're so confident the Linfae Brush will reduce your double chin and sculpt your jawline that we'll give you 30 days to try it risk-free.</p>
+        <blockquote>If you don't see a sharper, more defined face—send it back for a full refund.</blockquote>
+        <img src={asset('brush_top_view_kglow_d596118e.webp')} alt="Linfae Brush" loading="eager" />
+        <a className="black-button" href="#product-plans">GET YOURS NOW!</a>
+      </div>
+    </section>
+  )
+}
+
+function FaqSection() {
+  return (
+    <section className="faq-section">
+      <div>
+        <h2>Frequently Asked Questions</h2>
+        {faqs.map(([question, answer]) => (
+          <details key={question}>
+            <summary>{question}<span aria-hidden="true">+</span></summary>
+            <p>{answer}</p>
+          </details>
+        ))}
+        <a className="black-button black-button--pill" href="#product-plans">GET OFFER</a>
+      </div>
+    </section>
+  )
+}
 
 export default function ProductSection() {
-  return <div className="pwc-section pwc-product" dangerouslySetInnerHTML={{ __html }} />;
+  return (
+    <main>
+      <section className="product-section">
+        <div className="product-section__inner">
+          <ProductGallery />
+          <ProductInfo />
+        </div>
+      </section>
+      <MediaStrip />
+      <section className="reasons-section">
+        <img
+          src={asset('171d8e10-6f5c-4f74-b3cd-4be804982429_2e3d0341.webp')}
+          alt="5 Reasons The K Glow Brush Transforms Your Face"
+          loading="eager"
+        />
+      </section>
+      <BenefitsSection />
+      <TrustBar />
+      <ResultsSection />
+      <NumberStrip />
+      <GuaranteeSection />
+      <FaqSection />
+    </main>
+  )
 }

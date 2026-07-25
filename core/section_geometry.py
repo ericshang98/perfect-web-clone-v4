@@ -62,6 +62,13 @@ def _walk(node: Any, by_id: Dict[str, Dict], by_sig: Dict[Tuple[str, frozenset],
 _FIRST_TAG_RE = re.compile(r"<\s*([a-zA-Z][\w-]*)((?:\s[^>]*?)?)>", re.S)
 _ID_RE = re.compile(r'\bid\s*=\s*["\']([^"\']+)["\']')
 _CLASS_RE = re.compile(r'\bclass\s*=\s*["\']([^"\']*)["\']')
+_STYLE_RE = re.compile(r'\bstyle\s*=\s*["\']([^"\']*)["\']', re.I)
+_HIDDEN_MODAL_RE = re.compile(
+    r'class\s*=\s*["\'][^"\']*\bant-modal-wrap\b[^"\']*["\'][^>]*'
+    r'style\s*=\s*["\'][^"\']*display\s*:\s*none',
+    re.I | re.S,
+)
+_NONVISUAL_ROOT_RE = re.compile(r"^\s*(?:<noscript\b|<script\b)", re.I)
 
 
 def _root_anchor(full_html: str) -> Optional[Tuple[str, Optional[str], frozenset]]:
@@ -77,6 +84,24 @@ def _root_anchor(full_html: str) -> Optional[Tuple[str, Optional[str], frozenset
     clsm = _CLASS_RE.search(attrs)
     classes = frozenset(clsm.group(1).split()) if clsm else frozenset()
     return tag, (idm.group(1) if idm else None), classes
+
+
+def _root_explicitly_hidden(full_html: str) -> bool:
+    """True when the section root itself was baked out at capture time."""
+
+    if not full_html:
+        return False
+    tag = _FIRST_TAG_RE.search(full_html)
+    if not tag:
+        return False
+    style_match = _STYLE_RE.search(tag.group(2) or "")
+    if not style_match:
+        return False
+    style = re.sub(r"\s+", "", style_match.group(1).lower())
+    return (
+        "display:none" in style
+        or "visibility:hidden" in style
+    )
 
 
 def attach_bounds(sections: List[Dict[str, Any]], dom_tree: Optional[Dict[str, Any]]) -> int:
@@ -102,12 +127,16 @@ def attach_bounds(sections: List[Dict[str, Any]], dom_tree: Optional[Dict[str, A
             continue
         tag, nid, classes = anchor
         match: Optional[Dict] = None
-        if nid and nid in by_id:
-            match = by_id[nid]
-        if match is None and classes:
+        if nid:
+            # An explicit id is a unique identity. If it is absent from the
+            # visible DOM index, the section was not visible; borrowing another
+            # generic class match (for example `.shopify-section`) assigns bogus
+            # geometry to hidden drawers and templates.
+            match = by_id.get(nid)
+        if nid is None and match is None and classes:
             # exact (tag, classes) signature
             match = by_sig.get((tag, classes))
-        if match is None and classes:
+        if nid is None and match is None and classes:
             # relaxed: a node of the same tag whose classes are a superset
             for (sig_tag, sig_cls), bounds in by_sig.items():
                 if sig_tag == tag and classes <= sig_cls:
@@ -117,3 +146,56 @@ def attach_bounds(sections: List[Dict[str, Any]], dom_tree: Optional[Dict[str, A
             sec["bounds"] = dict(match)
             filled += 1
     return filled
+
+
+def filter_hidden_identified_sections(
+    sections: List[Dict[str, Any]],
+    dom_tree: Optional[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Drop identified roots that are absent from the captured visible DOM.
+
+    ``dom.json`` omits deliberately hidden subtrees. A section root with an
+    explicit HTML id can therefore be matched unambiguously: present means
+    visible, absent means it is a hidden drawer/template rather than a page
+    section. Anonymous roots are retained because class-only identity is
+    ambiguous and dropping them could lose real content.
+    """
+    if not dom_tree or not isinstance(sections, list):
+        return list(sections or [])
+
+    visible_ids: set[str] = set()
+    stack: List[Any] = [dom_tree]
+    while stack:
+        node = stack.pop()
+        if not isinstance(node, dict):
+            continue
+        nid = node.get("id") or (node.get("attributes") or {}).get("id")
+        if nid:
+            visible_ids.add(str(nid))
+        stack.extend(node.get("children", []) or [])
+
+    visible: List[Dict[str, Any]] = []
+    for sec in sections:
+        html = sec.get("full_html") or sec.get("raw_html") or ""
+        if _root_explicitly_hidden(html):
+            continue
+        # Some frameworks mount closed dialogs beneath an anonymous wrapper:
+        # ``<div><div class="ant-modal-wrap" style="display:none">…``. The
+        # anonymous outer div has no measurable capture geometry, so retaining
+        # it creates a phantom top-level section that can never be visually
+        # paired with the clone. The dialog remains represented by the
+        # interaction/state manifest; it is not a rest-state page section.
+        if not sec.get("bounds") and _HIDDEN_MODAL_RE.search(html):
+            continue
+        # Analytics-only tails (noscript pixels followed by scripts) are source
+        # instrumentation, not visible page sections.
+        if not sec.get("bounds") and _NONVISUAL_ROOT_RE.search(html):
+            continue
+        anchor = _root_anchor(html)
+        if anchor is None:
+            visible.append(sec)
+            continue
+        _tag, nid, _classes = anchor
+        if nid is None or nid in visible_ids:
+            visible.append(sec)
+    return visible

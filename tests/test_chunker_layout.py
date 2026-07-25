@@ -52,3 +52,34 @@ def test_layout_containers_none_is_default():
     # Passing None explicitly behaves identically to omitting it.
     html = _build_page()
     assert chunk_page(html, layout_containers=None) == chunk_page(html)
+
+
+def test_top_level_shopify_section_stays_atomic_over_token_budget():
+    """A visual Shopify section must not become style/grid/script fragments."""
+    huge_product = (
+        '<section id="shopify-section-product" class="shopify-section">'
+        "<style>.product{display:grid}</style>"
+        '<div class="product grid">'
+        f'<div class="media">{_big_text(MAX_SECTION_TOKENS)}</div>'
+        f'<div class="info">{_big_text(MAX_SECTION_TOKENS)}</div>'
+        "</div>"
+        "<script>customElements.define('product-info', class extends HTMLElement {})</script>"
+        "</section>"
+    )
+    second = (
+        '<section id="shopify-section-footer" class="shopify-section">'
+        "<h2>Footer</h2></section>"
+    )
+
+    sections = chunk_page(huge_product + second, "https://shop.example")
+
+    product_sections = [
+        section
+        for section in sections
+        if 'id="shopify-section-product"' in section["full_html"]
+    ]
+    assert len(product_sections) == 1
+    assert "media" in product_sections[0]["full_html"]
+    assert "info" in product_sections[0]["full_html"]
+    assert "<style>" in product_sections[0]["full_html"]
+    assert "<script>" in product_sections[0]["full_html"]

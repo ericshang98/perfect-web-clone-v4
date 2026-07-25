@@ -14,7 +14,7 @@ import json
 from pathlib import Path
 from typing import Any, Dict, List
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 VALID_STATUSES = {"pending", "pass", "fail", "waived"}
 VALID_STABILITY = {"stable", "unstable"}
 TRIGGER_KINDS = {"scroll", "hover", "click", "wait", "viewport"}
@@ -73,7 +73,10 @@ def validate_state(state: Dict[str, Any]) -> List[str]:
         for step in trigger:
             errs.extend(validate_trigger(step))
     expect = state.get("expect") or {}
-    if state.get("channel") != "residual" and not expect.get("ref"):
+    channel = state.get("channel")
+    if channel == "interaction" and not expect.get("observable"):
+        errs.append("interaction state needs expect.observable")
+    elif channel not in {"residual", "interaction"} and not expect.get("ref"):
         errs.append("non-residual state needs expect.ref")
     return errs
 
@@ -135,4 +138,51 @@ def baseline_states(page_height: float, viewport: tuple[int, int],
             "channel": "baseline", "evidence": None,
             "stability": "stable", "status": "pending",
         })
+    return states
+
+
+def interaction_states(
+    interactions: List[Dict[str, Any]], breakpoint: int
+) -> List[Dict[str, Any]]:
+    """Convert discovered common controls into required replay states."""
+
+    states: List[Dict[str, Any]] = []
+    used: set[str] = set()
+    for index, contract in enumerate(interactions):
+        if not contract.get("required", True):
+            continue
+        if contract.get("action", "click") != "click" or not contract.get("target"):
+            continue
+        base = str(contract.get("id") or f"interaction-{index + 1}")
+        sid = f"i_{breakpoint}_{base}"
+        suffix = 2
+        while sid in used:
+            sid = f"i_{breakpoint}_{base}_{suffix}"
+            suffix += 1
+        used.add(sid)
+        expect = dict(contract.get("expect") or {})
+        clone_target = contract.get("clone_target") or (
+            f"[data-pwc-interaction={json.dumps(base)}]"
+        )
+        if contract.get("controlled"):
+            expect["controlled"] = contract.get("clone_controlled") or (
+                f"[data-pwc-controlled={json.dumps(base)}]"
+            )
+        states.append(
+            {
+                "id": sid,
+                "section": contract.get("section"),
+                "breakpoint": breakpoint,
+                "trigger": [{"kind": "click", "target": clone_target}],
+                "expect": expect,
+                "channel": "interaction",
+                "interaction_kind": contract.get("kind", "interaction"),
+                "source_target": contract["target"],
+                "source_controlled": contract.get("controlled"),
+                "required": True,
+                "evidence": None,
+                "stability": "stable",
+                "status": "pending",
+            }
+        )
     return states

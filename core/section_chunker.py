@@ -114,7 +114,14 @@ def chunk_page(
 
     groups: List[List[Tag]] = []
     for root in roots:
-        groups.extend(_split_to_budget([root], 0, layout_containers))
+        # Shopify's top-level section wrapper is the visual ownership boundary:
+        # its style tag, layout container, and supporting markup belong together.
+        # Splitting an oversized wrapper produced nonvisual style/script chunks
+        # and detached slider children from their on-page geometry.
+        if "shopify-section" in (root.get("class") or []):
+            groups.append([root])
+        else:
+            groups.extend(_split_to_budget([root], 0, layout_containers))
 
     raw_sections: List[Dict[str, Any]] = []
     for nodes in groups:
