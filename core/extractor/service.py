@@ -190,9 +190,10 @@ class ExtractorService:
                     theme_detection = await theme_mod.detect_theme_support(page)
                     current = theme_detection.current_mode
 
-                # Render in the "primary" theme for the canonical pass.
-                primary = "light" if current == ThemeMode.LIGHT else "dark"
-                await theme_mod.apply_theme(page, primary)
+                # The detector restores the exact authored root state. Keep that
+                # state for the canonical capture: named themes such as DaisyUI
+                # "business" are not interchangeable with a generic
+                # data-theme="dark" toggle.
 
                 # Establish the SAME settled state for DOM/raw serialization and
                 # the reference raster. Previously this ran only after raw_html
@@ -397,10 +398,9 @@ class ExtractorService:
                 if has_both:
                     light_data = await self._capture_themed(page, ThemeMode.LIGHT, url, opts)
                     dark_data = await self._capture_themed(page, ThemeMode.DARK, url, opts)
-                    # primary screenshots reflect light unless page is dark-first
-                    if light_data and light_data.screenshot_b64:
-                        screenshot_b64 = light_data.screenshot_b64
-                        full_b64 = light_data.full_b64 or full_b64
+                    # The canonical screenshot remains the authored default
+                    # captured above. Theme variants are stored separately and
+                    # must never replace the primary reference.
 
                 return ExtractionResult(
                     success=True,

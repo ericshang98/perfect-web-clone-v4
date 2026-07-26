@@ -69,17 +69,21 @@ _SAVE_ORIGINAL_JS = r"""() => ({
     htmlClasses: document.documentElement.className,
     bodyClasses: document.body.className,
     dataTheme: document.documentElement.getAttribute('data-theme'),
-    dataColorScheme: document.documentElement.getAttribute('data-color-scheme')
+    dataColorScheme: document.documentElement.getAttribute('data-color-scheme'),
+    htmlStyle: document.documentElement.getAttribute('style'),
+    prefersDark: matchMedia('(prefers-color-scheme: dark)').matches
 })"""
 
 
 _RESTORE_ORIGINAL_JS = r"""(original) => {
     document.documentElement.className = original.htmlClasses;
     document.body.className = original.bodyClasses;
-    if (original.dataTheme) document.documentElement.setAttribute('data-theme', original.dataTheme);
+    if (original.dataTheme !== null) document.documentElement.setAttribute('data-theme', original.dataTheme);
     else document.documentElement.removeAttribute('data-theme');
-    if (original.dataColorScheme) document.documentElement.setAttribute('data-color-scheme', original.dataColorScheme);
+    if (original.dataColorScheme !== null) document.documentElement.setAttribute('data-color-scheme', original.dataColorScheme);
     else document.documentElement.removeAttribute('data-color-scheme');
+    if (original.htmlStyle !== null) document.documentElement.setAttribute('style', original.htmlStyle);
+    else document.documentElement.removeAttribute('style');
 }"""
 
 
@@ -207,6 +211,9 @@ async def detect_theme_support(page: Page) -> ThemeDetectionResult:
         light = await _capture_theme_styles(page, "light")
         dark = await _capture_theme_styles(page, "dark")
 
+        await page.emulate_media(
+            color_scheme="dark" if original.get("prefersDark") else "light"
+        )
         await page.evaluate(_RESTORE_ORIGINAL_JS, original)
 
         color_diff = 0
@@ -257,6 +264,10 @@ async def detect_theme_support(page: Page) -> ThemeDetectionResult:
             current = ThemeMode.DARK
         elif (info.get("current_theme_attr") or "").lower() in ("dark", "dark-mode"):
             current = ThemeMode.DARK
+        else:
+            color_scheme = str(info.get("color_scheme_css") or "").lower()
+            if "dark" in color_scheme and "light" not in color_scheme:
+                current = ThemeMode.DARK
 
         return ThemeDetectionResult(
             support=support,
