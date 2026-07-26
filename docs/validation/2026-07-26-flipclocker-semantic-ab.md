@@ -2,16 +2,30 @@
 
 **Date:** 2026-07-26  
 **Held-out source:** <https://flipclocker.com/>  
-**Source id:** `flipclocker.com-1785045707-54a88d`  
-**Viewport / page:** `1440×900`, full page `1440×1596`
+**Valid source id:** `flipclocker.com-1785049907-54a88d`
+**Viewport / page:** `1440×900`, full page `1440×1442`
 
 This public, unauthenticated page was not used while implementing the semantic
-gate. It contains a clock that changes every second, a changing third-party ad
-creative, stable navigation/content/footer UI, and settings interactions.
+gate. It contains a clock that changes every second, stable
+navigation/content/footer UI, and settings interactions.
+
+## Theme-baseline correction
+
+The first A/B result in this report was invalid. User review revealed that the
+live source was dark while the clone was light. The extractor recognized only
+literal `dark` / `dark-mode` names, misclassified the source's authored
+`data-theme="business"` state as light, mutated it to `data-theme="light"`,
+and then replaced the canonical screenshot with the generated light variant.
+
+The original `0.9958` static score therefore compared the clone to the wrong
+reference and is withdrawn. After fixing non-destructive theme detection, the
+source is captured as `current_theme=dark`; its authored `business` root state
+and dark primary raster remain intact.
 
 ## Source integrity
 
 - Capture integrity: passed on the first attempt.
+- Authored default theme: `business`, computed color scheme `dark`.
 - Critical regions: navigation, clock hero, information hero, footer.
 - Planned section defects were not trusted: the deterministic plan reported a
   zero-height header and failed to assign the two hero owners. Raw critical
@@ -22,57 +36,57 @@ creative, stable navigation/content/footer UI, and settings interactions.
 
 ## A/B result
 
-| Measurement | Previous raw workflow | Semantic workflow |
+| Measurement | Wrong light clone vs corrected source | Corrected semantic workflow |
 |---|---:|---:|
-| Whole-page SSIM | `0.7335` initial / `0.8361–0.8664` final samples | diagnostic only |
-| Valid static-region aggregate | not available | `0.9958` |
-| Navigation | mixed into whole page | `0.9839`, pass |
-| Information heading | mixed into whole page | `1.0000`, pass |
-| Feature grid | mixed into whole page | `0.9998`, pass |
-| Footer | mixed into whole page | `0.9970`, pass |
+| Whole-page SSIM | `0.1446` | `0.8883–0.8926`, diagnostic only |
+| Valid static-region aggregate | `0.0930`, fail | `0.9963`, pass |
+| Navigation | `0.1760`, fail | `0.9833`, pass |
+| Information heading | `0.0000`, fail | `0.9997`, pass |
+| Feature grid | `0.0386`, fail | `0.9999`, pass |
+| Footer | `0.1446`, fail | `0.9992`, pass |
 | Live clock | arbitrary digits caused false failure | bounds + aspect pass |
-| Third-party ad | creative pixels caused false failure | surface geometry/style pass |
 | Settings / hide seconds / hide labels / classic mode | presence only | four click/assert replays pass |
 | Mobile menu | not isolated | open/controlled-surface replay pass |
 
 The raw score changes between refreshes and remains below `0.97` even though
 every valid static crop exceeds its threshold and every declared dynamic
-invariant passes. This is the intended result: changing digits and ad pixels no
-longer decide whether CSS is correct.
+invariant passes. This is the intended result: changing digits no longer decide
+whether CSS is correct, while a whole-page light/dark mismatch now fails the
+static regions immediately.
 
 ## Comparison-driven repairs
 
-The first semantic run passed live-clock and ad invariants while keeping these
-real failures visible:
+The corrected semantic run rejects the old white clone and keeps these real
+theme failures visible:
 
-- information heading `0.6574`;
-- feature grid `0.7349`;
-- footer `0.8472`;
-- navigation `0.9068`;
-- settings submenu actions failed because their required “open settings” prefix
-  was absent.
+- information heading `0.0000`;
+- feature grid `0.0386`;
+- footer `0.1446`;
+- navigation `0.1760`.
 
-Repairs restored the source font-weight mapping, exact inherited tracking,
-heading/card line heights, navigation gap, footer flex geometry, and the
-settings action sequence. All four recorded visual attempts improved strictly
-and introduced no hard-gate regression.
+Repairs preserve the source's authored `business` theme and dark color scheme,
+then reproduce its root surface, navigation, button palette, cards, footer, and
+settings action sequence. The third-party ad placeholder from the invalid light
+capture was removed because it was not present in the corrected authored
+default capture.
 
-The worst-region packet measured `16,061` UTF-8 bytes (about `4,016` estimated
-tokens), included only the owning `section` sources, and truncated unrelated CSS
-under the `16 KiB` budget.
+The original worst-region packet measured `16,061` UTF-8 bytes (about `4,016`
+estimated tokens), included only the owning `section` sources, and truncated
+unrelated CSS under the `16 KiB` budget. The theme correction reused that bounded
+owner context rather than resending the full source capture.
 
 ## Evidence
 
 - Reference raster:
-  `.artifacts/semantic-ab/sources/flipclocker.com-1785045707-54a88d/screenshots/primary_full.png`
+  `.artifacts/semantic-ab/sources/flipclocker.com-1785049907-54a88d/screenshots/primary_full.png`
 - Final candidate:
-  `.artifacts/semantic-ab/optimized-clone/final.png`
+  `.artifacts/semantic-ab/optimized-clone/dark-final.png`
 - Mobile interaction review:
-  `.artifacts/semantic-ab/optimized-clone/mobile-review.png`
+  `.artifacts/semantic-ab/optimized-clone/mobile-dark-review.png`
 - Contract:
   `.artifacts/semantic-ab/optimized-clone/.pwc/comparison-contract.json`
 - Monotonic ledger:
-  `.artifacts/semantic-ab/sources/flipclocker.com-1785045707-54a88d/iteration-ledger.json`
+  `.artifacts/semantic-ab/sources/flipclocker.com-1785049907-54a88d/iteration-ledger.json`
 - Production build:
   `.artifacts/semantic-ab/optimized-clone/dist/`
 - Local review URL:

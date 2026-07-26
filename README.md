@@ -51,7 +51,9 @@ v4 is a Python MCP server (built on the official `mcp` package, `FastMCP`, expos
 
 1. **Extract** — `extract_page(url)` captures immutable raw evidence, compares
    it with the normalized derivative, discovers common interactions, and
-   retries structural inconsistencies up to three times.
+   retries structural inconsistencies up to three times. The canonical raster
+   preserves the authored default theme, including named dark themes; generated
+   light/dark variants never replace it.
 2. **Understand** — `get_comparison_evidence(source_id)` returns bounded
    volatility, critical-region, and interaction evidence; the Agent persists a
    fail-closed region contract.

@@ -85,6 +85,9 @@ Call `pwc4 extract_page(url, options)`.
 - Require `ok: true` and
   `summary.capture_integrity.status == "passed"`.
 - Record `source_id`; use the same value for all later tools.
+- Verify that `current_theme` and the primary raster preserve the source's
+  authored default root state. A named theme such as `business`, `forest`, or a
+  branded token is not interchangeable with a generic `light`/`dark` toggle.
 - Surface `capture_residuals` and the `site_classification` ceiling. If the page
   relies on WebGL, runtime canvas drawing, or scroll choreography that cannot be
   captured faithfully, continue only within the measured ceiling and keep it as
@@ -125,6 +128,8 @@ Call `pwc4 get_section_plan(source_id)`.
 - Review page geometry and source screenshots before authoring. Confirm that the
   plan spans the captured document height and contains the prominent regions
   visible in the raw evidence.
+- Preserve the authored root theme attributes and computed color scheme in the
+  clone. Do not infer the default theme from the Agent's own browser preference.
 - Record all planned section ids in `.pwc/run.json`.
 
 ### 5. Create the shell and author every section
