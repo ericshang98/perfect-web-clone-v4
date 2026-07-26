@@ -24,7 +24,11 @@ import io
 import json
 import logging
 import os
+import shlex
+import signal
+import socket
 import shutil
+import sys
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -59,6 +63,8 @@ MAX_TERMINALS = 5
 MAX_OUTPUT_LINES = 1000
 DEFAULT_TIMEOUT = 60.0  # seconds
 BUILD_TIMEOUT = float(os.getenv("BOXLITE_BUILD_TIMEOUT", "300"))  # seconds
+PREVIEW_METADATA = ".pwc/preview.json"
+PREVIEW_LOG = ".pwc/preview.log"
 
 # Viewport presets for screenshots (desktop / mobile fidelity comparison).
 VIEWPORTS = {
@@ -176,6 +182,8 @@ class TerminalProcess:
     output_buffer: List[str] = field(default_factory=list)
     on_output: Optional[Callable[[str], None]] = None
     _read_tasks: List[asyncio.Task] = field(default_factory=list)
+    detached: bool = False
+    log_path: Optional[str] = None
 
     def start_reading(self) -> None:
         tasks = []
@@ -214,10 +222,18 @@ class TerminalProcess:
 
         if self.process:
             try:
-                self.process.terminate()
+                if self.detached:
+                    os.killpg(self.process.pid, signal.SIGTERM)
+                else:
+                    self.process.terminate()
                 await asyncio.wait_for(self.process.wait(), timeout=5.0)
             except asyncio.TimeoutError:
-                self.process.kill()
+                if self.detached:
+                    os.killpg(self.process.pid, signal.SIGKILL)
+                else:
+                    self.process.kill()
+            except ProcessLookupError:
+                pass
             except Exception as e:  # noqa: BLE001
                 logger.error(f"Error stopping process: {e}")
 
@@ -241,6 +257,7 @@ class BoxLiteSandbox:
         self._initialized = False
         self._lock = asyncio.Lock()
         self._dev_server_starting = False
+        self._preview_port: Optional[int] = None
 
     # ----------------------------------------
     # Lifecycle
@@ -265,6 +282,7 @@ class BoxLiteSandbox:
             self.terminals.clear()
             self.state.terminals.clear()
 
+            await self._remove_launchd_job()
             await self._kill_port(DEV_SERVER_PORT, max_attempts=10)
 
             self.state.preview_url = None
@@ -317,19 +335,162 @@ class BoxLiteSandbox:
                 return await self._do_initialize(reset=True)
 
             self._scan_files_from_disk()
-            self.state.status = SandboxStatus.READY
+            restored_preview = self._restore_persisted_preview()
+            if not restored_preview:
+                self.state.status = SandboxStatus.READY
             self._initialized = True
             if not self.terminals:
                 await self._create_default_terminal()
             return self.state
 
+    @property
+    def _preview_metadata_path(self) -> Path:
+        return self.work_dir / PREVIEW_METADATA
+
+    @staticmethod
+    def _supports_launchd() -> bool:
+        return sys.platform == "darwin" and shutil.which("launchctl") is not None
+
+    @staticmethod
+    def _launchd_label() -> str:
+        return f"com.perfectwebclone.preview.{DEV_SERVER_PORT}"
+
+    async def _remove_launchd_job(self, label: Optional[str] = None) -> bool:
+        if not self._supports_launchd():
+            return False
+        launchctl = shutil.which("launchctl") or "launchctl"
+        process = await asyncio.create_subprocess_exec(
+            launchctl,
+            "remove",
+            label or self._launchd_label(),
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        await process.communicate()
+        return process.returncode == 0
+
+    async def _submit_launchd_preview(self) -> tuple[CommandResult, str, str]:
+        label = self._launchd_label()
+        await self._remove_launchd_job(label)
+        npm = shutil.which("npm") or "npm"
+        log_path = self.work_dir / PREVIEW_LOG
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        shell_command = (
+            f"cd {shlex.quote(str(self.work_dir))} && "
+            f"exec {shlex.quote(npm)} run dev"
+        )
+        command = " ".join(
+            [
+                shlex.quote(shutil.which("launchctl") or "launchctl"),
+                "submit",
+                "-l",
+                shlex.quote(label),
+                "-o",
+                shlex.quote(str(log_path)),
+                "-e",
+                shlex.quote(str(log_path)),
+                "--",
+                "/bin/zsh",
+                "-lc",
+                shlex.quote(shell_command),
+            ]
+        )
+        result = await self.exec(command, timeout=15.0)
+        return result, label, str(log_path)
+
+    @staticmethod
+    def _pid_is_alive(pid: int) -> bool:
+        if pid <= 0:
+            return False
+        try:
+            os.kill(pid, 0)
+            return True
+        except (OSError, ValueError):
+            return False
+
+    @staticmethod
+    def _port_is_listening(port: int) -> bool:
+        if port <= 0:
+            return False
+        try:
+            with socket.create_connection(("127.0.0.1", port), timeout=0.2):
+                return True
+        except OSError:
+            return False
+
+    def _read_preview_metadata(self) -> Optional[dict]:
+        try:
+            value = json.loads(self._preview_metadata_path.read_text(encoding="utf-8"))
+            return value if isinstance(value, dict) else None
+        except (OSError, json.JSONDecodeError, TypeError):
+            return None
+
+    def _clear_preview_metadata(self) -> None:
+        try:
+            self._preview_metadata_path.unlink(missing_ok=True)
+        except OSError as exc:
+            logger.warning(f"Failed to clear preview metadata: {exc}")
+        self._preview_port = None
+
+    def _restore_persisted_preview(self) -> bool:
+        metadata = self._read_preview_metadata()
+        if not metadata:
+            return False
+        try:
+            pid = int(metadata.get("pid") or 0)
+            port = int(metadata.get("port") or 0)
+        except (TypeError, ValueError):
+            self._clear_preview_metadata()
+            return False
+        supervisor = str(metadata.get("supervisor") or "")
+        process_alive = (
+            self._port_is_listening(port)
+            if supervisor == "launchctl"
+            else self._pid_is_alive(pid) and self._port_is_listening(port)
+        )
+        if not process_alive:
+            self._clear_preview_metadata()
+            return False
+        url = str(metadata.get("url") or f"http://127.0.0.1:{port}")
+        self.state.preview_url = url
+        self.state.preview = PreviewState(url=url)
+        self.state.forwarded_ports[port] = url
+        self.state.status = SandboxStatus.RUNNING
+        self._preview_port = port
+        return True
+
+    def _persist_preview(
+        self,
+        url: str,
+        *,
+        terminal: Optional[TerminalProcess] = None,
+        supervisor: str = "process",
+        label: Optional[str] = None,
+        log_path: Optional[str] = None,
+    ) -> None:
+        pid = terminal.process.pid if terminal and terminal.process else 0
+        metadata = {
+            "schema": 1,
+            "pid": pid,
+            "port": DEV_SERVER_PORT,
+            "url": url,
+            "log_path": log_path or (terminal.log_path if terminal else None),
+            "supervisor": supervisor,
+            "label": label,
+            "started_at": datetime.now().isoformat(),
+        }
+        self._preview_metadata_path.parent.mkdir(parents=True, exist_ok=True)
+        self._preview_metadata_path.write_text(
+            json.dumps(metadata, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        self._preview_port = DEV_SERVER_PORT
+
     async def cleanup(self) -> None:
+        await self.stop_preview()
         for terminal in list(self.terminals.values()):
             await terminal.stop()
         self.terminals.clear()
-        if self.dev_server_process:
-            await self.dev_server_process.stop()
-            self.dev_server_process = None
         try:
             if self.work_dir.exists():
                 shutil.rmtree(self.work_dir)
@@ -471,21 +632,33 @@ class BoxLiteSandbox:
                     is_running=True,
                     command=command,
                 )
-                process = await asyncio.create_subprocess_shell(
-                    command,
-                    cwd=str(self.work_dir),
-                    stdout=asyncio.subprocess.PIPE,
-                    stderr=asyncio.subprocess.STDOUT,
-                    env={**os.environ, "NODE_ENV": "development"},
+                log_dir = self.work_dir / ".pwc" / "process-logs"
+                log_dir.mkdir(parents=True, exist_ok=True)
+                log_path = log_dir / f"{terminal_id}.log"
+                with log_path.open("ab", buffering=0) as log_file:
+                    process = await asyncio.create_subprocess_shell(
+                        command,
+                        cwd=str(self.work_dir),
+                        stdout=log_file,
+                        stderr=asyncio.subprocess.STDOUT,
+                        env={**os.environ, "NODE_ENV": "development"},
+                        start_new_session=True,
+                    )
+                term = TerminalProcess(
+                    session=session,
+                    process=process,
+                    detached=True,
+                    log_path=str(log_path),
                 )
-                term = TerminalProcess(session=session, process=process)
-                term.start_reading()
                 self.terminals[terminal_id] = term
                 self.state.terminals.append(session)
                 return CommandResult(
                     success=True,
                     exit_code=0,
-                    stdout=f"Started background process [{terminal_id}]: {command}",
+                    stdout=(
+                        f"Started detached process [{terminal_id}] pid={process.pid}; "
+                        f"log={log_path}: {command}"
+                    ),
                     stderr="",
                     duration_ms=0,
                 )
@@ -582,10 +755,26 @@ class BoxLiteSandbox:
                 duration_ms=0,
             )
         if self.dev_server_process:
+            process = self.dev_server_process.process
+            if (
+                process is not None
+                and process.returncode is None
+                and self._port_is_listening(DEV_SERVER_PORT)
+            ):
+                return CommandResult(
+                    success=True,
+                    exit_code=0,
+                    stdout=f"Dev server already running on port {DEV_SERVER_PORT}",
+                    stderr="",
+                    duration_ms=0,
+                )
+            self.dev_server_process = None
+            self._clear_preview_metadata()
+        if self._restore_persisted_preview():
             return CommandResult(
                 success=True,
                 exit_code=0,
-                stdout=f"Dev server already running on port {DEV_SERVER_PORT}",
+                stdout=f"Reconnected to persisted preview on port {DEV_SERVER_PORT}",
                 stderr="",
                 duration_ms=0,
             )
@@ -615,36 +804,133 @@ class BoxLiteSandbox:
                 )
             await asyncio.sleep(2)
 
-            result = await self.exec("npm run dev", background=True)
-            if result.success:
-                for term in self.terminals.values():
-                    if "npm run dev" in (term.session.command or ""):
-                        self.dev_server_process = term
+            if self._supports_launchd():
+                result, label, log_path = await self._submit_launchd_preview()
+                if not result.success:
+                    return result
+                for _ in range(50):
+                    if self._port_is_listening(DEV_SERVER_PORT):
                         break
-                await asyncio.sleep(3)
-                url = f"http://localhost:{DEV_SERVER_PORT}"
+                    await asyncio.sleep(0.2)
+                if not self._port_is_listening(DEV_SERVER_PORT):
+                    await self._remove_launchd_job(label)
+                    return CommandResult(
+                        success=False,
+                        exit_code=-1,
+                        stdout=result.stdout,
+                        stderr=f"Preview did not become healthy on port {DEV_SERVER_PORT}.",
+                        duration_ms=10_000,
+                    )
+                url = f"http://127.0.0.1:{DEV_SERVER_PORT}"
                 self.state.preview_url = url
                 self.state.preview = PreviewState(url=url)
                 self.state.forwarded_ports[DEV_SERVER_PORT] = url
                 self.state.status = SandboxStatus.RUNNING
+                self._persist_preview(
+                    url,
+                    supervisor="launchctl",
+                    label=label,
+                    log_path=log_path,
+                )
+                logger.info(f"[start_preview] launchd preview running at {url}")
+                return result
+
+            existing_terminals = set(self.terminals)
+            result = await self.exec("npm run dev", background=True)
+            if result.success:
+                for terminal_id, term in self.terminals.items():
+                    if (
+                        terminal_id not in existing_terminals
+                        and "npm run dev" in (term.session.command or "")
+                    ):
+                        self.dev_server_process = term
+                        break
+                for _ in range(50):
+                    if self._port_is_listening(DEV_SERVER_PORT):
+                        break
+                    await asyncio.sleep(0.2)
+                if (
+                    self.dev_server_process is None
+                    or not self._port_is_listening(DEV_SERVER_PORT)
+                ):
+                    if self.dev_server_process is not None:
+                        await self.dev_server_process.stop()
+                        self.dev_server_process = None
+                    return CommandResult(
+                        success=False,
+                        exit_code=-1,
+                        stdout=result.stdout,
+                        stderr=f"Preview did not become healthy on port {DEV_SERVER_PORT}.",
+                        duration_ms=10_000,
+                    )
+                url = f"http://127.0.0.1:{DEV_SERVER_PORT}"
+                self.state.preview_url = url
+                self.state.preview = PreviewState(url=url)
+                self.state.forwarded_ports[DEV_SERVER_PORT] = url
+                self.state.status = SandboxStatus.RUNNING
+                self._persist_preview(url, terminal=self.dev_server_process)
                 logger.info(f"[start_preview] running at {url}")
             return result
         finally:
             self._dev_server_starting = False
 
     async def stop_preview(self) -> bool:
+        stopped = False
+        preview_port = self._preview_port or DEV_SERVER_PORT
         if self.dev_server_process:
+            terminal_id = self.dev_server_process.session.id
             await self.dev_server_process.stop()
             self.dev_server_process = None
-            self.state.preview_url = None
-            self.state.preview = PreviewState()
-            self.state.forwarded_ports.pop(DEV_SERVER_PORT, None)
+            self.terminals.pop(terminal_id, None)
+            self.state.terminals = [
+                session
+                for session in self.state.terminals
+                if session.id != terminal_id
+            ]
+            stopped = True
+        else:
+            metadata = self._read_preview_metadata()
+            supervisor = str((metadata or {}).get("supervisor") or "")
+            label = str((metadata or {}).get("label") or "")
+            try:
+                pid = int((metadata or {}).get("pid") or 0)
+            except (TypeError, ValueError):
+                pid = 0
+            if supervisor == "launchctl" and label:
+                stopped = await self._remove_launchd_job(label)
+            elif pid and self._pid_is_alive(pid):
+                try:
+                    os.killpg(pid, signal.SIGTERM)
+                    for _ in range(25):
+                        if not self._pid_is_alive(pid):
+                            break
+                        await asyncio.sleep(0.2)
+                    if self._pid_is_alive(pid):
+                        os.killpg(pid, signal.SIGKILL)
+                    stopped = True
+                except ProcessLookupError:
+                    stopped = True
+                except OSError as exc:
+                    logger.warning(f"Failed to stop persisted preview pid {pid}: {exc}")
+        self._clear_preview_metadata()
+        self.state.preview_url = None
+        self.state.preview = PreviewState()
+        self.state.forwarded_ports.pop(preview_port, None)
+        if self.state.status != SandboxStatus.STOPPED:
             self.state.status = SandboxStatus.READY
-            return True
-        return False
+        return stopped
 
     def preview_status(self) -> PreviewState:
         """Current preview/dev-server state (URL, running flag)."""
+        preview_port = self._preview_port or DEV_SERVER_PORT
+        if self.state.preview_url and not self._port_is_listening(preview_port):
+            self._clear_preview_metadata()
+            self.state.preview_url = None
+            self.state.preview = PreviewState()
+            self.state.forwarded_ports.pop(preview_port, None)
+            self.state.status = SandboxStatus.READY
+        elif not self.state.preview_url:
+            self._restore_persisted_preview()
         return PreviewState(
             url=self.state.preview_url,
             is_loading=self._dev_server_starting,
@@ -679,7 +965,16 @@ class BoxLiteSandbox:
 
     def get_terminal_output(self, terminal_id: str, lines: int = 50) -> List[str]:
         term = self.terminals.get(terminal_id)
-        return term.output_buffer[-lines:] if term else []
+        if term is None:
+            return []
+        if term.log_path:
+            try:
+                return Path(term.log_path).read_text(
+                    encoding="utf-8", errors="replace"
+                ).splitlines(keepends=True)[-lines:]
+            except OSError:
+                return []
+        return term.output_buffer[-lines:]
 
     # ----------------------------------------
     # Build (npm run build) -> static dist/
