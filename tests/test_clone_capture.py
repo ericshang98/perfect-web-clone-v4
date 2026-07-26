@@ -78,14 +78,32 @@ live = pytest.mark.skipif(os.getenv("RUN_LIVE") != "1", reason="chromium capture
 
 _PAGE = """<!doctype html><html><head><style>
   body{margin:0}
-  [data-pwc-section="hero"]{height:600px;background:#ace}
+  [data-pwc-section="hero"]{height:600px;background:#ace;position:relative}
   [data-pwc-section="footer"]{height:800px;background:#eca}
+  [data-pwc-interaction="settings"]{position:absolute;right:0;top:40px}
+  [data-pwc-controlled="settings"]{position:absolute;right:0;top:80px}
+  [data-nested-target]{position:absolute;right:0;top:120px}
 </style></head><body>
   <div data-pwc-section="hero">
     <div data-pwc-critical="hero-1" data-pwc-compare="player"
          style="height:600px;overflow:hidden">
-      <button aria-label="play" data-pwc-interaction="player-toggle">Play</button>
+      <button aria-label="play" data-pwc-interaction="player-toggle"
+              onclick="document.querySelector('[data-pwc-controlled=player-toggle]').hidden=false">
+        Play
+      </button>
+      <div data-pwc-controlled="player-toggle" hidden>Playing</div>
     </div>
+    <button data-pwc-interaction="settings"
+            onclick="document.querySelector('[data-pwc-controlled=settings]').hidden=false">
+      Settings
+    </button>
+    <div data-pwc-controlled="settings" hidden>
+      <button data-pwc-interaction="nested-hide"
+              onclick="document.querySelector('[data-nested-target]').hidden=true">
+        Hide
+      </button>
+    </div>
+    <div data-nested-target>Target</div>
   </div>
   <div data-pwc-section="footer">FOOTER</div>
 </body></html>"""
@@ -131,6 +149,21 @@ def test_capture_clone_collects_contract_geometry_controls_and_interactions(tmp_
                 "id": "player",
                 "owner": "hero",
                 "selector": '[data-pwc-compare="player"]',
+                "behaviors": [
+                    {
+                        "id": "play-toggle",
+                        "trigger": '[data-pwc-interaction="player-toggle"]',
+                        "target": '[data-pwc-controlled="player-toggle"]',
+                        "assert": "visible",
+                    },
+                    {
+                        "id": "nested-hide",
+                        "before": ['[data-pwc-interaction="settings"]'],
+                        "trigger": '[data-pwc-interaction="nested-hide"]',
+                        "target": "[data-nested-target]",
+                        "assert": "hidden",
+                    }
+                ],
             }
         ],
     )
@@ -140,3 +173,39 @@ def test_capture_clone_collects_contract_geometry_controls_and_interactions(tmp_
     assert facts["controls"] == ["play"]
     assert facts["interaction"] == ["player-toggle"]
     assert facts["style"]["overflow"] == "hidden"
+    assert facts["behavior"] == [
+        {
+            "id": "play-toggle",
+            "assert": "visible",
+            "passed": True,
+            "observed": "visible",
+        },
+        {
+            "id": "nested-hide",
+            "assert": "hidden",
+            "passed": True,
+            "observed": "hidden",
+        },
+    ]
+
+
+@live
+def test_capture_clone_keeps_fixed_navigation_overlay_out_of_document_flow(tmp_path):
+    from core.clone_capture import capture_clone
+
+    page = tmp_path / "fixed.html"
+    page.write_text(
+        """<!doctype html><style>
+        body{margin:0}
+        nav{position:fixed;top:0;height:45px;width:100%}
+        [data-pwc-section=hero]{height:600px}
+        </style><nav data-pwc-critical="nav">NAV</nav>
+        <main data-pwc-section="hero">HERO</main>""",
+        encoding="utf-8",
+    )
+
+    result = capture_clone(f"file://{page}", str(tmp_path / "fixed.png"))
+
+    assert result["bounds"]["hero"]["y"] == 0
+    assert result["bounds"]["hero"]["height"] == 600
+    assert result["critical_bounds"]["nav"]["y"] == 0

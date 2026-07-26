@@ -107,6 +107,96 @@ def test_video_controls_change_still_fails(tmp_path):
     assert "controls" in report["regions"][0]["failed_invariants"]
 
 
+def test_declared_behavior_must_replay_successfully(tmp_path):
+    ref = _save(tmp_path / "ref.png", "red")
+    cand = _save(tmp_path / "cand.png", "blue")
+    contract = _video_contract()
+    contract["regions"][0]["compare"].append("behavior")
+    contract["regions"][0]["behaviors"] = [
+        {
+            "id": "play-toggle",
+            "trigger": '[data-pwc-interaction="play-toggle"]',
+            "target": '[data-pwc-controlled="play-toggle"]',
+            "assert": "visible",
+        }
+    ]
+    expected = _matching_player_facts()
+    expected["behavior"] = [{"id": "play-toggle", "passed": True}]
+    broken = _matching_player_facts()
+    broken["behavior"] = [{"id": "play-toggle", "passed": False}]
+
+    report = evaluate_contract(
+        ref,
+        cand,
+        contract,
+        {"player": expected},
+        {"player": broken},
+    )
+
+    assert "behavior" in report["regions"][0]["failed_invariants"]
+
+
+def test_failed_source_behavior_replay_is_not_accepted_as_the_expectation(tmp_path):
+    ref = _save(tmp_path / "ref.png", "red")
+    cand = _save(tmp_path / "cand.png", "blue")
+    contract = _video_contract()
+    contract["regions"][0]["compare"].append("behavior")
+    contract["regions"][0]["behaviors"] = [
+        {
+            "id": "play-toggle",
+            "trigger": '[data-pwc-interaction="play-toggle"]',
+            "assert": "visible",
+        }
+    ]
+    failed_source = _matching_player_facts()
+    failed_source["behavior"] = [{"id": "play-toggle", "passed": False}]
+    successful_clone = _matching_player_facts()
+    successful_clone["behavior"] = [{"id": "play-toggle", "passed": True}]
+
+    report = evaluate_contract(
+        ref,
+        cand,
+        contract,
+        {"player": failed_source},
+        {"player": successful_clone},
+    )
+
+    assert "behavior" in report["regions"][0]["failed_invariants"]
+
+
+def test_every_declared_behavior_id_must_have_replay_evidence(tmp_path):
+    ref = _save(tmp_path / "ref.png", "red")
+    cand = _save(tmp_path / "cand.png", "blue")
+    contract = _video_contract()
+    contract["regions"][0]["compare"].append("behavior")
+    contract["regions"][0]["behaviors"] = [
+        {
+            "id": "play-toggle",
+            "trigger": '[data-pwc-interaction="play-toggle"]',
+            "assert": "visible",
+        },
+        {
+            "id": "settings-open",
+            "trigger": '[data-pwc-interaction="settings"]',
+            "assert": "visible",
+        },
+    ]
+    incomplete_source = _matching_player_facts()
+    incomplete_source["behavior"] = [{"id": "play-toggle", "passed": True}]
+    incomplete_clone = _matching_player_facts()
+    incomplete_clone["behavior"] = [{"id": "play-toggle", "passed": True}]
+
+    report = evaluate_contract(
+        ref,
+        cand,
+        contract,
+        {"player": incomplete_source},
+        {"player": incomplete_clone},
+    )
+
+    assert "behavior" in report["regions"][0]["failed_invariants"]
+
+
 def test_static_image_pixels_remain_strict(tmp_path):
     ref = _save(tmp_path / "ref.png", "white")
     cand = _save(tmp_path / "cand.png", "black")

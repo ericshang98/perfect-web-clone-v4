@@ -20,6 +20,12 @@ VALID_MODES = {
 }
 VALID_IMPORTANCE = {"critical", "important", "supporting"}
 _NON_STATIC_MODES = {"layout_style", "layout_behavior"}
+_BEHAVIOR_ASSERTIONS = {
+    "visible",
+    "hidden",
+    "attribute_equals",
+    "text_contains",
+}
 
 
 def _valid_bounds(bounds: Any) -> bool:
@@ -97,6 +103,62 @@ def validate_contract(contract: dict) -> list[str]:
             replacement = [item for item in (compare or []) if item != "pixels"]
             if not replacement:
                 errors.append(f"{prefix} needs a replacement invariant")
+
+        if "behavior" in (compare or []):
+            behaviors = region.get("behaviors")
+            if not isinstance(behaviors, list) or not behaviors:
+                errors.append(f"{prefix} behavior comparison needs behaviors")
+            else:
+                if len(behaviors) > 16:
+                    errors.append(f"{prefix} supports at most 16 behaviors")
+                seen_behaviors: set[str] = set()
+                for behavior_index, behavior in enumerate(behaviors):
+                    behavior_prefix = (
+                        f"{prefix}.behaviors[{behavior_index}]"
+                    )
+                    if not isinstance(behavior, dict):
+                        errors.append(f"{behavior_prefix} must be an object")
+                        continue
+                    behavior_id = str(behavior.get("id") or "").strip()
+                    if not behavior_id:
+                        errors.append(f"{behavior_prefix} missing id")
+                    elif behavior_id in seen_behaviors:
+                        errors.append(
+                            f"{prefix} duplicate behavior id {behavior_id!r}"
+                        )
+                    seen_behaviors.add(behavior_id)
+                    if not str(behavior.get("trigger") or "").strip():
+                        errors.append(f"{behavior_prefix} missing trigger")
+                    before = behavior.get("before")
+                    if before is not None and (
+                        not isinstance(before, list)
+                        or len(before) > 8
+                        or any(
+                            not isinstance(selector, str) or not selector.strip()
+                            for selector in before
+                        )
+                    ):
+                        errors.append(
+                            f"{behavior_prefix} before must contain at most "
+                            "8 selector strings"
+                        )
+                    assertion = behavior.get("assert", "visible")
+                    if assertion not in _BEHAVIOR_ASSERTIONS:
+                        errors.append(
+                            f"{behavior_prefix} assertion {assertion!r} is invalid"
+                        )
+                    if assertion in {"attribute_equals", "text_contains"} and (
+                        "value" not in behavior
+                    ):
+                        errors.append(
+                            f"{behavior_prefix} {assertion} needs value"
+                        )
+                    if assertion == "attribute_equals" and not str(
+                        behavior.get("attribute") or ""
+                    ).strip():
+                        errors.append(
+                            f"{behavior_prefix} attribute_equals needs attribute"
+                        )
 
         if mode == "residual":
             if not str(region.get("reason") or "").strip():

@@ -111,6 +111,7 @@ def _invariant_failures(
     compare: list[str],
     ref: dict,
     cand: dict,
+    behavior_ids: list[str] | None = None,
 ) -> list[str]:
     failed: list[str] = []
     ref_bounds = ref.get("bounds") or {}
@@ -130,6 +131,22 @@ def _invariant_failures(
             "interaction"
         ):
             failed.append(invariant)
+        elif invariant == "behavior":
+            source_replay = {
+                str(item.get("id")): bool(item.get("passed", True))
+                for item in (ref.get("behavior") or [])
+            }
+            observed = {
+                str(item.get("id")): bool(item.get("passed"))
+                for item in (cand.get("behavior") or [])
+            }
+            declared = behavior_ids or list(source_replay)
+            if not declared or any(
+                not source_replay.get(behavior_id, False)
+                or not observed.get(behavior_id, False)
+                for behavior_id in declared
+            ):
+                failed.append(invariant)
     return failed
 
 
@@ -184,6 +201,10 @@ def evaluate_contract(
                     list(region.get("compare") or []),
                     ref_region_facts,
                     cand_region_facts,
+                    [
+                        str(behavior["id"])
+                        for behavior in region.get("behaviors") or []
+                    ],
                 )
                 row["failed_invariants"] = failed
                 row["status"] = "fail" if failed else "pass"

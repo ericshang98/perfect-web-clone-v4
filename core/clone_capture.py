@@ -16,16 +16,6 @@ from typing import Any, Dict, List, Sequence, Tuple
 
 _BOUNDS_KEYS = ("x", "y", "width", "height")
 
-# Neutralize sticky/fixed positioning so the full-page raster and the measured
-# bounds reflect document flow, not viewport-pinned duplicates (same pattern
-# validated in docs/harness/scale_v3.py).
-_UNSTICK = (
-    "() => {document.querySelectorAll('*').forEach(e => {"
-    "const p = getComputedStyle(e).position;"
-    "if (p === 'sticky' || p === 'fixed') "
-    "e.style.setProperty('position', 'static', 'important');});}"
-)
-
 _MEASURE = """() => {
   const bounds = {};
   const critical_bounds = {};
@@ -145,14 +135,99 @@ def comparison_fact_request(
         if not region_id:
             continue
         selector = region.get("selector")
-        request.append(
-            {
-                "id": region_id,
-                "owner": owner,
-                "selector": str(selector) if selector else None,
-            }
-        )
+        behaviors = []
+        for behavior in list(region.get("behaviors") or [])[:16]:
+            if not isinstance(behavior, dict):
+                continue
+            if not behavior.get("id") or not behavior.get("trigger"):
+                continue
+            behaviors.append(
+                {
+                    key: behavior.get(key)
+                    for key in (
+                        "id",
+                        "before",
+                        "trigger",
+                        "target",
+                        "assert",
+                        "attribute",
+                        "value",
+                    )
+                    if behavior.get(key) is not None
+                }
+            )
+            if "before" in behaviors[-1]:
+                behaviors[-1]["before"] = [
+                    str(selector)
+                    for selector in list(behaviors[-1]["before"] or [])[:8]
+                    if str(selector).strip()
+                ]
+        record = {
+            "id": region_id,
+            "owner": owner,
+            "selector": str(selector) if selector else None,
+        }
+        if behaviors:
+            record["behaviors"] = behaviors
+        request.append(record)
     return request
+
+
+def _capture_behavior_facts(
+    page,
+    url: str,
+    request: Sequence[Dict[str, Any]],
+    settle_ms: int,
+) -> Dict[str, List[Dict[str, Any]]]:
+    """Replay bounded click/assert contracts in a fresh page state."""
+
+    results: Dict[str, List[Dict[str, Any]]] = {}
+    for region in request:
+        rows: List[Dict[str, Any]] = []
+        for behavior in region.get("behaviors") or []:
+            assertion = str(behavior.get("assert") or "visible")
+            row: Dict[str, Any] = {
+                "id": str(behavior["id"]),
+                "assert": assertion,
+                "passed": False,
+                "observed": "not-run",
+            }
+            try:
+                page.goto(url, wait_until="networkidle", timeout=60_000)
+                page.wait_for_timeout(min(max(int(settle_ms), 0), 2_000))
+                for selector in behavior.get("before") or []:
+                    page.locator(str(selector)).first.click(timeout=3_000)
+                    page.wait_for_timeout(50)
+                trigger = page.locator(str(behavior["trigger"])).first
+                trigger.click(timeout=3_000)
+                page.wait_for_timeout(100)
+                target_selector = str(
+                    behavior.get("target") or behavior["trigger"]
+                )
+                target = page.locator(target_selector).first
+                if assertion == "visible":
+                    visible = target.count() > 0 and target.is_visible()
+                    row.update(passed=visible, observed="visible" if visible else "hidden")
+                elif assertion == "hidden":
+                    hidden = target.count() == 0 or not target.is_visible()
+                    row.update(passed=hidden, observed="hidden" if hidden else "visible")
+                elif assertion == "attribute_equals":
+                    attribute = str(behavior.get("attribute") or "")
+                    observed = target.get_attribute(attribute) if target.count() else None
+                    expected = behavior.get("value")
+                    row.update(passed=observed == expected, observed=observed)
+                elif assertion == "text_contains":
+                    observed = target.inner_text() if target.count() else ""
+                    expected = str(behavior.get("value") or "")
+                    row.update(passed=expected in observed, observed=observed[:256])
+                else:
+                    row["observed"] = f"unsupported assertion: {assertion}"
+            except Exception as exc:  # noqa: BLE001
+                row["observed"] = f"replay error: {type(exc).__name__}"
+            rows.append(row)
+        if rows:
+            results[str(region["id"])] = rows
+    return results
 
 
 def match_sections(
@@ -218,13 +293,20 @@ def capture_clone(
         # bands. Force the clone's already-local image URLs to decode so a valid
         # lower-page section is not scored as a black placeholder.
         page.evaluate(FORCE_LOAD_IMAGES_JS)
-        page.evaluate(_UNSTICK)
+        # Measure and raster the clone's authored positioning. Converting fixed
+        # or sticky elements to static pushes following sections through the
+        # document and creates a candidate layout that never existed in either
+        # the source or the running clone.
         measured = page.evaluate(_MEASURE)
+        request = comparison_fact_request(comparison_regions)
         comparison_facts = page.evaluate(
             _MEASURE_COMPARISON_FACTS,
-            comparison_fact_request(comparison_regions),
+            request,
         )
         page.screenshot(path=out_png, full_page=True)
+        behavior_facts = _capture_behavior_facts(page, url, request, settle_ms)
+        for region_id, rows in behavior_facts.items():
+            comparison_facts.setdefault(region_id, {})["behavior"] = rows
         browser.close()
 
     return {
