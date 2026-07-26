@@ -20,8 +20,12 @@ filesystem, browser, build, replay, and measurement tools. “One request” mea
 one user operation, not one model call—the agent may perform multiple internal
 tool calls and repair iterations without asking the user to manage the workflow.
 
-Every run maintains `.pwc/run.json`, and a new source automatically receives a
-clean sandbox so a prior website's components cannot leak into the next clone.
+Every run maintains `.pwc/run.json` and an Agent-authored
+`.pwc/comparison-contract.json`; a new source automatically receives a clean
+sandbox so a prior website's components cannot leak into the next clone.
+Static UI remains pixel-strict. Live media, clocks, personalized content, and
+third-party creatives must name the exact changing observation and replace it
+with measured geometry, style, controls, and behavior invariants.
 The Harness may report `ready_for_user_review` or
 `failed_with_residuals`; only the user accepts the result.
 
@@ -43,17 +47,24 @@ user.
 ## What v4 is
 
 v4 is a Python MCP server (built on the official `mcp` package, `FastMCP`, exposed over
-**stdio**) plus a Claude Code **Skill** that scripts the seven-phase clone workflow:
+**stdio**) plus a Claude Code **Skill** that scripts the continuous clone workflow:
 
 1. **Extract** — `extract_page(url)` captures immutable raw evidence, compares
    it with the normalized derivative, discovers common interactions, and
    retries structural inconsistencies up to three times.
-2. **Section plan** — `get_section_plan(source_id)` returns the deterministic chunking plan.
-3. **Single-agent reproduction** — one owning agent keeps whole-page context while writing each isolated `sections/{namespace}/` component. Sections are repair units; delegation is opt-in.
-4. **Assemble** — `assemble_project(source_id)` deterministically wires up `App.jsx` / routes / `index.css`.
-5. **Preview self-check (dev)** — start a Vite dev server, screenshot, compare to the original, iterate.
-6. **Production self-check (build)** — `npm run build` must pass; re-screenshot the build output.
-7. **Review handoff** — produce a deploy-grade `dist/` and report
+2. **Understand** — `get_comparison_evidence(source_id)` returns bounded
+   volatility, critical-region, and interaction evidence; the Agent persists a
+   fail-closed region contract.
+3. **Section plan** — `get_section_plan(source_id)` returns the deterministic chunking plan.
+4. **Single-agent reproduction** — one owning agent keeps whole-page context while writing each isolated `sections/{namespace}/` component. Sections are repair units; delegation is opt-in.
+5. **Assemble** — `assemble_project(source_id)` deterministically wires up `App.jsx` / routes / `index.css`.
+6. **Preview and compare** — `score_semantic_fidelity` measures static pixels
+   and replays declared dynamic invariants without treating a random runtime
+   frame as CSS.
+7. **Targeted repair** — a worst-region packet stays under 16 KiB; only strict
+   improvements with no hard-gate regression replace the best candidate.
+8. **Production self-check** — `npm run build` must pass; re-screenshot the build output.
+9. **Review handoff** — produce a deploy-grade `dist/` and report
    `ready_for_user_review`; the user makes the acceptance decision.
 
 ### The iron rule
@@ -125,7 +136,7 @@ Steps:
 3. Start Claude Code in that directory. It launches the `pwc4` server over stdio and the
    `extract_page`, `get_section_plan`, `sandbox_*`, `start_preview`, `build_project`, etc. tools
    become available.
-4. Invoke the Skill (`skill/SKILL.md`) to run the seven-phase clone playbook.
+4. Invoke the Skill (`skill/SKILL.md`) to run the continuous clone playbook.
 
 ## Repository layout
 

@@ -63,3 +63,4 @@ node_modules/
 clones/
 .gstack/
 .worktrees/
+.artifacts/

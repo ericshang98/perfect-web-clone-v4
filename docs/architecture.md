@@ -104,15 +104,15 @@ gate is judged by vibes.
 | R1 | No Shopify fingerprints (Jose 6/21, 6/23) | `fingerprint_gate` | 0 occurrences of `shopify`, `myshopify`, `template--…__`, `data-shopify*`, `original.css`, `shopify-section` in `dist/` |
 | R2 | Clean, readable code | `cleanliness_gate` | No raw inline `<style>` dumps > N bytes; CSS expressed as tokens + utility classes; one component per section |
 | R3 | Lightweight & fast | `weight_gate` | `dist/` total transfer ≤ budget (default 120 KB gz, target 50–80 KB); LCP image lazy below fold |
-| R4 | Pixel-perfect | `fidelity_gate` | SSIM ≥ τ (default 0.97) per breakpoint × state vs reference raster |
+| R4 | Trustworthy visual fidelity | `semantic_fidelity_gate` | Static regions: bounds-aligned SSIM ≥ τ (default 0.97). Naturally changing regions: every Agent-declared replacement invariant (geometry/style/controls/behavior) passes; raw whole-page SSIM is diagnostic only. |
 | R5 | Clearly better than current repo (Jose's acceptance, 6/13) | `comparison_gate` | New output fidelity score strictly > current-repo output, side by side, per reference URL |
 | R6 | sticky follows scroll | `sticky` recognizer + fidelity in scrolled state | sticky element pinned in scrolled-state screenshot |
 | R7 | footer intact | `footer` recognizer | footer region SSIM ≥ τ |
 | R8 | reviews = real widget | `reviews` recognizer | reviews rebuilt as data-driven component, not a static PNG |
 | R9 | videos present | `video` collector | every source `<video>`/embed localized & playing |
 
-These gates are the contract. "Done" = all gates green on the agreed reference URLs
-(reelshort.com/es, livora.co, kojeva.com, trykojiva.com/brush).
+These gates are the machine contract. A green result means
+`ready_for_user_review`; only the user decides whether the artifact is accepted.
 
 ---
 
