@@ -694,12 +694,67 @@ CAPTURE_INVENTORY_JS = r"""() => {
     );
   });
 
+  // Compact hints for the Agent's later comparison contract. These observations
+  // never waive a visual gate by themselves; they only identify regions whose
+  // runtime value may legitimately change between captures.
+  const volatileCandidates = [];
+  const volatileSeen = new Set();
+  document.querySelectorAll(
+    'video,canvas,time,[aria-live],[role="status"],[role="timer"],' +
+    '[class*="carousel" i],[class*="swiper" i],[class*="slideshow" i]'
+  ).forEach(el => {
+    if (!structurallyVisible(el)) return;
+    const id = el.id || selectorFor(el);
+    if (!id || volatileSeen.has(id)) return;
+    volatileSeen.add(id);
+    const tag = el.tagName.toLowerCase();
+    const role = (el.getAttribute('role') || '').toLowerCase();
+    let hint = 'stateful_content';
+    let signature = '';
+    if (tag === 'video') {
+      hint = 'runtime_media';
+      signature = [
+        Math.round((Number(el.currentTime) || 0) * 10) / 10,
+        !!el.paused,
+        Number(el.readyState) || 0,
+        el.getAttribute('poster') || ''
+      ].join('|');
+    } else if (tag === 'canvas') {
+      hint = 'canvas_runtime';
+      signature = [el.width || 0, el.height || 0].join('x');
+    } else if (
+      tag === 'time' || el.hasAttribute('aria-live') ||
+      role === 'status' || role === 'timer'
+    ) {
+      hint = 'live_text';
+      signature = (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160);
+    } else {
+      const cs = getComputedStyle(el);
+      signature = [
+        (el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 160),
+        cs.transform || '',
+        cs.backgroundImage || ''
+      ].join('|');
+    }
+    volatileCandidates.push({
+      id,
+      tag,
+      bounds: rectFor(el),
+      hint,
+      signature
+    });
+  });
+  volatileCandidates.sort((a,b) =>
+    (b.bounds.width * b.bounds.height) - (a.bounds.width * a.bounds.height)
+  );
+
   return {
     viewport: {width:vw, height:vh},
     page: {width:Math.max(document.documentElement.scrollWidth, document.body.scrollWidth),
            height:pageHeight},
     regions,
-    interactions
+    interactions,
+    volatile_candidates: volatileCandidates.slice(0, 64)
   };
 }"""
 

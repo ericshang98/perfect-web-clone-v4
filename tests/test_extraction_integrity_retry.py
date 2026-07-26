@@ -94,3 +94,52 @@ def test_extract_hard_fails_after_three_inconsistent_attempts(tmp_path, monkeypa
     manifest = json.loads((source / "manifest.json").read_text())
     assert manifest["success"] is False
     assert manifest["capture_integrity"]["status"] == "failed"
+
+
+def test_extract_persists_compact_volatility_evidence(tmp_path, monkeypatch):
+    result = _result("passed")
+    result.raw_structure["volatile_candidates"] = [
+        {
+            "id": "player",
+            "tag": "video",
+            "bounds": {"x": 20, "y": 40, "width": 400, "height": 700},
+            "hint": "runtime_media",
+            "signature": "1.2|false|4",
+        }
+    ]
+    result.raw_structure["volatility_summary"] = {
+        "schema": 1,
+        "sample_count": 3,
+        "candidates": [
+            {
+                "id": "player",
+                "tag": "video",
+                "bounds": {"x": 20, "y": 40, "width": 400, "height": 700},
+                "hint": "runtime_media",
+                "changed_samples": 2,
+                "total_samples": 3,
+                "suggested_mode": "layout_behavior",
+                "requires_agent_decision": True,
+            }
+        ],
+        "truncated": 0,
+    }
+    service = _FakeService([result])
+    monkeypatch.setattr(api, "_get_service", lambda: service)
+
+    response = asyncio.run(
+        api.aextract_page(
+            "https://example.com",
+            {"max_capture_attempts": 1},
+            storage_root=tmp_path,
+        )
+    )
+
+    source = tmp_path / response["source_id"]
+    evidence = json.loads(
+        (source / "evidence/volatility_summary.json").read_text(encoding="utf-8")
+    )
+    assert evidence["candidates"][0]["id"] == "player"
+    assert evidence["candidates"][0]["suggested_mode"] == "layout_behavior"
+    assert evidence["candidates"][0]["changed_samples"] == 2
+    assert "signature" not in evidence["candidates"][0]

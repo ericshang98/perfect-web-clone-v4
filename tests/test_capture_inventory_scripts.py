@@ -196,6 +196,31 @@ def test_inventory_discovers_anonymous_nav_download_popover_control():
     )
 
 
+def test_inventory_emits_compact_semantic_volatility_candidates():
+    manager, runtime, browser, page = _browser_page(
+        """
+        <body>
+          <video id="player" style="width:400px;height:700px"></video>
+          <time id="clock">10:00</time>
+          <div aria-live="polite" id="counter">42</div>
+          <img id="poster" src="poster.jpg" width="600" height="400">
+        </body>
+        """
+    )
+    try:
+        inventory = page.evaluate(CAPTURE_INVENTORY_JS)
+    finally:
+        browser.close()
+        runtime.stop()
+
+    by_id = {item["id"]: item for item in inventory["volatile_candidates"]}
+    assert by_id["player"]["hint"] == "runtime_media"
+    assert by_id["clock"]["hint"] == "live_text"
+    assert by_id["counter"]["hint"] == "live_text"
+    assert "poster" not in by_id
+    assert by_id["player"]["bounds"]["width"] == 400
+
+
 def test_rest_state_bake_does_not_collapse_large_opacity_zero_carousel_region():
     manager, runtime, browser, page = _browser_page(
         """

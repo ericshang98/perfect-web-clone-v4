@@ -26,6 +26,8 @@ import re
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Union
 
+from core.volatility import build_volatility_summary
+
 from .models import (
     ExtractionResult,
     ExtractOptions,
@@ -203,6 +205,13 @@ def get_source(
             if path.is_file()
             else None
         )
+    if "volatility" in wanted:
+        path = store.dir / "evidence" / "volatility_summary.json"
+        out["volatility"] = (
+            json.loads(path.read_text(encoding="utf-8"))
+            if path.is_file()
+            else None
+        )
     if "files" in wanted:
         out["files"] = _file_index(store)
     return out
@@ -269,6 +278,18 @@ def _persist(store: SourceStore, result: ExtractionResult) -> None:
         result.normalized_html = None
     if result.raw_structure:
         store.write_json("evidence/raw_structure.json", result.raw_structure)
+        volatile = result.raw_structure.get("volatile_candidates") or []
+        volatility_summary = result.raw_structure.get("volatility_summary")
+        if volatility_summary:
+            store.write_json(
+                "evidence/volatility_summary.json",
+                volatility_summary,
+            )
+        elif volatile:
+            store.write_json(
+                "evidence/volatility_summary.json",
+                build_volatility_summary(volatile),
+            )
     if result.normalized_structure:
         store.write_json("evidence/normalized_structure.json", result.normalized_structure)
     if result.interactions:
@@ -390,6 +411,7 @@ def _file_index(store: SourceStore) -> Dict[str, str]:
         "normalized_html": "normalized.html",
         "raw_structure": "evidence/raw_structure.json",
         "normalized_structure": "evidence/normalized_structure.json",
+        "volatility": "evidence/volatility_summary.json",
         "capture_integrity": "capture_integrity.json",
         "interactions": "interactions.json",
         "dom": "dom.json",

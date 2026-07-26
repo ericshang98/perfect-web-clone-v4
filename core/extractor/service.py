@@ -36,6 +36,7 @@ from . import robustness
 from ..capture_integrity import assess_capture_integrity
 from ..png_dims import png_css_height_b64
 from .. import scroll_capture
+from ..volatility import capture_volatility_samples
 from .models import (
     AssetInfo,
     CSSAnimation,
@@ -223,6 +224,27 @@ class ExtractorService:
                     fallback={},
                     label="raw_capture_inventory",
                 )
+                volatility_summary = await robustness.eval_budgeted(
+                    capture_volatility_samples(
+                        page,
+                        js.CAPTURE_INVENTORY_JS,
+                        sample_count=3,
+                        interval_ms=150,
+                        initial_sample=list(
+                            (raw_structure or {}).get("volatile_candidates") or []
+                        ),
+                    ),
+                    min(eval_s, 4.0),
+                    fallback={
+                        "schema": 1,
+                        "sample_count": 1,
+                        "candidates": [],
+                        "truncated": 0,
+                    },
+                    label="volatility_samples",
+                )
+                if raw_structure is not None:
+                    raw_structure["volatility_summary"] = volatility_summary
                 interactions = list((raw_structure or {}).get("interactions") or [])
                 raw_html = await page.content()
                 raw_html = _rewrite_next_images(raw_html, url)
