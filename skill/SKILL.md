@@ -94,7 +94,28 @@ Call `pwc4 extract_page(url, options)`.
 - Immediately call `pwc4 generate_manifest(source_id)` so breakpoint, state, and
   interaction expectations exist before code generation.
 
-### 3. Plan the complete page
+### 3. Understand change and author the comparison contract
+
+Call `pwc4 get_comparison_evidence(source_id)` once. Review its bounded section,
+critical-region, interaction, and volatility records alongside the source
+raster. A volatility mode is only a hint; the current Agent makes the decision.
+
+For every important region ask: **could this observation change while the real
+page's design and behavior remained correct after a natural refresh?**
+
+- If no, use `static_pixels` (or a named `stateful_pixels` state) and keep pixel
+  comparison strict.
+- If yes, name only the observation that may vary, explain why, and supply
+  replacement invariants such as bounds, aspect ratio, container style,
+  controls, and interaction behavior.
+- A dynamic region is never an excuse to ignore its container, chrome, controls,
+  geometry, or behavior. Unknown critical regions remain strict.
+
+Persist the Agent-authored result with
+`pwc4 save_comparison_contract(source_id, contract)`. Fix every validation error
+before continuing.
+
+### 4. Plan the complete page
 
 Call `pwc4 get_section_plan(source_id)`.
 
@@ -106,7 +127,7 @@ Call `pwc4 get_section_plan(source_id)`.
   visible in the raw evidence.
 - Record all planned section ids in `.pwc/run.json`.
 
-### 4. Create the shell and author every section
+### 5. Create the shell and author every section
 
 Call `pwc4 assemble_project(source_id)` once to create the sandbox shell.
 Missing section files are expected on this first call. Assembly initializes
@@ -135,6 +156,9 @@ Apply these authoring requirements:
 - Reveal recoverable lazy content instead of preserving an accidental empty
   capture state.
 - Attach `data-pwc-critical="<anchor>"` to each required structural region.
+- Attach `data-pwc-compare="<contract region id>"` to contract regions whose
+  invariant facts must be measured; an explicit contract selector may be used
+  when the wrapper is not the correct measurement target.
 - Keep the assembly-owned `data-pwc-section` wrapper for every section.
 
 For each interaction contract:
@@ -148,7 +172,7 @@ For each interaction contract:
 
 An unresolved asset, region, or behavior becomes an explicit residual.
 
-### 5. Build before judging fidelity
+### 6. Build before judging fidelity
 
 Call `pwc4 assemble_project(source_id)` again.
 
@@ -160,7 +184,7 @@ Call `pwc4 assemble_project(source_id)` again.
 
 Never run acceptance scoring against a broken or stale build.
 
-### 6. Verify in gate order
+### 7. Verify in gate order
 
 Start the local preview with `pwc4 start_preview()` and retain its URL for user
 review. Verify at the captured breakpoints and observable states.
@@ -173,35 +197,42 @@ Run:
    `pwc4 verify_manifest(source_id, url)`.
 4. Build cleanliness through `pwc4 check_fingerprints(dist_dir)`.
 5. Code/asset weight through `pwc4 check_weight(dist_dir, budget_kb)`.
-6. Per-section and per-state visual comparison from
-   `score_clone_sections`/`verify_manifest`; use
+6. Contract-aware visual and invariant comparison through
+   `pwc4 score_semantic_fidelity(source_id, url)`, plus per-state results from
+   `verify_manifest`; use
    `pwc4 score_fidelity(...)` only for additional localization.
 7. `pwc4 compare_to_baseline(...)` when a valid same-source baseline exists.
 
-Do not treat one aggregate SSIM number as acceptance. Structure, interaction,
-and each required breakpoint/state remain individually visible in the result.
+Whole-page SSIM is diagnostic, not a CSS verdict when legitimate live
+observations differ. Do not treat one aggregate SSIM number as acceptance.
+Structure, interaction, every contract region, and each required
+breakpoint/state remain individually visible in the result.
 
-### 7. Repair automatically
+### 8. Repair automatically
 
 While a required gate is red and budget remains:
 
 1. Select the earliest failed hard gate; within it select the worst measured
    section or state.
-2. Map its evidence to the owning component using section bounds, interaction
-   ids, screenshot diffs, and diagnostic output.
-3. Read the current component and its captured section data.
+2. Call `pwc4 build_semantic_repair_packet(source_id, report)` for a visual or
+   invariant failure. Its 16 KiB default budget supplies only the worst target,
+   its contract, measurements, and owning component sources.
+3. Read only additional source evidence proven necessary for that target.
 4. Make one evidence-based repair to that component or shared token when the
    evidence proves the error is global.
 5. Rebuild and replay every affected structural, behavioral, and visual gate.
-6. Update `.pwc/run.json` with the attempt, measurement delta, and evidence
-   paths.
+6. Call `pwc4 record_semantic_attempt(...)` with the before/after measurement
+   and any hard-gate regressions. Keep an improving candidate only when no hard
+   gate regresses; otherwise restore the returned best candidate.
+7. Update `.pwc/run.json` with packet bytes, the accepted/rejected attempt,
+   measurement delta, and evidence paths.
 
 Use at most five repair attempts per breakpoint × state. Stop early after one
 non-improving retry followed by a second attempt that also fails to improve the
 same metric. Preserve the best measured candidate; do not leave a regression as
 the final artifact.
 
-### 8. Hand off honestly
+### 9. Hand off honestly
 
 Set `ready_for_user_review` only when:
 
@@ -226,11 +257,13 @@ decision.
 
 | Purpose | `pwc4` tools |
 |---|---|
-| Capture and plan | `extract_page`, `generate_manifest`, `get_section_plan`, `get_section_data` |
+| Capture and understand | `extract_page`, `generate_manifest`, `get_comparison_evidence`, `save_comparison_contract` |
+| Plan | `get_section_plan`, `get_section_data` |
 | Author and inspect | `assemble_project`, `sandbox_write_file`, `sandbox_read_file`, `sandbox_list_files` |
 | Build and diagnose | `build_project`, `get_build_errors`, `diagnose` |
 | Preview | `start_preview`, `preview_status`, `preview_screenshot` |
-| Verify | `score_clone_sections`, `verify_manifest`, `check_fingerprints`, `check_weight`, `score_fidelity`, `compare_to_baseline` |
+| Verify | `score_clone_sections`, `score_semantic_fidelity`, `verify_manifest`, `check_fingerprints`, `check_weight`, `compare_to_baseline` |
+| Targeted repair | `build_semantic_repair_packet`, `record_semantic_attempt` |
 | Optional delivery | `deploy` only after an explicit user request |
 
 The IR tools (`build_ir`, `run_recognizers`, `generate_code`) remain

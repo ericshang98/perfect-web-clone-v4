@@ -21,6 +21,11 @@ failure. Preserve prior attempt entries rather than overwriting history.
   "breakpoints": [1440, 390],
   "planned_sections": ["header", "hero", "content", "footer"],
   "completed_sections": ["header", "hero"],
+  "comparison_contract": {
+    "path": ".pwc/comparison-contract.json",
+    "regions": 8,
+    "status": "valid"
+  },
   "gate_results": {
     "capture_integrity": {"status": "pass", "evidence": []},
     "critical_structure": {"status": "pending", "evidence": []},
@@ -30,7 +35,15 @@ failure. Preserve prior attempt entries rather than overwriting history.
     "weight": {"status": "pending", "evidence": []},
     "visual": {"status": "pending", "evidence": []}
   },
-  "attempts": [],
+  "attempts": [
+    {
+      "target": "hero-copy",
+      "packet_bytes": 9120,
+      "before": 0.91,
+      "after": 0.975,
+      "accepted": true
+    }
+  ],
   "residuals": []
 }
 ```
@@ -91,6 +104,30 @@ Append one entry for each repair:
 ```
 
 Record a non-improving attempt too. Keep the best measured artifact.
+The deterministic iteration ledger is authoritative for whether a candidate is
+accepted, whether the target plateaued, and which candidate must be restored.
+
+## Comparison contract
+
+Before visual scoring, persist `.pwc/comparison-contract.json` from the compact
+source evidence. Each important region declares its owner and bounds, importance
+and comparison mode, and either strict pixel/state requirements or exact
+non-static observations plus replacement invariants.
+
+Volatility hints do not make the decision. Unknown critical regions remain
+strict, and a critical residual is a hard failure. Whole-page SSIM remains
+diagnostic when valid volatile observations exist.
+
+## Token and monotonicity record
+
+Each repair attempt records `packet_bytes`, estimated tokens, before/after
+measurements, hard-gate regressions, `accepted`, and the best candidate path.
+Default textual repair packets are limited to 16 KiB. Repair one owner at a
+time; do not repeatedly load the full DOM, CSS, or all prior attempts.
+
+Accept only strict target improvement with no hard-gate regression. After two
+consecutive non-improving attempts, stop that target and preserve the best
+measured candidate as the review artifact.
 
 ## Residual record
 

@@ -50,9 +50,109 @@ _MEASURE = """() => {
   return {
     bounds,
     critical_bounds,
+    page_width: document.documentElement.scrollWidth,
     page_height: document.documentElement.scrollHeight
   };
 }"""
+
+_MEASURE_COMPARISON_FACTS = """(regions) => {
+  const facts = {};
+  const esc = value => {
+    if (window.CSS && CSS.escape) return CSS.escape(String(value));
+    return String(value).replace(/["\\\\]/g, '\\\\$&');
+  };
+  const rect = el => {
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.x + window.scrollX,
+      y: r.y + window.scrollY,
+      width: r.width,
+      height: r.height,
+    };
+  };
+  const unique = values => [...new Set(values.filter(Boolean))].sort();
+  for (const region of regions || []) {
+    let el = null;
+    if (region.selector) {
+      try { el = document.querySelector(region.selector); } catch (_) {}
+    }
+    if (!el) {
+      el = document.querySelector(
+        `[data-pwc-compare="${esc(region.id)}"]`
+      );
+    }
+    if (!el) {
+      el = document.querySelector(
+        `[data-pwc-critical="${esc(region.id)}"]`
+      );
+    }
+    if (!el && region.owner) {
+      el = document.querySelector(
+        `[data-pwc-section="${esc(region.owner)}"]`
+      );
+    }
+    if (!el) continue;
+    const style = getComputedStyle(el);
+    const controls = [];
+    if (el.matches('video[controls]')) controls.push('video');
+    el.querySelectorAll(
+      'button,[role="button"],input,select,textarea,video[controls]'
+    ).forEach(control => {
+      const label = (
+        control.getAttribute('aria-label') ||
+        control.getAttribute('data-pwc-control') ||
+        control.getAttribute('name') ||
+        control.getAttribute('type') ||
+        control.getAttribute('role') ||
+        control.tagName
+      ).trim().toLowerCase();
+      if (label) controls.push(label);
+    });
+    const interactions = [];
+    if (el.hasAttribute('data-pwc-interaction')) {
+      interactions.push(el.getAttribute('data-pwc-interaction'));
+    }
+    el.querySelectorAll('[data-pwc-interaction]').forEach(control => {
+      interactions.push(control.getAttribute('data-pwc-interaction'));
+    });
+    facts[region.id] = {
+      bounds: rect(el),
+      style: {
+        display: style.display,
+        position: style.position,
+        overflow: style.overflow,
+        borderRadius: style.borderRadius,
+        backgroundColor: style.backgroundColor,
+        color: style.color,
+      },
+      controls: unique(controls),
+      interaction: unique(interactions),
+    };
+  }
+  return facts;
+}"""
+
+
+def comparison_fact_request(
+    regions: Sequence[Dict[str, Any]] | None,
+) -> List[Dict[str, Any]]:
+    """Return the bounded selector metadata needed by the browser fact probe."""
+
+    request: List[Dict[str, Any]] = []
+    for region in regions or []:
+        region_id = str(region.get("id") or "").strip()
+        owner = str(region.get("owner") or "").strip()
+        if not region_id:
+            continue
+        selector = region.get("selector")
+        request.append(
+            {
+                "id": region_id,
+                "owner": owner,
+                "selector": str(selector) if selector else None,
+            }
+        )
+    return request
 
 
 def match_sections(
@@ -94,6 +194,7 @@ def capture_clone(
     out_png: str,
     viewport: Tuple[int, int] = (1440, 900),
     settle_ms: int = 800,
+    comparison_regions: Sequence[Dict[str, Any]] | None = None,
 ) -> Dict[str, Any]:
     """Raster the running clone full-page and measure every section anchor.
 
@@ -119,12 +220,21 @@ def capture_clone(
         page.evaluate(FORCE_LOAD_IMAGES_JS)
         page.evaluate(_UNSTICK)
         measured = page.evaluate(_MEASURE)
+        comparison_facts = page.evaluate(
+            _MEASURE_COMPARISON_FACTS,
+            comparison_fact_request(comparison_regions),
+        )
         page.screenshot(path=out_png, full_page=True)
         browser.close()
 
     return {
         "png": out_png,
+        "page_width": float(measured["page_width"]),
         "page_height": float(measured["page_height"]),
         "bounds": measured["bounds"],
         "critical_bounds": measured["critical_bounds"],
+        "comparison_facts": comparison_facts,
     }
+
+
+__all__ = ["match_sections", "comparison_fact_request", "capture_clone"]

@@ -18,7 +18,7 @@ deploy. ALL reasoning — writing React code, judging whether the clone looks li
 the original, deciding what to fix — happens in Claude Code, the brain. This
 server is only the wiring that exposes the hands and eyes.
 
-Registered tools (29 total)
+Registered tools (34 total)
 ---------------------------
 Extraction / chunking (``tools.extraction``):
     * ``extract_page``        — Playwright render a URL → ``source_id`` + summary.
@@ -51,6 +51,16 @@ Fidelity gates (``tools.verify``):
     * ``score_clone_sections``   — one-shot R4: capture the live clone, pair
       plan/clone bounds by name, per-section SSIM, worst-first — drives the
       self-heal loop.
+    * ``get_comparison_evidence`` — bounded source regions and volatility hints
+      for the current Agent's one-time semantic classification.
+    * ``save_comparison_contract`` — validate/persist the Agent's strict
+      per-region comparison policy.
+    * ``score_semantic_fidelity`` — gate static pixels and dynamic replacement
+      invariants without conflating live observations.
+    * ``build_semantic_repair_packet`` — return only the worst region and its
+      owner sources under a text budget.
+    * ``record_semantic_attempt`` — preserve monotonic improvements and report
+      plateaus or the best candidate to restore.
     * ``generate_manifest``  — write the per-site state checklist (baseline states)
     * ``verify_manifest``    — replay the checklist on the live clone + report
 
@@ -139,6 +149,11 @@ def register_tools(server: FastMCP) -> list[str]:
         verify.verify_assets,
         verify.capture_clone_sections,
         verify.score_clone_sections,
+        verify.get_comparison_evidence,
+        verify.save_comparison_contract,
+        verify.score_semantic_fidelity,
+        verify.build_semantic_repair_packet,
+        verify.record_semantic_attempt,
         verify.generate_manifest,
         verify.verify_manifest,
     ):

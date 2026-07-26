@@ -47,6 +47,28 @@ def test_red_gates_cannot_be_hidden_or_reported_as_success():
     assert "Only the user can accept the result" in text
 
 
+def test_agent_authors_semantic_contract_before_visual_scoring():
+    text = _skill()
+    assert "`get_comparison_evidence`" in text
+    assert "`save_comparison_contract`" in text
+    assert "`score_semantic_fidelity`" in text
+    assert "Whole-page SSIM is diagnostic" in text
+    assert "could this observation change" in text
+    assert "replacement invariants" in text
+
+
+def test_repairs_are_token_bounded_and_monotonic():
+    text = _skill()
+    assert "`build_semantic_repair_packet`" in text
+    assert "`record_semantic_attempt`" in text
+    assert "16 KiB" in text
+    assert "Preserve the best measured candidate" in text
+    contract = HARNESS_CONTRACT.read_text(encoding="utf-8")
+    assert '"comparison_contract"' in contract
+    assert '"packet_bytes"' in contract
+    assert '"accepted"' in contract
+
+
 def test_harness_persists_progress_and_resumes_the_same_run():
     text = _skill()
     assert "`.pwc/run.json`" in text

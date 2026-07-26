@@ -55,6 +55,22 @@ def test_ref_section_with_empty_bounds_is_ungradeable():
     assert out["unmatched_ref"] == ["hero"]
 
 
+def test_contract_fact_script_prefers_explicit_selector_and_falls_back_to_owner():
+    from core.clone_capture import comparison_fact_request
+
+    regions = [
+        {"id": "player", "owner": "hero", "selector": "#real-player"},
+        {"id": "caption", "owner": "details"},
+    ]
+
+    request = comparison_fact_request(regions)
+
+    assert request == [
+        {"id": "player", "owner": "hero", "selector": "#real-player"},
+        {"id": "caption", "owner": "details", "selector": None},
+    ]
+
+
 # --------------------------------------------------------------------------- #
 # live-browser capture (chromium, file:// page — no network)
 # --------------------------------------------------------------------------- #
@@ -66,7 +82,10 @@ _PAGE = """<!doctype html><html><head><style>
   [data-pwc-section="footer"]{height:800px;background:#eca}
 </style></head><body>
   <div data-pwc-section="hero">
-    <div data-pwc-critical="hero-1" style="height:600px">HERO</div>
+    <div data-pwc-critical="hero-1" data-pwc-compare="player"
+         style="height:600px;overflow:hidden">
+      <button aria-label="play" data-pwc-interaction="player-toggle">Play</button>
+    </div>
   </div>
   <div data-pwc-section="footer">FOOTER</div>
 </body></html>"""
@@ -96,3 +115,28 @@ def test_capture_clone_measures_bounds_and_full_page_raster(tmp_path):
 
     img = Image.open(out_png)
     assert abs(img.height - 1400) <= 4  # device_scale_factor=1 → raster px == CSS px
+
+
+@live
+def test_capture_clone_collects_contract_geometry_controls_and_interactions(tmp_path):
+    from core.clone_capture import capture_clone
+
+    page = tmp_path / "page.html"
+    page.write_text(_PAGE, encoding="utf-8")
+    result = capture_clone(
+        f"file://{page}",
+        str(tmp_path / "clone.png"),
+        comparison_regions=[
+            {
+                "id": "player",
+                "owner": "hero",
+                "selector": '[data-pwc-compare="player"]',
+            }
+        ],
+    )
+
+    facts = result["comparison_facts"]["player"]
+    assert abs(facts["bounds"]["height"] - 600) <= 2
+    assert facts["controls"] == ["play"]
+    assert facts["interaction"] == ["player-toggle"]
+    assert facts["style"]["overflow"] == "hidden"
