@@ -27,6 +27,10 @@ def _fingerprint(region: Mapping[str, Any]) -> str:
     return str(region.get("fingerprint") or region.get("id") or "").strip()
 
 
+def _selector(region: Mapping[str, Any]) -> str:
+    return str(region.get("selector") or "").strip()
+
+
 def _rect(region: Mapping[str, Any]) -> Mapping[str, Any]:
     value = region.get("rect")
     return value if isinstance(value, Mapping) else {}
@@ -88,11 +92,11 @@ def assess_capture_integrity(
             "metrics": {},
         }
 
-    post_by_fingerprint = {
-        _fingerprint(region): region
-        for region in post
-        if _fingerprint(region)
-    }
+    post_by_fingerprint: Dict[str, List[Dict[str, Any]]] = {}
+    for region in post:
+        fingerprint = _fingerprint(region)
+        if fingerprint:
+            post_by_fingerprint.setdefault(fingerprint, []).append(region)
     missing_critical: List[str] = []
     collapsed_critical: List[str] = []
 
@@ -110,8 +114,8 @@ def assess_capture_integrity(
             )
             continue
 
-        candidate = post_by_fingerprint.get(fingerprint)
-        if candidate is None:
+        candidates = post_by_fingerprint.get(fingerprint) or []
+        if not candidates:
             missing_critical.append(fingerprint)
             issues.append(
                 _issue(
@@ -123,6 +127,25 @@ def assess_capture_integrity(
                 )
             )
             continue
+        if len(candidates) == 1:
+            candidate = candidates[0]
+        else:
+            selector = _selector(region)
+            exact = [
+                item for item in candidates if _selector(item) == selector
+            ]
+            if not selector or len(exact) != 1:
+                issues.append(
+                    _issue(
+                        "critical_region_ambiguous",
+                        f"Critical region {fingerprint!r} has no unique normalized match.",
+                        fingerprint=fingerprint,
+                        selector=selector or None,
+                        candidate_count=len(candidates),
+                    )
+                )
+                continue
+            candidate = exact[0]
 
         pre_area = _area(region)
         post_area = _area(candidate)

@@ -9,9 +9,11 @@ def _region(
     width: float = 1440,
     kind: str = "section",
     critical: bool = True,
+    selector: str | None = None,
 ):
     return {
         "fingerprint": fingerprint,
+        "selector": selector,
         "kind": kind,
         "tag": "section",
         "rect": {"x": 0, "y": y, "width": width, "height": height},
@@ -114,3 +116,71 @@ def test_noncritical_tiny_region_may_disappear_without_failing_capture():
     )
 
     assert report["status"] == "passed"
+
+
+def test_duplicate_fingerprints_match_the_same_selector_instead_of_last_region():
+    pre = [
+        _region(
+            "heading:naro",
+            y=0,
+            height=1596,
+            width=1410,
+            kind="hero",
+            selector="#root > div.page",
+        ),
+        _region(
+            "heading:naro",
+            y=0,
+            height=868,
+            width=1410,
+            kind="hero",
+            selector="#root > div.page > main",
+        ),
+        _region(
+            "heading:naro",
+            y=80,
+            height=788,
+            width=564,
+            critical=False,
+            selector="#root > div.page > main > div.details",
+        ),
+    ]
+    post = [
+        _region(
+            "heading:naro",
+            y=0,
+            height=1550,
+            width=1410,
+            kind="hero",
+            selector="#root > div.page",
+        ),
+        _region(
+            "heading:naro",
+            y=0,
+            height=822,
+            width=1410,
+            kind="hero",
+            selector="#root > div.page > main",
+        ),
+        _region(
+            "heading:naro",
+            y=80,
+            height=742,
+            width=706,
+            critical=False,
+            selector="#root > div.page > main > div.details",
+        ),
+    ]
+
+    report = assess_capture_integrity(
+        pre_regions=pre,
+        post_regions=post,
+        pre_page_height=1596,
+        post_page_height=1550,
+        raster_height=1518,
+        viewport_width=1440,
+        viewport_height=900,
+    )
+
+    assert report["status"] == "passed"
+    assert report["collapsed_critical"] == []
