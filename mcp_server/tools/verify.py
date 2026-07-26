@@ -731,6 +731,8 @@ async def record_semantic_attempt(
     after: float,
     hard_gate_regressions: list[str],
     candidate_path: Optional[str] = None,
+    packet_bytes: Optional[int] = None,
+    estimated_tokens: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Persist one measured repair attempt and reject non-monotonic candidates."""
 
@@ -747,6 +749,18 @@ async def record_semantic_attempt(
     ledger = _read_json(ledger_path, None)
     if not isinstance(ledger, dict):
         ledger = new_ledger()
+    for value, name in (
+        (packet_bytes, "packet_bytes"),
+        (estimated_tokens, "estimated_tokens"),
+    ):
+        if value is not None and (
+            isinstance(value, bool) or not isinstance(value, int) or value < 0
+        ):
+            return _err(
+                f"{name} must be a non-negative integer.",
+                source_id=source_id,
+            )
+    previous_attempts = len(ledger.get("attempts") or [])
     result = record_attempt(
         ledger,
         target=target,
@@ -755,8 +769,15 @@ async def record_semantic_attempt(
         hard_gate_regressions=hard_gate_regressions,
         candidate_path=candidate_path,
     )
+    updated_ledger = result["ledger"]
+    if len(updated_ledger.get("attempts") or []) > previous_attempts:
+        attempt = updated_ledger["attempts"][-1]
+        if packet_bytes is not None:
+            attempt["packet_bytes"] = packet_bytes
+        if estimated_tokens is not None:
+            attempt["estimated_tokens"] = estimated_tokens
     ledger_path.write_text(
-        json.dumps(result["ledger"], indent=2, ensure_ascii=False) + "\n",
+        json.dumps(updated_ledger, indent=2, ensure_ascii=False) + "\n",
         encoding="utf-8",
     )
     sb = get_sandbox()

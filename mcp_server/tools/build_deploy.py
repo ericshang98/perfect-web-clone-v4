@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import shutil
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -44,6 +45,7 @@ from core.boxlite import (
     create_sandbox,
     get_sandbox,
 )
+from core.token_accounting import new_token_usage_summary
 from mcp_server import contracts
 
 # NOTE: core.extractor.storage is imported lazily inside _load_source_data.
@@ -96,7 +98,8 @@ def _new_run_ledger(
         for section in plan.get("sections", [])
     ]
     return {
-        "schema": 1,
+        "schema": 2,
+        "run_id": str(uuid.uuid4()),
         "url": source_url,
         "source_id": source_id,
         "phase": "assemble",
@@ -120,6 +123,7 @@ def _new_run_ledger(
         },
         "attempts": [],
         "residuals": [],
+        "token_usage": new_token_usage_summary(),
     }
 
 

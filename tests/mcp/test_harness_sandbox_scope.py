@@ -82,6 +82,8 @@ def test_assembly_ledger_has_the_agent_harness_contract_fields():
     )
 
     assert json.loads(json.dumps(ledger)) == ledger
+    assert ledger["schema"] == 2
+    assert ledger["run_id"]
     assert ledger["source_id"] == "source-a"
     assert ledger["url"] == "https://example.com/"
     assert ledger["phase"] == "assemble"
@@ -98,3 +100,22 @@ def test_assembly_ledger_has_the_agent_harness_contract_fields():
         "visual",
     }
     assert ledger["residuals"] == []
+    usage = ledger["token_usage"]
+    assert usage["measurement_status"] == "estimated"
+    assert usage["accounting_complete"] is False
+    assert usage["budget"] == {
+        "soft_tokens": 250_000,
+        "hard_tokens": 500_000,
+        "basis": "non_cached_input_plus_output",
+    }
+
+
+def test_each_new_assembly_ledger_has_a_distinct_run_id():
+    first = build_deploy._new_run_ledger(
+        "source-a", "https://example.com/a", {"sections": []}
+    )
+    second = build_deploy._new_run_ledger(
+        "source-b", "https://example.com/b", {"sections": []}
+    )
+
+    assert first["run_id"] != second["run_id"]

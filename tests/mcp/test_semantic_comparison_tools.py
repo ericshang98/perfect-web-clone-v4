@@ -338,6 +338,8 @@ def test_repair_packet_uses_only_owner_component_and_records_attempt(
             after=0.88,
             hard_gate_regressions=[],
             candidate_path="candidate-1",
+            packet_bytes=packet["text_bytes"],
+            estimated_tokens=packet["estimated_tokens"],
         )
     )
     second = asyncio.run(
@@ -353,7 +355,11 @@ def test_repair_packet_uses_only_owner_component_and_records_attempt(
     assert first["accepted"] is True
     assert second["accepted"] is False
     assert second["restore_candidate"] == "candidate-1"
-    assert (root / "iteration-ledger.json").is_file()
+    ledger_path = root / "iteration-ledger.json"
+    assert ledger_path.is_file()
+    ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+    assert ledger["attempts"][0]["packet_bytes"] == packet["text_bytes"]
+    assert ledger["attempts"][0]["estimated_tokens"] == packet["estimated_tokens"]
 
 
 def test_semantic_tools_are_registered():
