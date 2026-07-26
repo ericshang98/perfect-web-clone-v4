@@ -1,0 +1,61 @@
+{
+  "source_id": "livora.co-1784826866-453146",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "page": {
+    "width": 1440,
+    "height": 9188,
+    "broken_images": 0,
+    "broken_videos": 0,
+    "placeholder_links": 0,
+    "root_relative_links": 0
+  },
+  "build": {
+    "ok": true,
+    "vite": "7.3.6"
+  },
+  "audit": {
+    "ok": true,
+    "vulnerabilities": 0,
+    "with_dev_dependencies": 0,
+    "production_dependencies": 0
+  },
+  "fingerprints": {
+    "ok": true,
+    "total": 0
+  },
+  "weight": {
+    "ok": true,
+    "code_kb": 54.907,
+    "code_budget_kb": 100,
+    "asset_kb": 18287.883,
+    "asset_budget_kb": null
+  },
+  "fidelity": {
+    "ok": true,
+    "score": 0.7480433272172081,
+    "threshold": 0.72,
+    "worst_band": {
+      "index": 3,
+      "ssim": 0.2063777345329444,
+      "canvas_y0": 48,
+      "canvas_y1": 64
+    }
+  },
+  "mobile_390": {
+    "horizontal_overflow": false,
+    "broken_images": 0,
+    "broken_videos": 0,
+    "placeholder_links": 0,
+    "primary_navigation_display": "flex",
+    "primary_navigation_visible_links": 5
+  },
+  "evidence": {
+    "reference": "core/extractor/_sources/livora.co-1784826866-453146/screenshots/primary_full.png",
+    "candidate": "showcase/products/livora/shots/desktop_current.png",
+    "side_by_side": "showcase/products/livora/shots/sidebyside.png",
+    "mobile": "showcase/products/livora/shots/mobile_390.png"
+  }
+}

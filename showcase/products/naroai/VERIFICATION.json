@@ -50,5 +50,11 @@
   "responsive": {
     "mobile_viewport_width": 390,
     "horizontal_overflow": false
+  },
+  "acceptance": {
+    "scope": "gallery_case_not_requested_client_target",
+    "machine_status": "ready_for_user_review",
+    "user_accepted": null,
+    "decision": "not_recorded"
   }
 }

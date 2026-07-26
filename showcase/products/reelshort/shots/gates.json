@@ -1,0 +1,49 @@
+{
+  "source_id": "www.reelshort.com-1784826796-22e26a",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "page": {
+    "width": 1440,
+    "height": 5988,
+    "accepted_urls_matched": 89,
+    "accepted_urls_total": 89,
+    "placeholder_links": 0,
+    "external_resource_requests": 0,
+    "failed_requests": 0,
+    "broken_images_after_scroll": 0
+  },
+  "build": {
+    "ok": true,
+    "css_gzip_kb": 2.69,
+    "js_gzip_kb": 55.7
+  },
+  "audit": {
+    "ok": true,
+    "vulnerabilities": 0
+  },
+  "fingerprints": {
+    "ok": true,
+    "total": 0
+  },
+  "weight": {
+    "ok": true,
+    "code_kb": 57.246,
+    "code_budget_kb": 80,
+    "asset_kb": 8474.219,
+    "asset_budget_kb": null
+  },
+  "fidelity": {
+    "ok": true,
+    "score": 0.9307849636500164,
+    "threshold": 0.72,
+    "recommended_shelf": 0.933872367
+  },
+  "evidence": {
+    "reference": "core/extractor/_sources/www.reelshort.com-1784826796-22e26a/screenshots/primary_full.png",
+    "candidate": "showcase/products/reelshort/shots/desktop_full.png",
+    "side_by_side": "showcase/products/reelshort/shots/sidebyside.png",
+    "tablet": "showcase/products/reelshort/shots/tablet_full.png"
+  }
+}

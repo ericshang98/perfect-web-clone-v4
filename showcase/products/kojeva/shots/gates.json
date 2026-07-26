@@ -1,0 +1,59 @@
+{
+  "source_id": "kojeva.com-1784828890-25edd7",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "page": {
+    "width": 1440,
+    "height": 6175,
+    "link_count": 47,
+    "root_relative_links": 0,
+    "broken_images": 0,
+    "failed_requests": 0
+  },
+  "build": {
+    "ok": true,
+    "vite": "8.1.5",
+    "css_gzip_kb": 4.26,
+    "js_gzip_kb": 51.76
+  },
+  "audit": {
+    "ok": true,
+    "vulnerabilities": 0
+  },
+  "fingerprints": {
+    "ok": true,
+    "total": 0
+  },
+  "weight": {
+    "ok": true,
+    "code_kb": 54.332,
+    "code_budget_kb": 100,
+    "asset_kb": 12041.409,
+    "asset_budget_kb": null
+  },
+  "responsive": {
+    "ok": true,
+    "viewport_width": 390,
+    "scroll_width": 390,
+    "visible_navigation_links": 4
+  },
+  "fidelity": {
+    "ok": true,
+    "score": 0.7624058670575847,
+    "threshold": 0.72,
+    "weighted_section_score": 0.7616662138642658
+  },
+  "section_residuals": {
+    "ugc": 0.6123,
+    "instant_de_puff": 0.6691,
+    "satisfaction": 0.6929
+  },
+  "evidence": {
+    "reference": "core/extractor/_sources/kojeva.com-1784828890-25edd7/screenshots/primary_full.png",
+    "candidate": "showcase/products/kojeva/shots/desktop.png",
+    "side_by_side": "showcase/products/kojeva/shots/sidebyside.png",
+    "mobile": "showcase/products/kojeva/shots/mobile-390.png"
+  }
+}

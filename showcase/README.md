@@ -1,43 +1,48 @@
-# Clone Showcase · 克隆产品集
+# Clone Gallery · 复刻结果归档
 
-A curated collection of websites cloned with the **Perfect Web Clone v3** pipeline
-(Claude Code as the brain, deterministic zero-LLM Python tools as the hands). Each
-entry is a self-contained, runnable **Vite + React + Tailwind** static project with a
-prebuilt `dist/`.
+This directory is the local review Gallery for Perfect Web Clone harness runs.
+It keeps runnable source projects, desktop/mobile screenshots, side-by-side
+evidence, and the machine-validation context needed for user review.
 
-> Delivery + showcase only — **these are never deployed online.**
+Machine gates do not represent user acceptance. They show whether the recorded
+evidence satisfies the harness contract; the user makes the final decision.
 
-## Browse
-
-Open `index.html` for the visual gallery (full-page screenshots, source links, tech
-stack, and run commands). Easiest:
+## Open the Gallery
 
 ```bash
 cd showcase
-python3 -m http.server 9000   # then open http://localhost:9000
+python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
-(Opening `index.html` directly via `file://` also works for the gallery + screenshots.)
+Then open <http://127.0.0.1:8080/>.
 
-## Run a single clone live
+The Gallery itself is plain HTML, CSS, and JavaScript. Its filters work without
+a build step.
 
-Each clone uses absolute `/assets/...` paths, so it must be served at a **server root**
-(not a subfolder). Run it on its own:
+## Run one clone
+
+Most clones are independent Vite projects:
 
 ```bash
-cd products/db-longbow      # or products/withnovu
+cd showcase/products/reelshort
 npm install
-npm run preview             # serves the prebuilt dist/
-# or: npm run dev           # live dev server
+npm run dev
 ```
 
-## Contents
+`oryzo-pixel` is a static HTML project and can be served directly.
 
-| Clone | Source | Sections | Notes |
-|-------|--------|----------|-------|
-| **VARIANT3D** | variant3d.io | 14 | Self-hosted Founders Grotesk; dark 3D product site (scroll-pinned WebGL → static fallback); desktop+mobile verified |
-| **Longbow** | db-longbow.webflow.io | 16 | Self-hosted Bebas Neue / EB Garamond / Geist Mono; desktop+mobile verified |
-| **Novu** | withnovu.com | 5 | Inter + Lora long landing page; desktop+mobile verified |
+## Recent harness cases
 
-The canonical working copies live in `../clones/<name>/`; this folder is the curated,
-self-contained collection. New clones get added here as they're finished.
+| Clone | Source | Archived evidence |
+|---|---|---|
+| Naro AI · Order | `naroai.co/order` | Desktop/mobile screenshots and interaction verification; Gallery case, not the requested client target |
+| FlipClocker | `flipclocker.com` | Corrected dark-theme clone, desktop/mobile screenshots, semantic A/B validation |
+| ReelShort · Español | `reelshort.com/es` | Runnable clone, full-page/tablet screenshots, side-by-side and gate report |
+| Livora | `livora.co` | Runnable clone, desktop/mobile screenshots, side-by-side and gate report |
+| Kojeva | `kojeva.com` | Runnable clone, quality-iteration desktop/mobile screenshots, side-by-side and gate report |
+| Linfae · TryKojiva | `trykojiva.com/brush` | Runnable clone, clean desktop/mobile screenshots, side-by-side and residual report |
+
+## Historical archive
+
+The Gallery also retains ORYZO, VARIANT3D, Longbow, Novu, Pagerie, Pagerie
+product-page variants, Everswap, Sowieso, and ORYZO Pixel.

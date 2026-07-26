@@ -1,365 +1,621 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Perfect Web Clone — 克隆产品集 / Clone Showcase</title>
-<style>
-  :root{
-    --bg:#0b0c0e; --panel:#141619; --line:#23262b; --fg:#f4f5f6;
-    --muted:#9aa0a8; --accent:#d8ff3e; --accent2:#7ab8ff;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{background:var(--bg);color:var(--fg);
-    font-family:ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,
-      "PingFang SC","Microsoft YaHei",sans-serif;
-    -webkit-font-smoothing:antialiased;line-height:1.5}
-  a{color:inherit;text-decoration:none}
-  .wrap{max-width:1120px;margin:0 auto;padding:64px 24px 96px}
-  header{border-bottom:1px solid var(--line);padding-bottom:32px;margin-bottom:48px}
-  .eyebrow{font-size:12px;letter-spacing:.22em;text-transform:uppercase;color:var(--accent);
-    font-weight:600;margin-bottom:14px}
-  h1{font-size:clamp(30px,5vw,46px);font-weight:700;letter-spacing:-.02em;line-height:1.05}
-  h1 .dim{color:var(--muted)}
-  .sub{color:var(--muted);max-width:680px;margin-top:16px;font-size:15px}
-  .stats{display:flex;gap:34px;margin-top:28px;flex-wrap:wrap}
-  .stat .n{font-size:26px;font-weight:700}
-  .stat .l{font-size:12px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-top:2px}
-  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:28px}
-  @media(max-width:760px){.grid{grid-template-columns:1fr}}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;
-    transition:transform .25s ease,border-color .25s ease}
-  .card:hover{transform:translateY(-4px);border-color:#3a3f46}
-  .shot{display:block;position:relative;height:300px;overflow:hidden;background:#000;border-bottom:1px solid var(--line)}
-  .shot img{width:100%;display:block;transition:transform 6s linear}
-  .card:hover .shot img{transform:translateY(calc(-100% + 300px))}
-  .shot .badge{position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);backdrop-filter:blur(6px);
-    border:1px solid rgba(255,255,255,.14);color:#fff;font-size:11px;padding:5px 10px;border-radius:999px;
-    letter-spacing:.04em}
-  .body{padding:22px 22px 24px}
-  .ttl{font-size:19px;font-weight:700;letter-spacing:-.01em}
-  .src{display:inline-flex;align-items:center;gap:6px;color:var(--accent2);font-size:13px;margin-top:6px}
-  .src:hover{text-decoration:underline}
-  .meta{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-  .tag{font-size:11px;color:var(--muted);border:1px solid var(--line);padding:4px 9px;border-radius:7px;
-    background:#0f1113}
-  .row{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
-  .btn{font-size:13px;font-weight:600;padding:9px 14px;border-radius:9px;border:1px solid var(--line);
-    background:#0f1113;color:var(--fg);cursor:pointer}
-  .btn.primary{background:var(--accent);color:#10120a;border-color:var(--accent)}
-  .btn:hover{border-color:#4a4f57}
-  .run{margin-top:16px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;
-    color:var(--muted);background:#0f1113;border:1px solid var(--line);border-radius:8px;padding:10px 12px;
-    overflow-x:auto;white-space:nowrap}
-  .run b{color:var(--fg);font-weight:600}
-  footer{margin-top:56px;padding-top:24px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
-  code{font-family:ui-monospace,Menlo,monospace;color:var(--accent2)}
-</style>
-</head>
-<body>
-<div class="wrap">
-  <header>
-    <div class="eyebrow">Perfect Web Clone v3 · 克隆产品集</div>
-    <h1>Clone Showcase <span class="dim">— 克隆过的网站合集</span></h1>
-    <p class="sub">用 Perfect Web Clone v3 流水线（Claude Code 为大脑，确定性 Python 工具为手）
-      高保真克隆的网站。每个都是可运行的 Vite + React + Tailwind 静态项目，自带打包好的
-      <code>dist/</code>。点击缩略图查看整页截图；卡片底部是本地运行命令。</p>
-    <div class="stats">
-      <div class="stat"><div class="n">9</div><div class="l">Sites cloned</div></div>
-      <div class="stat"><div class="n">12</div><div class="l">Runnable builds</div></div>
-      <div class="stat"><div class="n">99</div><div class="l">Sections reproduced</div></div>
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Perfect Web Clone harness 生成的网站复刻案例与验证证据 Gallery。"
+    />
+    <title>Perfect Web Clone · Gallery</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090a0b;
+        --panel: #121416;
+        --panel-strong: #17191c;
+        --line: #282b30;
+        --line-strong: #3b4048;
+        --fg: #f4f5f6;
+        --muted: #9ba1a9;
+        --lime: #d8ff3e;
+        --blue: #78b8ff;
+        --orange: #ff9d5c;
+        --green: #66e5a3;
+        --radius: 18px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background: var(--bg);
+        scroll-behavior: smooth;
+      }
+
+      body {
+        min-width: 320px;
+        margin: 0;
+        background:
+          radial-gradient(circle at 74% -10%, rgb(120 184 255 / 10%), transparent 32rem),
+          radial-gradient(circle at 8% 16%, rgb(216 255 62 / 6%), transparent 28rem),
+          var(--bg);
+        color: var(--fg);
+        font-family:
+          Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          "PingFang SC", "Microsoft YaHei", sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      button,
+      a {
+        color: inherit;
+        font: inherit;
+      }
+
+      a {
+        text-decoration: none;
+      }
+
+      button {
+        cursor: pointer;
+      }
+
+      .topbar {
+        position: sticky;
+        z-index: 30;
+        top: 0;
+        border-bottom: 1px solid rgb(255 255 255 / 7%);
+        background: rgb(9 10 11 / 82%);
+        backdrop-filter: blur(18px);
+      }
+
+      .topbar-inner,
+      .wrap {
+        width: min(1180px, calc(100% - 40px));
+        margin: 0 auto;
+      }
+
+      .topbar-inner {
+        display: flex;
+        min-height: 64px;
+        align-items: center;
+        justify-content: space-between;
+        gap: 24px;
+      }
+
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        font-size: 14px;
+        font-weight: 760;
+        letter-spacing: -0.01em;
+      }
+
+      .brand-mark {
+        display: grid;
+        width: 28px;
+        height: 28px;
+        place-items: center;
+        border-radius: 8px;
+        background: var(--lime);
+        color: #111407;
+        font-size: 13px;
+        font-weight: 900;
+      }
+
+      .top-note {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .wrap {
+        padding: 76px 0 96px;
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(270px, 360px);
+        gap: 70px;
+        align-items: end;
+        padding-bottom: 54px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .eyebrow {
+        margin-bottom: 18px;
+        color: var(--lime);
+        font-size: 12px;
+        font-weight: 760;
+        letter-spacing: 0.19em;
+        text-transform: uppercase;
+      }
+
+      h1 {
+        max-width: 800px;
+        margin: 0;
+        font-size: clamp(42px, 7vw, 76px);
+        font-weight: 760;
+        letter-spacing: -0.055em;
+        line-height: 0.98;
+      }
+
+      h1 span {
+        color: #737981;
+      }
+
+      .intro {
+        max-width: 680px;
+        margin: 24px 0 0;
+        color: #b6bbc2;
+        font-size: 16px;
+        line-height: 1.75;
+      }
+
+      .hero-note {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgb(18 20 22 / 72%);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.7;
+      }
+
+      .hero-note strong {
+        color: var(--fg);
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 38px;
+      }
+
+      .stat {
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: rgb(18 20 22 / 62%);
+      }
+
+      .stat-number {
+        font-size: 27px;
+        font-weight: 780;
+        letter-spacing: -0.04em;
+      }
+
+      .stat-label {
+        margin-top: 4px;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        margin: 42px 0 28px;
+      }
+
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .filter {
+        padding: 9px 14px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: #101214;
+        color: var(--muted);
+        font-size: 13px;
+        transition:
+          border-color 160ms ease,
+          color 160ms ease,
+          background 160ms ease;
+      }
+
+      .filter:hover {
+        border-color: var(--line-strong);
+        color: var(--fg);
+      }
+
+      .filter.is-active {
+        border-color: var(--lime);
+        background: var(--lime);
+        color: #111407;
+        font-weight: 720;
+      }
+
+      .result-count {
+        flex: 0 0 auto;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .section {
+        margin-top: 42px;
+      }
+
+      .section[hidden] {
+        display: none;
+      }
+
+      .section-heading {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 24px;
+        margin-bottom: 18px;
+      }
+
+      .section-heading h2 {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 34px);
+        letter-spacing: -0.04em;
+      }
+
+      .section-heading p {
+        max-width: 520px;
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.6;
+        text-align: right;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+      }
+
+      .card {
+        min-width: 0;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        background: var(--panel);
+        transition:
+          transform 200ms ease,
+          border-color 200ms ease,
+          box-shadow 200ms ease;
+      }
+
+      .card:hover {
+        border-color: var(--line-strong);
+        box-shadow: 0 20px 60px rgb(0 0 0 / 24%);
+        transform: translateY(-4px);
+      }
+
+      .shot {
+        position: relative;
+        display: block;
+        height: 310px;
+        overflow: hidden;
+        border-bottom: 1px solid var(--line);
+        background: #050505;
+      }
+
+      .shot img {
+        display: block;
+        width: 100%;
+        min-height: 100%;
+        object-fit: cover;
+        object-position: top center;
+        transition: transform 5s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      .card:hover .shot img {
+        transform: translateY(calc(-100% + 310px));
+      }
+
+      .shot-badge {
+        position: absolute;
+        z-index: 2;
+        top: 14px;
+        left: 14px;
+        max-width: calc(100% - 28px);
+        padding: 6px 10px;
+        overflow: hidden;
+        border: 1px solid rgb(255 255 255 / 13%);
+        border-radius: 999px;
+        background: rgb(0 0 0 / 68%);
+        color: #fff;
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        backdrop-filter: blur(8px);
+      }
+
+      .card-body {
+        padding: 22px;
+      }
+
+      .card-kicker {
+        color: var(--blue);
+        font-size: 11px;
+        font-weight: 720;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+      }
+
+      .card h3 {
+        margin: 7px 0 0;
+        font-size: 21px;
+        letter-spacing: -0.025em;
+      }
+
+      .source {
+        display: inline-block;
+        margin-top: 7px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .source:hover {
+        color: var(--blue);
+      }
+
+      .status {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        min-height: 48px;
+        margin-top: 17px;
+        padding: 11px 12px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background: #0e1012;
+        color: #bdc2c8;
+        font-size: 12px;
+        line-height: 1.45;
+      }
+
+      .status-dot {
+        flex: 0 0 auto;
+        width: 7px;
+        height: 7px;
+        margin-top: 5px;
+        border-radius: 50%;
+        background: var(--green);
+        box-shadow: 0 0 0 4px rgb(102 229 163 / 10%);
+      }
+
+      .status[data-tone="review"] .status-dot {
+        background: var(--orange);
+        box-shadow: 0 0 0 4px rgb(255 157 92 / 10%);
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 7px;
+        margin-top: 16px;
+      }
+
+      .tag {
+        padding: 5px 9px;
+        border: 1px solid var(--line);
+        border-radius: 7px;
+        background: #0e1012;
+        color: var(--muted);
+        font-size: 11px;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 9px;
+        margin-top: 19px;
+      }
+
+      .btn {
+        display: inline-flex;
+        min-height: 38px;
+        align-items: center;
+        justify-content: center;
+        padding: 9px 13px;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: #0e1012;
+        color: var(--fg);
+        font-size: 12px;
+        font-weight: 690;
+      }
+
+      .btn:hover {
+        border-color: var(--line-strong);
+      }
+
+      .btn.primary {
+        border-color: var(--lime);
+        background: var(--lime);
+        color: #111407;
+      }
+
+      .command {
+        margin-top: 14px;
+        padding: 10px 11px;
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: #0b0d0f;
+        color: #858c95;
+        font-family: "SFMono-Regular", Consolas, monospace;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+
+      .empty {
+        padding: 50px;
+        border: 1px dashed var(--line-strong);
+        border-radius: 16px;
+        color: var(--muted);
+        text-align: center;
+      }
+
+      footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 32px;
+        margin-top: 64px;
+        padding-top: 26px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.65;
+      }
+
+      footer strong {
+        color: #cbd0d5;
+      }
+
+      @media (max-width: 880px) {
+        .hero {
+          grid-template-columns: 1fr;
+          gap: 32px;
+        }
+
+        .hero-note {
+          max-width: 600px;
+        }
+
+        .section-heading {
+          align-items: start;
+          flex-direction: column;
+          gap: 7px;
+        }
+
+        .section-heading p {
+          text-align: left;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .topbar-inner,
+        .wrap {
+          width: min(100% - 28px, 1180px);
+        }
+
+        .top-note {
+          display: none;
+        }
+
+        .wrap {
+          padding-top: 52px;
+        }
+
+        .stats,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .toolbar {
+          align-items: flex-start;
+          flex-direction: column;
+        }
+
+        .shot {
+          height: 280px;
+        }
+
+        .card:hover .shot img {
+          transform: none;
+        }
+
+        footer {
+          flex-direction: column;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+
+        .card,
+        .shot img {
+          transition: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#top" aria-label="返回 Gallery 顶部">
+          <span class="brand-mark">P</span>
+          <span>Perfect Web Clone · Gallery</span>
+        </a>
+        <div class="top-note">Harness output archive · Local review</div>
+      </div>
     </div>
-  </header>
 
-  <main class="grid">
+    <div class="wrap" id="top">
+      <header class="hero">
+        <div>
+          <div class="eyebrow">Harness-generated clone archive</div>
+          <h1>复刻结果，<span>统一放在这里审阅。</span></h1>
+          <p class="intro">
+            这里保存每次复刻的可运行代码、桌面与移动截图、对比证据和系统验证状态。
+            自动门禁只说明证据是否完整，最终是否通过由用户审阅决定。
+          </p>
+          <div class="stats" aria-label="Gallery 统计">
+            <div class="stat">
+              <div class="stat-number" id="project-count">16</div>
+              <div class="stat-label">Clone projects</div>
+            </div>
+            <div class="stat">
+              <div class="stat-number" id="recent-count">6</div>
+              <div class="stat-label">Recent harness cases</div>
+            </div>
+            <div class="stat">
+              <div class="stat-number">15 + 1</div>
+              <div class="stat-label">Vite builds + static</div>
+            </div>
+          </div>
+        </div>
+        <aside class="hero-note">
+          <strong>范围说明</strong><br />
+          Naro 是这次产生的展示案例，不是客户邮件里指定的目标页面，因此保留在 Gallery，
+          但不会被标记为客户交付完成。其余近期复刻也分别保留机器证据与用户验收状态。
+        </aside>
+      </header>
 
-    <!-- trykojiva -->
-    <article class="card">
-      <a class="shot" href="products/trykojiva/shots/sidebyside.png" target="_blank" rel="noopener">
-        <span class="badge">原站 vs 克隆 · hover 预览</span>
-        <img src="thumbs/trykojiva.jpg" alt="trykojiva Linfae clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Linfae · trykojiva</div>
-        <a class="src" href="https://trykojiva.com/brush" target="_blank" rel="noopener">trykojiva.com/brush ↗</a>
-        <div class="meta">
-          <span class="tag">5 sections</span>
-          <span class="tag">产品详情页（自建站）</span>
-          <span class="tag">0 指纹 · 代码 63KB</span>
-          <span class="tag">干净 React 重建</span>
+      <div class="toolbar" aria-label="Gallery 筛选">
+        <div class="filters" role="group" aria-label="筛选复刻项目">
+          <button class="filter is-active" type="button" data-filter="all">全部</button>
+          <button class="filter" type="button" data-filter="recent">近期流程验证</button>
+          <button class="filter" type="button" data-filter="archive">历史归档</button>
         </div>
-        <div class="run">cd products/trykojiva &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/trykojiva/shots/sidebyside.png" target="_blank" rel="noopener">并排对比</a>
-          <a class="btn" href="products/trykojiva/shots/desktop_full.png" target="_blank" rel="noopener">克隆整页</a>
-          <a class="btn" href="products/trykojiva/" target="_blank" rel="noopener">项目文件</a>
-        </div>
+        <div class="result-count" id="result-count" aria-live="polite">显示 16 个项目</div>
       </div>
-    </article>
 
-    <!-- infinite-passerella -->
-    <article class="card">
-      <a class="shot" href="products/infinite-passerella/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">原创 Three.js 重建 · hover 预览</span>
-        <img src="thumbs/infinite-passerella.jpg" alt="Infinite Passerella reconstruction screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Infinite Passerella</div>
-        <a class="src" href="https://exp-infinite-passerella.lusion.co" target="_blank" rel="noopener">exp-infinite-passerella.lusion.co ↗</a>
-        <div class="meta">
-          <span class="tag">react-three-fiber WebGL</span>
-          <span class="tag">无限 T 台 + 走秀人形</span>
-          <span class="tag">相机取景框 HUD</span>
-          <span class="tag">可换 LED 灯光 / 自由视角</span>
-          <span class="tag">纯 WebGL 站 → 原创重建</span>
-        </div>
-        <div class="run">cd products/infinite-passerella &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/infinite-passerella/shots/desktop_full.png" target="_blank" rel="noopener">场景截图</a>
-          <a class="btn" href="products/infinite-passerella/shots/preloader.png" target="_blank" rel="noopener">加载页</a>
-          <a class="btn" href="products/infinite-passerella/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
+      <main id="gallery"></main>
 
-    <!-- oryzo -->
-    <article class="card">
-      <a class="shot" href="products/oryzo/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/oryzo.jpg" alt="ORYZO clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">ORYZO</div>
-        <a class="src" href="https://oryzo.ai" target="_blank" rel="noopener">oryzo.ai ↗</a>
-        <div class="meta">
-          <span class="tag">react-three-fiber WebGL</span>
-          <span class="tag">14 scroll 场景</span>
-          <span class="tag">中心 3D 金戒指模型（GLB）</span>
-          <span class="tag">固定 canvas + 滚动编排</span>
-          <span class="tag">Archivo（halyard 替身）</span>
+      <footer>
+        <div>
+          <strong>运行方式</strong><br />
+          每个 Vite 项目进入对应目录后执行 <code>npm install &amp;&amp; npm run dev</code>。
+          Gallery 自身是无构建的静态页面。
         </div>
-        <div class="run">cd products/oryzo &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/oryzo/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/oryzo/shots/mobile_full.png" target="_blank" rel="noopener">移动整页</a>
-          <a class="btn" href="products/oryzo/" target="_blank" rel="noopener">项目文件</a>
+        <div>
+          <strong>状态定义</strong><br />
+          “系统验证”不等于“用户验收”；机器分数、交互回放和截图证据只作为审阅依据。
         </div>
-      </div>
-    </article>
+      </footer>
+    </div>
 
-    <!-- variant3d -->
-    <article class="card">
-      <a class="shot" href="products/variant3d/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/variant3d.jpg" alt="VARIANT3D clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">VARIANT3D</div>
-        <a class="src" href="https://variant3d.io" target="_blank" rel="noopener">variant3d.io ↗</a>
-        <div class="meta">
-          <span class="tag">14 sections</span>
-          <span class="tag">Founders Grotesk</span>
-          <span class="tag">自托管字体</span>
-          <span class="tag">深色 3D 产品站</span>
-          <span class="tag">Desktop+Mobile ✓</span>
-        </div>
-        <div class="run">cd products/variant3d &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/variant3d/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/variant3d/shots/mobile_full.png" target="_blank" rel="noopener">移动整页</a>
-          <a class="btn" href="products/variant3d/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- db-longbow -->
-    <article class="card">
-      <a class="shot" href="products/db-longbow/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/db-longbow.jpg" alt="Longbow clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Longbow</div>
-        <a class="src" href="https://db-longbow.webflow.io" target="_blank" rel="noopener">db-longbow.webflow.io ↗</a>
-        <div class="meta">
-          <span class="tag">16 sections</span>
-          <span class="tag">Bebas Neue · EB Garamond · Geist Mono</span>
-          <span class="tag">自托管字体</span>
-          <span class="tag">Desktop+Mobile ✓</span>
-        </div>
-        <div class="run">cd products/db-longbow &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/db-longbow/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/db-longbow/shots/mobile_full.png" target="_blank" rel="noopener">移动整页</a>
-          <a class="btn" href="products/db-longbow/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- withnovu -->
-    <article class="card">
-      <a class="shot" href="products/withnovu/shots/desktop.jpg" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/withnovu.jpg" alt="Novu clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Novu</div>
-        <a class="src" href="https://www.withnovu.com" target="_blank" rel="noopener">withnovu.com ↗</a>
-        <div class="meta">
-          <span class="tag">5 sections</span>
-          <span class="tag">Inter · Lora</span>
-          <span class="tag">长着陆页</span>
-          <span class="tag">Desktop+Mobile ✓</span>
-        </div>
-        <div class="run">cd products/withnovu &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/withnovu/shots/desktop.jpg" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/withnovu/shots/mobile.jpg" target="_blank" rel="noopener">移动整页</a>
-          <a class="btn" href="products/withnovu/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- pagerie -->
-    <article class="card">
-      <a class="shot" href="products/pagerie/shots/clone-full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/pagerie.jpg" alt="Pagerie clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Pagerie</div>
-        <a class="src" href="https://www.pagerie.com" target="_blank" rel="noopener">pagerie.com ↗</a>
-        <div class="meta">
-          <span class="tag">13 sections</span>
-          <span class="tag">Shopify 奢侈宠物品牌</span>
-          <span class="tag">lazysizes 图片修复</span>
-          <span class="tag">PDP 双栏 sticky</span>
-        </div>
-        <div class="run">cd products/pagerie &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/pagerie/shots/clone-full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/pagerie/shots/sidebyside.png" target="_blank" rel="noopener">对照图</a>
-          <a class="btn" href="products/pagerie/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- pagerie-dorro -->
-    <article class="card">
-      <a class="shot" href="products/pagerie-dorro/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/pagerie-dorro.jpg" alt="Pagerie The Dorro clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Pagerie · The Dorro</div>
-        <a class="src" href="https://www.pagerie.com" target="_blank" rel="noopener">pagerie.com（The Dorro PDP）↗</a>
-        <div class="meta">
-          <span class="tag">11 sections</span>
-          <span class="tag">Shopify 产品详情页</span>
-          <span class="tag">gallery + product 双栏</span>
-        </div>
-        <div class="run">cd products/pagerie-dorro &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/pagerie-dorro/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/pagerie-dorro/shots/sidebyside.png" target="_blank" rel="noopener">对照图</a>
-          <a class="btn" href="products/pagerie-dorro/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- pagerie-v4 -->
-    <article class="card">
-      <a class="shot" href="products/pagerie-v4/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/pagerie-v4.jpg" alt="Pagerie v4 rebuild full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Pagerie（v4 重建）</div>
-        <a class="src" href="https://www.pagerie.com" target="_blank" rel="noopener">pagerie.com ↗</a>
-        <div class="meta">
-          <span class="tag">13 sections</span>
-          <span class="tag">v4 确定性流水线</span>
-          <span class="tag">fidelity 门禁</span>
-        </div>
-        <div class="run">cd products/pagerie-v4 &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/pagerie-v4/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/pagerie-v4/shots/compare.png" target="_blank" rel="noopener">对照图</a>
-          <a class="btn" href="products/pagerie-v4/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- everswap -->
-    <article class="card">
-      <a class="shot" href="products/everswap/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/everswap.jpg" alt="Everswap clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Everswap</div>
-        <a class="src" href="https://everswap.com" target="_blank" rel="noopener">everswap.com ↗</a>
-        <div class="meta">
-          <span class="tag">8 sections</span>
-          <span class="tag">长着陆页</span>
-        </div>
-        <div class="run">cd products/everswap &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/everswap/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/everswap/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- sowieso -->
-    <article class="card">
-      <a class="shot" href="products/sowieso/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/sowieso.jpg" alt="Sowieso clone full-page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">Sowieso</div>
-        <a class="src" href="https://sowieso.wero-wallet.eu" target="_blank" rel="noopener">sowieso.wero-wallet.eu ↗</a>
-        <div class="meta">
-          <span class="tag">11 sections</span>
-          <span class="tag">长着陆页</span>
-        </div>
-        <div class="run">cd products/sowieso &amp;&amp; <b>npm i &amp;&amp; npm run preview</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/sowieso/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/sowieso/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-    <!-- oryzo-pixel -->
-    <article class="card">
-      <a class="shot" href="products/oryzo-pixel/shots/desktop_full.png" target="_blank" rel="noopener">
-        <span class="badge">整页截图 · hover 预览</span>
-        <img src="thumbs/oryzo-pixel.jpg" alt="ORYZO pixel-gate static page screenshot" loading="lazy"/>
-      </a>
-      <div class="body">
-        <div class="ttl">ORYZO · Pixel</div>
-        <a class="src" href="https://oryzo.ai" target="_blank" rel="noopener">oryzo.ai ↗</a>
-        <div class="meta">
-          <span class="tag">像素门禁静态单页</span>
-          <span class="tag">无构建 · 直接打开</span>
-        </div>
-        <div class="run">open products/oryzo-pixel/<b>index.html</b></div>
-        <div class="row">
-          <a class="btn primary" href="products/oryzo-pixel/shots/desktop_full.png" target="_blank" rel="noopener">桌面整页</a>
-          <a class="btn" href="products/oryzo-pixel/index.html" target="_blank" rel="noopener">在线打开</a>
-          <a class="btn" href="products/oryzo-pixel/" target="_blank" rel="noopener">项目文件</a>
-        </div>
-      </div>
-    </article>
-
-  </main>
-
-  <footer>
-    每个产品都是独立可运行的静态项目：<code>npm install</code> 后 <code>npm run dev</code>（开发）
-    或 <code>npm run preview</code>（预览已打包的 dist）。本合集仅做交付与展示，<b>不做线上部署</b>。
-  </footer>
-</div>
-</body>
+    <script src="gallery.js"></script>
+  </body>
 </html>

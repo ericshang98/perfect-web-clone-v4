@@ -1,0 +1,48 @@
+{
+  "source_url": "https://flipclocker.com/",
+  "source_id": "flipclocker.com-1785049907-54a88d",
+  "verified_at": "2026-07-26",
+  "viewport": {
+    "width": 1440,
+    "height": 900,
+    "page_height": 1442
+  },
+  "theme": {
+    "authored_state": "business",
+    "color_scheme": "dark",
+    "passed": true
+  },
+  "visual": {
+    "whole_page_ssim_diagnostic_range": [
+      0.8883,
+      0.8926
+    ],
+    "static_region_aggregate": 0.9963,
+    "passed": true,
+    "note": "Whole-page SSIM is diagnostic only because the clock digits change every second."
+  },
+  "static_regions": {
+    "navigation": 0.9833,
+    "information_heading": 0.9997,
+    "feature_grid": 0.9999,
+    "footer": 0.9992
+  },
+  "dynamic_regions": {
+    "live_clock": {
+      "comparison": "bounds_and_aspect",
+      "passed": true
+    }
+  },
+  "interactions": {
+    "settings": true,
+    "hide_seconds": true,
+    "hide_labels": true,
+    "classic_mode": true,
+    "mobile_menu": true
+  },
+  "acceptance": {
+    "machine_status": "ready_for_user_review",
+    "user_accepted": null,
+    "decision": "not_recorded"
+  }
+}
