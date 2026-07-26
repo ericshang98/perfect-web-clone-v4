@@ -61,6 +61,9 @@ sections. Do not delegate unless the user explicitly asks.
    A missing critical region cannot be offset by aggregate visual similarity.
 9. End only in `ready_for_user_review` or `failed_with_residuals`.
    Only the user can accept the result.
+10. Account for Agent Token usage throughout the source-scoped run. Prefer
+    provider-reported usage, label estimates, and never merge actual and estimated
+    totals into a fake exact number.
 
 Read [references/harness-contract.md](references/harness-contract.md) before
 starting a new run or resuming one. It defines the progress ledger, terminal
@@ -138,6 +141,22 @@ Call `pwc4 assemble_project(source_id)` once to create the sandbox shell.
 Missing section files are expected on this first call. Assembly initializes
 `.pwc/run.json`; read, update, and rewrite that ledger through the sandbox tools
 as the agent advances.
+
+Immediately call pwc4 `begin_token_accounting(source_id)` after the run ledger
+exists. This establishes the provider baseline for the source-scoped run. The
+capture, understanding, and planning work that occurred before this baseline
+must be checkpointed as labeled estimates; do not describe the resulting
+mixed report as complete actual usage.
+
+The accounting tool sequence is `begin_token_accounting`,
+`checkpoint_token_accounting`, `finalize_token_accounting`, and
+`get_token_report`.
+
+After every later phase call
+pwc4 `checkpoint_token_accounting(source_id, phase, operation, context)`.
+Use these phase names: `capture`, `understand`, `plan`, `generate`, `build`,
+`verify`, `repair`, `debug`, and `handoff`. Unexpected Harness failures such as
+a corrupted theme baseline belong to `debug`, never ordinary repair.
 
 For each planned section, in order:
 
@@ -231,11 +250,27 @@ While a required gate is red and budget remains:
    gate regresses; otherwise restore the returned best candidate.
 7. Update `.pwc/run.json` with packet bytes, the accepted/rejected attempt,
    measurement delta, and evidence paths.
+8. Call pwc4 `checkpoint_token_accounting` with the repair packet byte/Token
+   estimate and the same before/after/accepted quality evidence.
 
 Use at most five repair attempts per breakpoint × state. Stop early after one
 non-improving retry followed by a second attempt that also fails to improve the
 same metric. Preserve the best measured candidate; do not leave a regression as
 the final artifact.
+
+Token budgets use **non-cached input plus output**, not gross processed input:
+
+- soft budget: `250K`;
+- hard budget: `500K`;
+- a soft warning requires the next operation to use the smallest owner-scoped
+  evidence path;
+- at the hard stop, do not begin another repair;
+- the hard Token budget cannot waive a failed gate. Preserve the best candidate
+  and use `failed_with_residuals` when a required gate remains red.
+
+Actual and estimated usage may both be present, but never merge them. Cached
+input, non-cached input, output, usage by phase, and accepted/rejected repair
+efficiency remain separately visible.
 
 ### 9. Hand off honestly
 
@@ -257,6 +292,13 @@ Return the local review URL, source project path, `dist/` path, evidence/report
 paths, gate summary, and residuals. Say “ready for your review,” never “accepted”
 or “pixel-perfect.” The user's visual and functional review is the final
 decision.
+
+Before returning, call pwc4 `finalize_token_accounting(source_id)` and then
+`get_token_report(source_id)`. Include its compact totals, measurement
+status, accounting completeness, budget status, highest-cost phases, and
+Token-per-accepted-repair result. If provider telemetry was unavailable, say
+that the total is estimated. A repair packet estimate is never the total run
+usage.
 
 ## Tool map
 

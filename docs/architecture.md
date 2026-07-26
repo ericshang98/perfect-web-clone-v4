@@ -111,6 +111,7 @@ gate is judged by vibes.
 | R8 | reviews = real widget | `reviews` recognizer | reviews rebuilt as data-driven component, not a static PNG |
 | R9 | videos present | `video` collector | every source `<video>`/embed localized & playing |
 | R10 | authored default theme survives capture | `theme_capture_gate` | Theme detection restores the exact root class/attributes/inline style/media preference; the canonical raster is never replaced by a synthesized light/dark variant. |
+| R11 | Token usage is measurable and bounded | `token_accounting` | Every source-scoped run reports provider usage when available, labeled estimates otherwise, separate actual/estimated totals, and a 250K soft / 500K hard non-cached-input-plus-output budget. |
 
 These gates are the machine contract. A green result means
 `ready_for_user_review`; only the user decides whether the artifact is accepted.

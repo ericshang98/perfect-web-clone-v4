@@ -23,6 +23,10 @@ tool calls and repair iterations without asking the user to manage the workflow.
 Every run maintains `.pwc/run.json` and an Agent-authored
 `.pwc/comparison-contract.json`; a new source automatically receives a clean
 sandbox so a prior website's components cannot leak into the next clone.
+Detailed Token events are appended to `.pwc/token-usage.jsonl`; the run ledger
+keeps compact actual/estimated totals, cached versus non-cached input, output,
+phase/Agent attribution, budgets, and repair efficiency. Provider usage is used
+when available and deterministic estimates remain explicitly separate.
 Static UI remains pixel-strict. Live media, clocks, personalized content, and
 third-party creatives must name the exact changing observation and replace it
 with measured geometry, style, controls, and behavior invariants.
@@ -66,7 +70,12 @@ v4 is a Python MCP server (built on the official `mcp` package, `FastMCP`, expos
 7. **Targeted repair** — a worst-region packet stays under 16 KiB; only strict
    improvements with no hard-gate regression replace the best candidate.
 8. **Production self-check** — `npm run build` must pass; re-screenshot the build output.
-9. **Review handoff** — produce a deploy-grade `dist/` and report
+9. **Token accounting** — `begin_token_accounting`,
+   `checkpoint_token_accounting`, `get_token_report`, and
+   `finalize_token_accounting` measure the source-scoped run; a 250K soft /
+   500K hard non-cached-input-plus-output budget stops low-value iteration
+   without waiving red gates.
+10. **Review handoff** — produce a deploy-grade `dist/` and report
    `ready_for_user_review`; the user makes the acceptance decision.
 
 ### The iron rule

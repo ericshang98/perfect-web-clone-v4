@@ -69,6 +69,32 @@ def test_repairs_are_token_bounded_and_monotonic():
     assert '"accepted"' in contract
 
 
+def test_harness_accounts_tokens_and_never_merges_estimates_with_actuals():
+    text = _skill()
+    for tool in (
+        "begin_token_accounting",
+        "checkpoint_token_accounting",
+        "get_token_report",
+        "finalize_token_accounting",
+    ):
+        assert f"`{tool}`" in text
+    assert "actual and estimated" in text
+    assert "never merge" in text
+    assert "non-cached input plus output" in text
+    contract = HARNESS_CONTRACT.read_text(encoding="utf-8")
+    assert '".pwc/token-usage.jsonl"' in contract
+    assert '"measurement_status"' in contract
+    assert '"accounting_complete"' in contract
+
+
+def test_hard_token_budget_stops_repairs_without_waiving_failures():
+    text = _skill()
+    assert "250K" in text
+    assert "500K" in text
+    assert "hard Token budget cannot waive" in text
+    assert "failed_with_residuals" in text
+
+
 def test_harness_persists_progress_and_resumes_the_same_run():
     text = _skill()
     assert "`.pwc/run.json`" in text
