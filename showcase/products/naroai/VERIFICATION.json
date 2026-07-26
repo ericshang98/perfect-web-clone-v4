@@ -1,0 +1,54 @@
+{
+  "source_url": "https://naroai.co/order",
+  "source_id": "naroai.co-1785064866-4e5394",
+  "verified_at": "2026-07-26",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "visual": {
+    "threshold": 0.97,
+    "whole_page_ssim": 0.9920625602532295,
+    "section_weighted_ssim": 0.9916775443377068,
+    "passed": true
+  },
+  "structure": {
+    "page_height": 1550,
+    "header_height": 65,
+    "main_height": 822,
+    "product_media_width": 705,
+    "footer_height": 728,
+    "passed": true
+  },
+  "interactions": {
+    "carousel": true,
+    "color_selection": true,
+    "quantity": true,
+    "newsletter": true,
+    "console_errors": []
+  },
+  "links": {
+    "sections_passed": 4,
+    "sections_total": 4,
+    "passed": true
+  },
+  "assets": {
+    "sections_passed": 4,
+    "sections_total": 4,
+    "passed": true
+  },
+  "fingerprints": {
+    "matches": 0,
+    "passed": true
+  },
+  "weight": {
+    "code_kb": 53.117,
+    "code_budget_kb": 120,
+    "content_assets_kb": 2523.531,
+    "passed": true
+  },
+  "responsive": {
+    "mobile_viewport_width": 390,
+    "horizontal_overflow": false
+  }
+}
