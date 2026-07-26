@@ -75,6 +75,40 @@ estimated tokens), included only the owning `section` sources, and truncated
 unrelated CSS under the `16 KiB` budget. The theme correction reused that bounded
 owner context rather than resending the full source capture.
 
+## Token-accounting validation
+
+The earlier FlipClocker clone predated the run ledger. Reconstruction from the
+owning Codex session gives approximately `41.12M` gross processed tokens,
+including `39.64M` cached input and `1.48M` non-cached input plus output. This is
+a historical estimate, not a provider-backed per-run record.
+
+The new accounting path was exercised against the same source in a dedicated
+run (`da32bfd1-8920-484f-ac71-e6ef3a2a7a52`) with a real bounded repair packet.
+It recorded two provider-backed intervals:
+
+| Measurement | Recorded value |
+|---|---:|
+| Gross input + output | `698,053` |
+| Cached input | `682,240` |
+| Non-cached input | `13,906` |
+| Output | `1,907` |
+| Non-cached input + output budget use | `15,813` |
+| Repair-packet context | `814` bytes / `204` estimated tokens |
+| Accepted repairs | `1` |
+| Tokens per accepted repair | `10,209` |
+| Tokens per quality point | `1,182.97` |
+
+The final report is `measurement_status=actual`,
+`accounting_complete=true`, has no missing segments, and remains below the
+`250K` soft budget. The detailed JSONL stores compact metrics, paths, and
+digests—not prompt or tool-output bodies. Estimated context remains separate
+from actual provider usage.
+
+This smoke run proves collection, phase attribution, idempotent persistence,
+budgeting, and efficiency reporting. It is not a clean from-scratch clone and
+therefore does **not** prove a `50%` end-to-end Token reduction. That claim must
+wait for the next full clone to produce a directly comparable per-run ledger.
+
 ## Evidence
 
 - Reference raster:
@@ -89,7 +123,16 @@ owner context rather than resending the full source capture.
   `.artifacts/semantic-ab/sources/flipclocker.com-1785049907-54a88d/iteration-ledger.json`
 - Production build:
   `.artifacts/semantic-ab/optimized-clone/dist/`
+- Token-accounting smoke report:
+  `.artifacts/semantic-ab/token-accounting-smoke/run.json`
+- Token-accounting event ledger:
+  `.artifacts/semantic-ab/token-accounting-smoke/token-usage.jsonl`
+- Bounded smoke repair packet:
+  `.artifacts/semantic-ab/token-accounting-smoke/smoke-packet.json`
 - Local review URL:
   <http://127.0.0.1:4174/>
+
+Regression status: `475 passed, 13 skipped`; the two warnings are pre-existing
+Pydantic class-config deprecations in `core/extractor/models.py`.
 
 Machine status: `ready_for_user_review`. This is not user acceptance.
