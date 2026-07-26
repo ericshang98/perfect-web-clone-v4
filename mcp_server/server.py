@@ -80,7 +80,14 @@ from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
 
-from mcp_server.tools import build_deploy, extraction, pipeline, sandbox, verify
+from mcp_server.tools import (
+    build_deploy,
+    extraction,
+    pipeline,
+    sandbox,
+    token_accounting,
+    verify,
+)
 
 # --------------------------------------------------------------------------- #
 # The single shared FastMCP instance. Tools attach to this object.
@@ -143,7 +150,17 @@ def register_tools(server: FastMCP) -> list[str]:
         server.tool()(fn)
         registered.append(fn.__name__)
 
-    # 4) Fidelity gates — deterministic verification of the generated clone.
+    # 4) Run-scoped Token accounting and budget evidence.
+    for fn in (
+        token_accounting.begin_token_accounting,
+        token_accounting.checkpoint_token_accounting,
+        token_accounting.get_token_report,
+        token_accounting.finalize_token_accounting,
+    ):
+        server.tool()(fn)
+        registered.append(fn.__name__)
+
+    # 5) Fidelity gates — deterministic verification of the generated clone.
     for fn in (
         verify.verify_links,
         verify.verify_assets,
@@ -160,7 +177,7 @@ def register_tools(server: FastMCP) -> list[str]:
         server.tool()(fn)
         registered.append(fn.__name__)
 
-    # 5) v4 pipeline — IR build / recognizers / codegen + the R1/R3/R4/R5 gates.
+    # 6) v4 pipeline — IR build / recognizers / codegen + the R1/R3/R4/R5 gates.
     pipeline_tools = (
         pipeline.build_ir,
         pipeline.run_recognizers,

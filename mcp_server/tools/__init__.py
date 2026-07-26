@@ -12,6 +12,7 @@ Each module here groups a set of pure, no-LLM tool functions that
 * :mod:`mcp_server.tools.build_deploy` — ``assemble_project`` / ``build_project`` /
   ``get_build_errors`` / ``diagnose`` / ``deploy`` (assembly, build gate, three-layer
   error detection, optional Cloudflare Pages deploy).
+* :mod:`mcp_server.tools.token_accounting` — per-run Token usage and budgets.
 * :mod:`mcp_server.tools.verify`       — ``verify_links`` / ``verify_assets``
   (deterministic fidelity gates over the generated clone).
 * :mod:`mcp_server.tools.pipeline`     — ``build_ir`` / ``run_recognizers`` /
@@ -21,4 +22,11 @@ Each module here groups a set of pure, no-LLM tool functions that
 THE IRON RULE: no module here calls an LLM / Anthropic / OpenAI / any model API.
 """
 
-__all__ = ["extraction", "sandbox", "build_deploy", "verify", "pipeline"]
+__all__ = [
+    "extraction",
+    "sandbox",
+    "build_deploy",
+    "token_accounting",
+    "verify",
+    "pipeline",
+]
