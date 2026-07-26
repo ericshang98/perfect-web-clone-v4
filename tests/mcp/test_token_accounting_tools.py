@@ -44,11 +44,17 @@ def _sandbox(source_id="source-a"):
     )
 
 
-def _snapshot(input_tokens, cached_input_tokens, output_tokens):
+def _snapshot(
+    input_tokens,
+    cached_input_tokens,
+    output_tokens,
+    *,
+    session_id="thread",
+):
     return UsageSnapshot(
         provider="codex",
         model="gpt-test",
-        session_id="thread",
+        session_id=session_id,
         input_tokens=input_tokens,
         cached_input_tokens=cached_input_tokens,
         output_tokens=output_tokens,
@@ -230,6 +236,95 @@ def test_hard_budget_prevents_starting_another_repair(monkeypatch):
 
     assert result["report"]["budget_status"]["status"] == "hard_stop"
     assert result["report"]["budget_status"]["can_start_repair"] is False
+
+
+def test_estimated_usage_also_enforces_the_hard_budget(monkeypatch):
+    sandbox = _sandbox()
+    monkeypatch.setattr(token_tools, "get_sandbox", lambda: sandbox)
+    monkeypatch.setattr(
+        token_tools,
+        "_collect_snapshot",
+        lambda *_args, **_kwargs: None,
+    )
+    asyncio.run(token_tools.begin_token_accounting("source-a"))
+
+    result = asyncio.run(
+        token_tools.checkpoint_token_accounting(
+            "source-a",
+            "repair",
+            "repair:hero:estimated",
+            context={"text_bytes": 2_000_000},
+        )
+    )
+
+    budget = result["report"]["budget_status"]
+    assert budget["measurement"] == "estimated"
+    assert budget["used_tokens"] == 500_000
+    assert budget["status"] == "hard_stop"
+    assert budget["can_start_repair"] is False
+
+
+def test_counter_reset_is_reported_as_an_incomplete_segment(monkeypatch):
+    sandbox = _sandbox()
+    snapshots = iter(
+        [
+            _snapshot(100, 60, 10, session_id="old"),
+            _snapshot(12, 8, 3, session_id="new"),
+        ]
+    )
+    monkeypatch.setattr(token_tools, "get_sandbox", lambda: sandbox)
+    monkeypatch.setattr(
+        token_tools,
+        "_collect_snapshot",
+        lambda *_args, **_kwargs: next(snapshots),
+    )
+    asyncio.run(token_tools.begin_token_accounting("source-a"))
+
+    result = asyncio.run(
+        token_tools.checkpoint_token_accounting(
+            "source-a",
+            "verify",
+            "visual:desktop",
+        )
+    )
+
+    assert result["usage"]["segment_reset"] is True
+    assert result["report"]["accounting_complete"] is False
+    assert any(
+        "counter reset" in marker
+        for marker in result["report"]["missing_segments"]
+    )
+
+
+def test_expected_child_agent_missing_is_visible_in_report(monkeypatch):
+    sandbox = _sandbox()
+    ledger = json.loads(sandbox.files[".pwc/run.json"])
+    ledger["token_usage"]["expected_agents"] = ["owner", "reviewer"]
+    sandbox.files[".pwc/run.json"] = json.dumps(ledger)
+    snapshots = iter(
+        [
+            _snapshot(100, 60, 10),
+            _snapshot(120, 70, 12),
+        ]
+    )
+    monkeypatch.setattr(token_tools, "get_sandbox", lambda: sandbox)
+    monkeypatch.setattr(
+        token_tools,
+        "_collect_snapshot",
+        lambda *_args, **_kwargs: next(snapshots),
+    )
+    asyncio.run(token_tools.begin_token_accounting("source-a"))
+
+    result = asyncio.run(
+        token_tools.checkpoint_token_accounting(
+            "source-a",
+            "verify",
+            "visual:desktop",
+            agent_id="owner",
+        )
+    )
+
+    assert "agent:reviewer usage missing" in result["report"]["missing_segments"]
 
 
 def test_tools_are_registered():

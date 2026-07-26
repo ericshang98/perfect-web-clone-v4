@@ -128,10 +128,41 @@ def test_actual_and_estimated_totals_never_merge():
 
     assert report["actual"]["total_tokens"] == 110
     assert report["estimated"]["observable_tokens"] == 6_000
+    assert report["estimated"]["fallback_tokens"] == 2_000
     assert report["measurement_status"] == "mixed"
     assert report["efficiency"]["accepted_repairs"] == 1
     assert report["efficiency"]["tokens_per_accepted_repair"] == 50
     assert report["efficiency"]["tokens_per_quality_point"] == 10.0
+
+
+def test_estimated_repair_efficiency_stays_separate_from_actual_efficiency():
+    report = aggregate_events(
+        [
+            {
+                "event_id": "estimated-repair",
+                "phase": "repair",
+                "agent_id": "owner",
+                "measurement": "estimated",
+                "usage": {},
+                "context": {"estimated_tokens": 2_000},
+                "quality": {
+                    "target": "hero",
+                    "before": 0.90,
+                    "after": 0.95,
+                    "accepted": True,
+                },
+            }
+        ]
+    )
+
+    assert report["efficiency"]["accepted_repairs"] == 1
+    assert report["efficiency"]["tokens_per_accepted_repair"] is None
+    assert report["efficiency"]["tokens_per_quality_point"] is None
+    assert (
+        report["efficiency"]["estimated_tokens_per_accepted_repair"]
+        == 2_000
+    )
+    assert report["efficiency"]["estimated_tokens_per_quality_point"] == 400.0
 
 
 def test_duplicate_event_ids_are_counted_once():

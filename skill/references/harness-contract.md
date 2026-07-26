@@ -48,6 +48,7 @@ failure. Preserve prior attempt entries rather than overwriting history.
   "token_usage": {
     "measurement_status": "mixed",
     "accounting_complete": false,
+    "expected_agents": ["owner"],
     "budget": {
       "soft_tokens": 250000,
       "hard_tokens": 500000,
@@ -60,10 +61,16 @@ failure. Preserve prior attempt entries rather than overwriting history.
       "output_tokens": 12000,
       "total_tokens": 192000
     },
-    "estimated": {"observable_tokens": 71000},
+    "estimated": {
+      "observable_tokens": 71000,
+      "fallback_tokens": 4000
+    },
     "by_phase": {},
     "by_agent": {},
-    "efficiency": {}
+    "efficiency": {
+      "tokens_per_accepted_repair": 72000,
+      "estimated_tokens_per_accepted_repair": null
+    }
   },
   "residuals": []
 }
@@ -192,15 +199,25 @@ Use provider-reported usage when available and a deterministic, labeled estimate
 otherwise. Actual and estimated values remain separate. `measurement_status`
 is `actual`, `estimated`, or `mixed`; `accounting_complete=false` lists missing
 pre-baseline, image, child-Agent, or provider segments instead of filling them
-with zero.
+with zero. A provider/session counter reset starts a new non-negative segment
+and adds an explicit accounting residual because the gap cannot be inferred.
+
+`estimated.observable_tokens` describes every compact context observation.
+`estimated.fallback_tokens` contains only intervals without provider usage and
+is the conservative budget fallback; it is not added to the actual total.
+Actual and estimated repair-efficiency fields remain separate for the same
+reason.
 
 Child Agents, when explicitly authorized by the user, receive the parent
 `run_id` and a unique `agent_id`. Missing child usage is an accounting residual.
 
 The soft budget is 250K and the hard budget is 500K non-cached input plus
-output. At the hard budget preserve the best measured artifact and stop new
-repairs. A budget stop never waives a red gate; record the unresolved gate and
-return `failed_with_residuals`.
+output. When actual usage is unavailable, apply the same thresholds to labeled
+fallback estimates; for mixed runs, add only estimated-only intervals to the
+actual budget basis. `budget_status.measurement` says which basis was used. At
+the hard budget preserve the best measured artifact and stop new repairs. A
+budget stop never waives a red gate; record the unresolved gate and return
+`failed_with_residuals`.
 
 ## Residual record
 

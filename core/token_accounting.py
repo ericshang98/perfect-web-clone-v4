@@ -196,14 +196,19 @@ def aggregate_events(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
 
     actual = empty_usage()
     observable_estimate = 0
+    fallback_estimate = 0
     by_phase: dict[str, dict[str, int]] = {}
     by_agent: dict[str, dict[str, int]] = {}
     actual_rows = 0
     estimated_rows = 0
     accepted = 0
     rejected = 0
-    accepted_tokens = 0
-    accepted_quality_points = 0.0
+    accepted_actual_rows = 0
+    accepted_actual_tokens = 0
+    accepted_actual_quality_points = 0.0
+    accepted_estimated_rows = 0
+    accepted_estimated_tokens = 0
+    accepted_estimated_quality_points = 0.0
 
     for raw in unique.values():
         phase = str(raw.get("phase") or "")
@@ -236,6 +241,7 @@ def aggregate_events(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
             _add_usage(agent_bucket, usage)
         else:
             estimated_rows += 1
+            fallback_estimate += estimated_tokens
 
         quality = raw.get("quality") or {}
         if quality:
@@ -243,11 +249,18 @@ def aggregate_events(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
                 accepted += 1
                 before = float(quality.get("before") or 0)
                 after = float(quality.get("after") or 0)
-                accepted_quality_points += max(0.0, after - before) * 100
-                accepted_tokens += (
-                    usage["non_cached_input_tokens"]
-                    + usage["output_tokens"]
-                )
+                quality_points = max(0.0, after - before) * 100
+                if measurement == "actual":
+                    accepted_actual_rows += 1
+                    accepted_actual_quality_points += quality_points
+                    accepted_actual_tokens += (
+                        usage["non_cached_input_tokens"]
+                        + usage["output_tokens"]
+                    )
+                else:
+                    accepted_estimated_rows += 1
+                    accepted_estimated_quality_points += quality_points
+                    accepted_estimated_tokens += estimated_tokens
             else:
                 rejected += 1
 
@@ -261,18 +274,40 @@ def aggregate_events(events: Iterable[Mapping[str, Any]]) -> dict[str, Any]:
     return {
         "measurement_status": measurement_status,
         "actual": actual,
-        "estimated": {"observable_tokens": observable_estimate},
+        "estimated": {
+            "observable_tokens": observable_estimate,
+            "fallback_tokens": fallback_estimate,
+        },
         "by_phase": by_phase,
         "by_agent": by_agent,
         "efficiency": {
             "accepted_repairs": accepted,
             "rejected_repairs": rejected,
             "tokens_per_accepted_repair": (
-                accepted_tokens // accepted if accepted else None
+                accepted_actual_tokens // accepted_actual_rows
+                if accepted_actual_rows
+                else None
             ),
             "tokens_per_quality_point": (
-                round(accepted_tokens / accepted_quality_points, 2)
-                if accepted_quality_points
+                round(
+                    accepted_actual_tokens / accepted_actual_quality_points,
+                    2,
+                )
+                if accepted_actual_quality_points
+                else None
+            ),
+            "estimated_tokens_per_accepted_repair": (
+                accepted_estimated_tokens // accepted_estimated_rows
+                if accepted_estimated_rows
+                else None
+            ),
+            "estimated_tokens_per_quality_point": (
+                round(
+                    accepted_estimated_tokens
+                    / accepted_estimated_quality_points,
+                    2,
+                )
+                if accepted_estimated_quality_points
                 else None
             ),
         },

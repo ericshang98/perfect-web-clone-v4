@@ -165,17 +165,44 @@ def _report(
     finalized: bool | None = None,
 ) -> dict[str, Any]:
     aggregate = aggregate_events(events)
-    budget = dict(
-        ((ledger.get("token_usage") or {}).get("budget"))
-        or _DEFAULT_BUDGET
-    )
+    token_config = ledger.get("token_usage") or {}
+    budget = dict(token_config.get("budget") or _DEFAULT_BUDGET)
     aggregate["budget"] = budget
-    aggregate["budget_status"] = budget_decision(
-        aggregate["actual"],
+    actual = aggregate["actual"]
+    fallback_tokens = aggregate["estimated"]["fallback_tokens"]
+    measurement_status = aggregate["measurement_status"]
+    if measurement_status == "actual":
+        budget_usage = actual
+    elif measurement_status == "estimated":
+        budget_usage = {
+            "non_cached_input_tokens": fallback_tokens,
+            "output_tokens": 0,
+        }
+    else:
+        budget_usage = {
+            "non_cached_input_tokens": (
+                actual["non_cached_input_tokens"] + fallback_tokens
+            ),
+            "output_tokens": actual["output_tokens"],
+        }
+    budget_status = budget_decision(
+        budget_usage,
         soft_tokens=int(budget.get("soft_tokens") or 250_000),
         hard_tokens=int(budget.get("hard_tokens") or 500_000),
     )
+    budget_status["measurement"] = measurement_status
+    aggregate["budget_status"] = budget_status
     missing = list(dict.fromkeys(state.get("missing_segments") or []))
+    expected_agents = [
+        str(agent).strip()
+        for agent in (token_config.get("expected_agents") or [])
+        if str(agent).strip()
+    ]
+    aggregate["expected_agents"] = expected_agents
+    for agent in expected_agents:
+        if agent not in aggregate["by_agent"]:
+            missing.append(f"agent:{agent} usage missing")
+    missing = list(dict.fromkeys(missing))
     is_finalized = (
         bool(state.get("finalized")) if finalized is None else finalized
     )
@@ -331,6 +358,9 @@ async def checkpoint_token_accounting(
         measurement = "actual"
         usage = usage_delta(previous, current)
         state["snapshot"] = current.to_dict()
+        if usage["segment_reset"]:
+            marker = f"{phase_name}:{operation_name} counter reset"
+            state.setdefault("missing_segments", []).append(marker)
     else:
         measurement = "estimated"
         usage = {
