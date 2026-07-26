@@ -62,3 +62,4 @@ Thumbs.db
 node_modules/
 clones/
 .gstack/
+.worktrees/
