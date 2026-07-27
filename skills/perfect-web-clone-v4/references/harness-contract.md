@@ -11,7 +11,7 @@ failure. Preserve prior attempt entries rather than overwriting history.
 
 ```json
 {
-  "schema": 2,
+  "schema": 4,
   "run_id": "019f-example-run-id",
   "url": "https://example.com/",
   "source_id": "source-id",
@@ -34,7 +34,19 @@ failure. Preserve prior attempt entries rather than overwriting history.
     "build": {"status": "pending", "evidence": []},
     "fingerprints": {"status": "pending", "evidence": []},
     "weight": {"status": "pending", "evidence": []},
-    "visual": {"status": "pending", "evidence": []}
+    "visual": {
+      "status": "pending",
+      "evidence": [],
+      "details": {
+        "policy_version": "visual-state-v1",
+        "contract_digest": null,
+        "required_view_ids": [],
+        "measured_view_ids": [],
+        "failures_by_view": {}
+      }
+    },
+    "runtime": {"status": "pending", "evidence": []},
+    "responsive": {"status": "pending", "evidence": []}
   },
   "attempts": [
     {
@@ -98,11 +110,14 @@ Allowed gate statuses:
 - `pending`
 - `pass`
 - `fail`
-- `waived`
 
-Use `waived` only when the user explicitly accepts an exception or the source
-classification establishes a measurable technical ceiling. Add the reason and
-evidence to `residuals`; never use a waiver to make a red result disappear.
+No tool or Agent may waive a required gate. A proven technical ceiling remains
+a failed gate with an evidence-bound authorized stop and explicit residual.
+
+For schema 4, a visual `pass` is valid only when the current contract digest and
+policy match, `required_view_ids` exactly equals `measured_view_ids`, and
+`failures_by_view` is empty. A legacy desktop-only green result is invalidated
+when resumed under the current Harness.
 
 ## Resume rule
 
@@ -145,6 +160,20 @@ non-static observations plus replacement invariants.
 Volatility hints do not make the decision. Unknown critical regions remain
 strict, and a critical residual is a hard failure. Whole-page SSIM remains
 diagnostic when valid volatile observations exist.
+
+The source browser, not the Agent, owns reference measurements. Required
+menu/accordion/tab/carousel states persist a post-trigger raster and bounded
+facts under content-hashed paths; checklist generation verifies both digests.
+Every baseline scroll stop likewise persists its actual `scrollY`, raster,
+complete bounded region inventory, and computed facts. Fixed and sticky
+geometry therefore comes from the measured state (including non-zero sticky
+insets and container release), never from projecting the initial rectangle.
+Agent-authored `reference_facts` are discarded in strict mode. Static and
+stateful pixel regions always compare source bounds in addition to their pixel
+crop. `layout_style` requires `bounds`, `aspect_ratio`, and
+`container_style`; `layout_behavior` requires all three plus `controls` or a
+bounded behavior assertion. A required view with zero effective regions,
+missing facts, a clamped scroll position, or stale evidence is a hard failure.
 
 ## Token and monotonicity record
 
@@ -246,8 +275,9 @@ Evaluate gates in this order:
 3. required common interaction behavior;
 4. production build;
 5. fingerprint and weight constraints;
-6. visual fidelity by breakpoint and state;
-7. comparison to a valid baseline, when present.
+6. runtime/resource integrity and responsive layout at every breakpoint;
+7. visual fidelity by breakpoint and state;
+8. comparison to a valid baseline, when present.
 
 A failure in an earlier gate blocks `ready_for_user_review`, regardless of later
 scores.

@@ -12,7 +12,7 @@
 
 > **⚠ Default-route pivot (2026-06-26).** The **delivery path is the subagent-by-section route**
 > (extract → plan sections by real `#main` children → assemble shell → per-section subagents author
-> clean JSX → build → gates), per `skill/SKILL.md`. The **IR→codegen layers (1–3) below are
+> clean JSX → build → gates), per `skills/perfect-web-clone-v4/SKILL.md`. The **IR→codegen layers (1–3) below are
 > demoted to experimental** R&D: on real pages the multi-MB DOM cannot transit MCP context and
 > codegen currently emits empty shells. **Everything else in this document still holds** — the
 > feasibility argument (§1), the requirement→gate mapping (§2), and the Layer-4 gate-driven
@@ -104,7 +104,7 @@ gate is judged by vibes.
 | R1 | No Shopify fingerprints (Jose 6/21, 6/23) | `fingerprint_gate` | 0 occurrences of `shopify`, `myshopify`, `template--…__`, `data-shopify*`, `original.css`, `shopify-section` in `dist/` |
 | R2 | Clean, readable code | `cleanliness_gate` | No raw inline `<style>` dumps > N bytes; CSS expressed as tokens + utility classes; one component per section |
 | R3 | Lightweight & fast | `weight_gate` | `dist/` total transfer ≤ budget (default 120 KB gz, target 50–80 KB); LCP image lazy below fold |
-| R4 | Trustworthy visual fidelity | `semantic_fidelity_gate` | Static regions: bounds-aligned SSIM ≥ τ (default 0.97). Naturally changing regions: every Agent-declared replacement invariant (geometry/style/controls/behavior) passes; raw whole-page SSIM is diagnostic only. |
+| R4 | Trustworthy visual fidelity | `semantic_fidelity_gate` | Every required 1440/390 breakpoint and source-browser state is measured. Static regions: source geometry plus bounds-aligned SSIM ≥ τ (default 0.97). Naturally changing regions may exempt only volatile frame pixels; source-owned geometry/style/controls/behavior invariants still pass. Raw whole-page SSIM is diagnostic only. |
 | R5 | Clearly better than current repo (Jose's acceptance, 6/13) | `comparison_gate` | New output fidelity score strictly > current-repo output, side by side, per reference URL |
 | R6 | sticky follows scroll | `sticky` recognizer + fidelity in scrolled state | sticky element pinned in scrolled-state screenshot |
 | R7 | footer intact | `footer` recognizer | footer region SSIM ≥ τ |
@@ -125,13 +125,16 @@ These gates are the machine contract. A green result means
 > turning captured section data into clean components — is done by **per-section subagents**
 > (one subagent per real `#main` child, authoring clean JSX + local CSS over a deduped global
 > cleaned stylesheet). Layer 0 (capture) and Layer 4 (gate-driven self-heal) are unchanged and
-> remain the backbone. See `skill/SKILL.md` for the operational route.
+> remain the backbone. See `skills/perfect-web-clone-v4/SKILL.md` for the operational route.
 
 ```
 Layer 0  CAPTURE (ground truth)                          [evolves core/extractor]
-   • Playwright renders at every breakpoint (1440 / 768 / 375)
+   • Playwright renders the required desktop/mobile breakpoints (1440 / 390, DPR 1)
    • Captures: DOM + computed styles + box geometry + assets + fonts
-   • Captures REFERENCE RASTERS per breakpoint × key state (initial, scrolled, hover/expanded)
+   • Captures REFERENCE RASTERS and bounded facts per breakpoint × key state
+     (initial, scrolled, menu/accordion/tab/carousel post-trigger)
+   • Hashes state rasters and facts; checklist generation rejects stale or
+     tampered evidence
    • Triggers lazy-load; collects video/iframe sources; dismisses overlays
    • Output: immutable Source — every downstream artifact is judged against its rasters
         │

@@ -103,6 +103,30 @@ def test_fullpage_crop_writes_refs(tmp_path):
             assert px == band_color, f"wrong colour at y={y}: {px!r} != {band_color!r}"
 
 
+def test_breakpoint_scoped_source_bundle_is_used_instead_of_primary_desktop_raster(tmp_path):
+    """Mobile refs must crop mobile evidence, never scale desktop primary_full."""
+    src = _make_store(tmp_path)
+    mobile_width, mobile_height, mobile_page_height = 390, 844, 2800
+    desktop = _solid(VW, PAGE_HEIGHT, (255, 0, 0))
+    desktop.save(src / "screenshots" / "primary_full.png")
+    mobile_dir = src / "screenshots" / "breakpoints" / str(mobile_width)
+    mobile_dir.mkdir(parents=True)
+    _solid(mobile_width, mobile_page_height, (0, 0, 255)).save(mobile_dir / "full.png")
+
+    result = materialize_refs(
+        src,
+        mobile_page_height,
+        (mobile_width, mobile_height),
+        mobile_width,
+        screenshots_dir=mobile_dir,
+    )
+
+    assert result["missing"] == []
+    with Image.open(src / state_ref_relpath(mobile_width, 0)) as ref:
+        assert ref.size == (mobile_width, mobile_height)
+        assert ref.getpixel((10, 10)) == (0, 0, 255)
+
+
 # ---------------------------------------------------------------------------
 # 3. Bottom clamp (last scroll position crop stays (VW, VH), no overflow)
 # ---------------------------------------------------------------------------

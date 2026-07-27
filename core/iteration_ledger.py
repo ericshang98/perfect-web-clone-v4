@@ -48,6 +48,7 @@ def record_attempt(
             "accepted": False,
             "plateaued": True,
             "stop_reason": "target attempt budget exhausted",
+            "stop_code": "target_attempt_budget_exhausted",
             "restore_candidate": (updated.get("best_candidates") or {}).get(target),
             "ledger": updated,
         }
@@ -59,6 +60,7 @@ def record_attempt(
             "accepted": False,
             "plateaued": True,
             "stop_reason": "total attempt budget exhausted",
+            "stop_code": "total_attempt_budget_exhausted",
             "restore_candidate": (updated.get("best_candidates") or {}).get(target),
             "ledger": updated,
         }
@@ -98,6 +100,7 @@ def record_attempt(
         "accepted": accepted,
         "plateaued": plateaued,
         "stop_reason": "two non-improving attempts" if plateaued else None,
+        "stop_code": "plateau" if plateaued else None,
         "restore_candidate": (
             None
             if accepted

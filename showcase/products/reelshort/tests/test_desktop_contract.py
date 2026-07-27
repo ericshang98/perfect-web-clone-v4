@@ -1,7 +1,6 @@
 from playwright.sync_api import sync_playwright
 
 
-URL = "http://127.0.0.1:4181/"
 TOLERANCE = 2.0
 TIGHT_TOLERANCE = 0.25
 
@@ -14,14 +13,19 @@ def _tight(actual: float, expected: float) -> bool:
     return abs(actual - expected) <= TIGHT_TOLERANCE
 
 
-def test_reelshort_desktop_geometry_and_header_style():
+def test_reelshort_desktop_geometry_and_header_style(reelshort_preview):
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch()
         page = browser.new_page(
             viewport={"width": 1440, "height": 900},
             device_scale_factor=1,
         )
-        page.goto(URL, wait_until="networkidle", timeout=60_000)
+        response = page.goto(
+            reelshort_preview.url,
+            wait_until="networkidle",
+            timeout=60_000,
+        )
+        assert response is not None and response.status == 200
         facts = page.evaluate(
             """() => {
               const read = selector => {

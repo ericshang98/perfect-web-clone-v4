@@ -1,12 +1,9 @@
 {
   "mcpServers": {
     "pwc4": {
-      "command": "/Users/eric/AI_development/perfect-web-clone-v4/.venv/bin/python",
-      "args": ["-m", "mcp_server.server"],
-      "cwd": "/Users/eric/AI_development/perfect-web-clone-v4",
-      "env": {
-        "PYTHONPATH": "/Users/eric/AI_development/perfect-web-clone-v4"
-      }
+      "command": "uv",
+      "args": ["run", "--project", ".", "pwc4-mcp"],
+      "cwd": "."
     }
   }
 }

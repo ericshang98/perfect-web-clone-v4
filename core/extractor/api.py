@@ -21,6 +21,8 @@ plain Python (e.g. an MCP tool handler). `aextract_page` is the async form.
 from __future__ import annotations
 
 import asyncio
+import base64
+import hashlib
 import json
 import re
 from pathlib import Path
@@ -29,6 +31,7 @@ from typing import Any, Dict, Iterable, Optional, Union
 from core.volatility import build_volatility_summary
 
 from .models import (
+    BreakpointCapture,
     ExtractionResult,
     ExtractOptions,
     SourceSummary,
@@ -319,6 +322,12 @@ def _persist(store: SourceStore, result: ExtractionResult) -> None:
     result.raw_initial_b64 = None
     result.raw_full_b64 = None
 
+    # Breakpoint-scoped raster bundles are the canonical responsive source
+    # evidence.  Keep the legacy ``primary`` writes above for callers that
+    # predate the multi-breakpoint contract.
+    for capture in result.breakpoint_captures:
+        _persist_breakpoint_capture(store, capture)
+
     # Per-scroll-state rasters (scroll-choreographed / canvas sites).
     if result.scroll_state_b64s:
         paths = []
@@ -403,6 +412,150 @@ def _save_shot(store: SourceStore, rel: str, b64: Optional[str]) -> Optional[str
         return None
 
 
+def _persist_breakpoint_capture(store: SourceStore, capture: BreakpointCapture) -> None:
+    """Materialize one namespaced viewport/full/scroll evidence bundle."""
+    breakpoint = int(capture.breakpoint)
+    base = f"screenshots/breakpoints/{breakpoint}"
+    capture.screenshot_path = _save_shot(
+        store, f"{base}/viewport.png", capture.screenshot_b64
+    )
+    capture.full_page_screenshot_path = _save_shot(
+        store, f"{base}/full.png", capture.full_b64
+    )
+    paths: list[str] = []
+    scroll_states: list[dict[str, Any]] = []
+    scroll_b64s = (
+        [state.screenshot_b64 for state in capture.scroll_states]
+        if capture.scroll_states
+        else list(capture.scroll_state_b64s)
+    )
+    for index, b64 in enumerate(scroll_b64s):
+        path = _save_shot(store, f"{base}/scroll_{index:02d}.png", b64)
+        if path:
+            paths.append(path)
+    capture.scroll_state_paths = paths
+    for state in capture.scroll_states:
+        screenshot_bytes = (
+            base64.b64decode(state.screenshot_b64)
+            if isinstance(state.screenshot_b64, str)
+            else b""
+        )
+        screenshot_sha = hashlib.sha256(screenshot_bytes).hexdigest()
+        state.screenshot_digest = "sha256:" + screenshot_sha
+        state.screenshot_path = _save_shot(
+            store,
+            f"refs/{breakpoint}/{state.id}-{screenshot_sha[:12]}.png",
+            state.screenshot_b64,
+        )
+        facts_payload = {
+            "schema": 1,
+            "breakpoint": breakpoint,
+            "state_id": state.id,
+            "scroll_y": float(state.scroll_y),
+            "regions": list(state.regions),
+            "facts": dict(state.facts),
+        }
+        canonical = json.dumps(
+            facts_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        facts_sha = hashlib.sha256(canonical).hexdigest()
+        state.facts_digest = "sha256:" + facts_sha
+        state.facts_path = store.write_json(
+            (
+                f"evidence/breakpoints/{breakpoint}/scroll/"
+                f"{state.id}-{facts_sha[:12]}.json"
+            ),
+            facts_payload,
+        )
+        state.screenshot_b64 = None
+        scroll_states.append(
+            {
+                "id": state.id,
+                "ref": state.screenshot_path,
+                "ref_digest": state.screenshot_digest,
+                "facts_path": state.facts_path,
+                "facts_digest": state.facts_digest,
+                "scroll_y": float(state.scroll_y),
+                "region_ids": [
+                    str(region.get("fingerprint") or region.get("id"))
+                    for region in state.regions
+                    if region.get("fingerprint") or region.get("id")
+                ],
+            }
+        )
+    interaction_states: list[dict[str, Any]] = []
+    for state in capture.interaction_states:
+        screenshot_bytes = (
+            base64.b64decode(state.screenshot_b64)
+            if isinstance(state.screenshot_b64, str)
+            else b""
+        )
+        screenshot_sha = hashlib.sha256(screenshot_bytes).hexdigest()
+        state.screenshot_digest = "sha256:" + screenshot_sha
+        state.screenshot_path = _save_shot(
+            store,
+            f"refs/{breakpoint}/{state.id}-{screenshot_sha[:12]}.png",
+            state.screenshot_b64,
+        )
+        facts_payload = {
+            "schema": 1,
+            "breakpoint": breakpoint,
+            "state_id": state.id,
+            "interaction_id": state.interaction_id,
+            "scroll_y": float(state.scroll_y),
+            "regions": list(state.regions),
+            "facts": dict(state.facts),
+        }
+        canonical = json.dumps(
+            facts_payload, ensure_ascii=False, sort_keys=True, separators=(",", ":")
+        ).encode("utf-8")
+        facts_sha = hashlib.sha256(canonical).hexdigest()
+        state.facts_digest = "sha256:" + facts_sha
+        state.facts_path = store.write_json(
+            (
+                f"evidence/breakpoints/{breakpoint}/interactions/"
+                f"{state.id}-{facts_sha[:12]}.json"
+            ),
+            facts_payload,
+        )
+        state.screenshot_b64 = None
+        interaction_states.append(
+            {
+                "id": state.id,
+                "interaction_id": state.interaction_id,
+                "ref": state.screenshot_path,
+                "ref_digest": state.screenshot_digest,
+                "facts_path": state.facts_path,
+                "facts_digest": state.facts_digest,
+                "scroll_y": float(state.scroll_y),
+                "region_ids": [
+                    str(region.get("fingerprint") or region.get("id"))
+                    for region in state.regions
+                    if region.get("fingerprint") or region.get("id")
+                ],
+            }
+        )
+    capture.interaction_evidence_path = store.write_json(
+        f"evidence/breakpoints/{breakpoint}.json",
+        {
+            "breakpoint": breakpoint,
+            "viewport": dict(capture.viewport),
+            "page_width": capture.page_width,
+            "page_height": capture.page_height,
+            "interactions": list(capture.interactions),
+            "critical_regions": list(capture.critical_regions),
+            "regions": list(capture.regions or capture.critical_regions),
+            "region_facts": dict(capture.region_facts),
+            "scroll_states": scroll_states,
+            "interaction_states": interaction_states,
+            "page": dict(capture.page),
+        },
+    )
+    capture.screenshot_b64 = None
+    capture.full_b64 = None
+    capture.scroll_state_b64s = []
+
+
 def _file_index(store: SourceStore) -> Dict[str, str]:
     """A flat map of logical-name -> relative path for files that exist on disk."""
     index: Dict[str, str] = {}
@@ -441,6 +594,23 @@ def _build_summary(store: SourceStore, result: ExtractionResult, url: str) -> So
     dl = result.downloaded_resources
     css = result.css_data
 
+    breakpoints = [_breakpoint_summary(capture) for capture in result.breakpoint_captures]
+    if not breakpoints and md:
+        # Extraction results produced by older services have only the primary
+        # fields.  Preserve their usability while new captures always contain
+        # explicit desktop + mobile evidence.
+        breakpoints = [
+            {
+                "breakpoint": md.viewport_width,
+                "viewport": {"width": md.viewport_width, "height": md.viewport_height},
+                "page_width": md.page_width,
+                "page_height": md.page_height,
+                "screenshot": result.screenshot_path,
+                "full_page_screenshot": result.full_page_screenshot_path,
+                "scroll_states": list(result.scroll_state_paths),
+            }
+        ]
+
     return SourceSummary(
         source_id=result.source_id or store.source_id,
         url=url,
@@ -451,6 +621,7 @@ def _build_summary(store: SourceStore, result: ExtractionResult, url: str) -> So
         viewport={"width": md.viewport_width, "height": md.viewport_height} if md else {},
         page_width=md.page_width if md else 0,
         page_height=md.page_height if md else 0,
+        breakpoints=breakpoints,
         total_elements=md.total_elements if md else 0,
         max_depth=md.max_depth if md else 0,
         theme_support=td.support if td else ThemeSupport.UNKNOWN,
@@ -475,6 +646,24 @@ def _build_summary(store: SourceStore, result: ExtractionResult, url: str) -> So
         files=_file_index(store),
         storage_dir=str(store.dir),
     )
+
+
+def _breakpoint_summary(capture: BreakpointCapture) -> Dict[str, Any]:
+    """Return path-only responsive evidence suitable for summary.json."""
+    return {
+        "breakpoint": int(capture.breakpoint),
+        "device_scale_factor": int(capture.device_scale_factor),
+        "viewport": {
+            "width": int(capture.viewport.get("width") or capture.breakpoint),
+            "height": int(capture.viewport.get("height") or 0),
+        },
+        "page_width": int(capture.page_width),
+        "page_height": int(capture.page_height),
+        "screenshot": capture.screenshot_path,
+        "full_page_screenshot": capture.full_page_screenshot_path,
+        "scroll_states": list(capture.scroll_state_paths),
+        "interaction_evidence": capture.interaction_evidence_path,
+    }
 
 
 def _compact_integrity(report: Dict[str, Any]) -> Dict[str, Any]:

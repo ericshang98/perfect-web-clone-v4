@@ -4,9 +4,10 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SKILL = ROOT / "skill" / "SKILL.md"
-HARNESS_CONTRACT = ROOT / "skill" / "references" / "harness-contract.md"
-OPENAI_YAML = ROOT / "skill" / "agents" / "openai.yaml"
+SKILL_ROOT = ROOT / "skills" / "perfect-web-clone-v4"
+SKILL = SKILL_ROOT / "SKILL.md"
+HARNESS_CONTRACT = SKILL_ROOT / "references" / "harness-contract.md"
+OPENAI_YAML = SKILL_ROOT / "agents" / "openai.yaml"
 README = ROOT / "README.md"
 
 

@@ -98,7 +98,9 @@ def _new_run_ledger(
         for section in plan.get("sections", [])
     ]
     return {
-        "schema": 2,
+        # Schema 4 requires measured visual evidence for every source
+        # breakpoint/state before a run can be handed off.
+        "schema": 4,
         "run_id": str(uuid.uuid4()),
         "url": source_url,
         "source_id": source_id,
@@ -107,6 +109,18 @@ def _new_run_ledger(
         "started_at": now,
         "updated_at": now,
         "breakpoints": list(plan.get("breakpoints") or []),
+        "required_gates": [
+            "capture_integrity",
+            "critical_structure",
+            "interactions",
+            "build",
+            "fingerprints",
+            "weight",
+            "runtime",
+            "responsive",
+            "visual",
+        ],
+        "verification_epoch": 0,
         "planned_sections": [section for section in sections if section],
         "completed_sections": [],
         "gate_results": {
@@ -119,6 +133,8 @@ def _new_run_ledger(
                 "fingerprints",
                 "weight",
                 "visual",
+                "runtime",
+                "responsive",
             )
         },
         "attempts": [],

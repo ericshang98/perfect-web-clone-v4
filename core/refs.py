@@ -38,6 +38,8 @@ def materialize_refs(
     page_height: float,
     viewport: Tuple[int, int],
     breakpoint: int,
+    *,
+    screenshots_dir: str | Path | None = None,
 ) -> Dict[str, List[str] | str]:
     """Write missing reference rasters and return a summary.
 
@@ -59,6 +61,11 @@ def materialize_refs(
         viewport: ``(vw, vh)`` CSS pixel viewport dimensions.
         breakpoint: Numeric CSS viewport width used as the ref namespace
             (e.g. ``1440``).
+        screenshots_dir: Optional breakpoint-scoped evidence directory.  When
+            provided, scroll rasters are read from it and its ``full.png`` is
+            the full-page source.  When omitted, the legacy
+            ``screenshots/scroll_*.png`` / ``screenshots/primary_full.png``
+            layout remains supported.
 
     Returns:
         ``{"written": [...], "skipped": [...], "missing": [...], "source":
@@ -95,7 +102,12 @@ def materialize_refs(
     # call).  A mismatch means the rasters were captured at a different
     # configuration; using them would silently assign wrong pixels to wrong
     # scroll positions.  Disable the scroll-raster branch in that case.
-    screenshots_dir = source_dir / "screenshots"
+    uses_breakpoint_bundle = screenshots_dir is not None
+    screenshots_dir = (
+        Path(screenshots_dir)
+        if screenshots_dir is not None
+        else source_dir / "screenshots"
+    )
     scroll_raster_count = len(list(screenshots_dir.glob("scroll_*.png")))
     use_scroll_rasters = scroll_raster_count == len(positions)
     if scroll_raster_count > 0 and not use_scroll_rasters:
@@ -105,7 +117,11 @@ def materialize_refs(
         )
 
     # Pre-load the full-page raster lazily (open once, keep handle)
-    fullpage_path = source_dir / "screenshots" / "primary_full.png"
+    fullpage_path = (
+        screenshots_dir / "full.png"
+        if uses_breakpoint_bundle
+        else screenshots_dir / "primary_full.png"
+    )
     fullpage_img: Image.Image | None = None
 
     for i, y in enumerate(positions):
@@ -120,7 +136,7 @@ def materialize_refs(
         target.parent.mkdir(parents=True, exist_ok=True)
 
         # 2. Prefer scroll raster (only when count matches — see guard above)
-        scroll_path = source_dir / "screenshots" / f"scroll_{i:02d}.png"
+        scroll_path = screenshots_dir / f"scroll_{i:02d}.png"
         if use_scroll_rasters and scroll_path.is_file():
             try:
                 with Image.open(scroll_path) as shot:

@@ -1,0 +1,32 @@
+{
+  "name": "perfect-web-clone-v4",
+  "version": "0.1.0",
+  "description": "Agent-facing Harness that captures, reproduces, verifies, and iteratively repairs complete websites.",
+  "author": {
+    "name": "Perfect Web Clone"
+  },
+  "license": "MIT",
+  "keywords": [
+    "website-cloning",
+    "playwright",
+    "agent-harness",
+    "visual-verification"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Perfect Web Clone v4",
+    "shortDescription": "复刻完整网站并自动验证、定位和迭代修复",
+    "longDescription": "A reusable Agent Harness for full-page website reproduction with deterministic capture, interaction replay, runtime checks, semantic comparison, bounded repair, and honest review handoff.",
+    "developerName": "Perfect Web Clone",
+    "category": "Developer Tools",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "defaultPrompt": [
+      "复刻这个网站，自动验证并迭代到可审阅状态。"
+    ],
+    "brandColor": "#E91E63"
+  }
+}

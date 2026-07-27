@@ -60,8 +60,8 @@ _MEASURE_COMPARISON_FACTS = """(regions) => {
       height: r.height,
     };
   };
-  const unique = values => [...new Set(values.filter(Boolean))].sort();
-  for (const region of regions || []) {
+  const unique = values => [...new Set(values.filter(Boolean))].sort().slice(0, 16);
+  for (const region of (regions || []).slice(0, 64)) {
     let el = null;
     if (region.selector) {
       try { el = document.querySelector(region.selector); } catch (_) {}
@@ -86,16 +86,16 @@ _MEASURE_COMPARISON_FACTS = """(regions) => {
     const controls = [];
     if (el.matches('video[controls]')) controls.push('video');
     el.querySelectorAll(
-      'button,[role="button"],input,select,textarea,video[controls]'
+      'button,[role="button"],input,select,textarea,video[controls],summary'
     ).forEach(control => {
       const label = (
         control.getAttribute('aria-label') ||
-        control.getAttribute('data-pwc-control') ||
         control.getAttribute('name') ||
         control.getAttribute('type') ||
         control.getAttribute('role') ||
+        control.textContent ||
         control.tagName
-      ).trim().toLowerCase();
+      ).replace(/\\s+/g, ' ').trim().toLowerCase().slice(0, 96);
       if (label) controls.push(label);
     });
     const interactions = [];

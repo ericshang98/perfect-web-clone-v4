@@ -39,6 +39,7 @@ from .. import scroll_capture
 from ..volatility import capture_volatility_samples
 from .models import (
     AssetInfo,
+    BreakpointCapture,
     CSSAnimation,
     CSSData,
     CSSKeyframe,
@@ -51,10 +52,12 @@ from .models import (
     ElementStyles,
     ExtractionResult,
     ExtractOptions,
+    InteractionStateCapture,
     PageAssets,
     PageMetadata,
     PseudoElementStyle,
     ResourceContent,
+    ScrollStateCapture,
     StyleSummary,
     StylesheetContent,
     ThemedData,
@@ -64,6 +67,14 @@ from .models import (
 from . import theme as theme_mod
 
 logger = logging.getLogger(__name__)
+
+
+class BreakpointReloadError(RuntimeError):
+    """The responsive source reload returned an error document."""
+
+
+class CaptureInventoryError(RuntimeError):
+    """Required DOM inventory could not be measured truthfully."""
 
 
 def _resolve_next_image(url: str, base_url: str = "") -> Optional[str]:
@@ -219,11 +230,8 @@ class ExtractorService:
                 assets = await self._extract_assets(page, timeout_s=eval_s)
                 # Immutable evidence boundary: inventory, HTML and rasters are
                 # recorded BEFORE rest-state baking mutates the live DOM.
-                raw_structure: Dict[str, Any] = await robustness.eval_budgeted(
-                    page.evaluate(js.CAPTURE_INVENTORY_JS),
-                    eval_s,
-                    fallback={},
-                    label="raw_capture_inventory",
+                raw_structure = await self._capture_inventory(
+                    page, timeout_s=eval_s, label="raw_capture_inventory"
                 )
                 volatility_summary = await robustness.eval_budgeted(
                     capture_volatility_samples(
@@ -280,11 +288,8 @@ class ExtractorService:
                 except Exception as e:  # noqa: BLE001 — prep is best-effort.
                     logger.warning("pre-capture prep failed: %s", e)
 
-                normalized_structure: Dict[str, Any] = await robustness.eval_budgeted(
-                    page.evaluate(js.CAPTURE_INVENTORY_JS),
-                    eval_s,
-                    fallback={},
-                    label="normalized_capture_inventory",
+                normalized_structure = await self._capture_inventory(
+                    page, timeout_s=eval_s, label="normalized_capture_inventory"
                 )
                 normalized_html = await page.content()
                 normalized_html = _rewrite_next_images(normalized_html, url)
@@ -402,6 +407,81 @@ class ExtractorService:
                     # captured above. Theme variants are stored separately and
                     # must never replace the primary reference.
 
+                # Re-enter the immutable authored desktop state for bounded
+                # per-region facts and post-click references.  Agent-authored
+                # comparison contracts never supply these reference values.
+                await page.set_viewport_size(
+                    {"width": metadata.viewport_width, "height": metadata.viewport_height}
+                )
+                response = await page.goto(
+                    url, wait_until="load", timeout=opts.nav_timeout_ms
+                )
+                if robustness.is_error_status(response.status if response else None):
+                    raise BreakpointReloadError("desktop source evidence reload failed")
+                await asyncio.sleep(opts.settle_ms / 1000)
+                desktop_inventory = await self._capture_inventory(
+                    page, timeout_s=eval_s, label="desktop_breakpoint_inventory"
+                )
+                desktop_regions = self._regions(desktop_inventory)
+                desktop_facts = await self._capture_region_facts(
+                    page, desktop_regions, timeout_s=eval_s
+                )
+                desktop_scroll_states: List[ScrollStateCapture] = []
+                if self._should_capture_scroll_states(
+                    opts.full_page_screenshot,
+                    metadata.page_height,
+                    metadata.viewport_height,
+                ):
+                    desktop_scroll_states = await self._capture_scroll_state_evidence(
+                        page,
+                        metadata.page_height,
+                        metadata.viewport_height,
+                        timeout_s=eval_s,
+                        breakpoint=metadata.viewport_width,
+                    )
+                desktop_interaction_states = await self._capture_source_interaction_states(
+                    page,
+                    url,
+                    list(desktop_inventory.get("interactions") or []),
+                    opts,
+                    breakpoint=metadata.viewport_width,
+                )
+                desktop_capture = BreakpointCapture(
+                    breakpoint=metadata.viewport_width,
+                    viewport={
+                        "width": metadata.viewport_width,
+                        "height": metadata.viewport_height,
+                    },
+                    page_width=metadata.page_width,
+                    page_height=metadata.page_height,
+                    screenshot_b64=screenshot_b64,
+                    full_b64=full_b64,
+                    scroll_states=desktop_scroll_states,
+                    interactions=list(desktop_inventory.get("interactions") or []),
+                    critical_regions=self._critical_regions(desktop_inventory),
+                    regions=desktop_regions,
+                    region_facts=desktop_facts,
+                    interaction_states=desktop_interaction_states,
+                    page=dict(desktop_inventory.get("page") or {}),
+                )
+
+                # ``mobile_viewport_*`` are evidence requirements, not dormant
+                # options.  Switch the very same settled source page to mobile,
+                # then retain a separately replayable viewport/full/scroll bundle.
+                # Restore the authored detected theme first: a prior dual-theme
+                # capture leaves the page in the last sampled theme.
+                if has_both:
+                    await theme_mod.apply_theme(page, current)
+                mobile_capture = await self._capture_breakpoint(
+                    page,
+                    url,
+                    opts,
+                    width=opts.mobile_viewport_width,
+                    height=opts.mobile_viewport_height,
+                    load_ms=load_ms,
+                    reload_source=True,
+                )
+
                 return ExtractionResult(
                     success=True,
                     message="extracted",
@@ -429,9 +509,22 @@ class ExtractorService:
                     raw_initial_b64=raw_initial_b64,
                     raw_full_b64=raw_full_b64,
                     scroll_state_b64s=scroll_state_b64s,
+                    breakpoint_captures=[desktop_capture, mobile_capture],
                 )
             finally:
                 await page.close()
+        except (BreakpointReloadError, CaptureInventoryError) as e:
+            logger.error("required source evidence failed: %s", e)
+            return ExtractionResult(
+                success=False,
+                message="required source evidence failed",
+                error=str(e),
+                capture_integrity={
+                    "ok": False,
+                    "status": "failed",
+                    "issues": [{"code": "required_source_evidence_failed", "detail": str(e)}],
+                },
+            )
         except PlaywrightTimeout as e:
             logger.error("navigation timeout: %s", e)
             return ExtractionResult(success=False, message="navigation timeout", error=str(e))
@@ -453,6 +546,329 @@ class ExtractorService:
             total_elements=info["totalElements"],
             max_depth=info["maxDepth"],
             load_time_ms=load_ms,
+        )
+
+    async def _capture_inventory(
+        self, page: Page, *, timeout_s: float, label: str
+    ) -> Dict[str, Any]:
+        """Collect a required inventory without converting failures to empty data."""
+        try:
+            inventory = await asyncio.wait_for(
+                page.evaluate(js.CAPTURE_INVENTORY_JS), timeout=timeout_s
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise CaptureInventoryError(f"{label} unavailable: {exc}") from exc
+        if not isinstance(inventory, dict) or not isinstance(inventory.get("interactions"), list):
+            raise CaptureInventoryError(f"{label} returned an invalid inventory")
+        return inventory
+
+    @staticmethod
+    def _critical_regions(inventory: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Keep a compact responsive structural fingerprint, never a second DOM."""
+        return [
+            dict(region)
+            for region in (inventory.get("regions") or [])
+            if isinstance(region, dict) and region.get("critical")
+        ][:64]
+
+    @staticmethod
+    def _regions(inventory: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Keep all bounded relevant regions, including mobile-only reflows."""
+        regions: List[Dict[str, Any]] = []
+        seen: set[str] = set()
+        structural = [
+            item
+            for item in (inventory.get("regions") or [])
+            if isinstance(item, dict)
+        ]
+        ordered = [
+            *(item for item in structural if item.get("critical")),
+            *(inventory.get("volatile_candidates") or []),
+            *(item for item in structural if not item.get("critical")),
+        ]
+        for raw in ordered:
+            if not isinstance(raw, dict):
+                continue
+            region = dict(raw)
+            region_id = str(
+                region.get("fingerprint") or region.get("id") or ""
+            ).strip()
+            if not region_id or region_id in seen:
+                continue
+            region["fingerprint"] = region_id
+            if "rect" not in region and isinstance(region.get("bounds"), dict):
+                region["rect"] = dict(region["bounds"])
+            if not region.get("selector"):
+                continue
+            seen.add(region_id)
+            regions.append(region)
+            if len(regions) >= 64:
+                break
+        return regions
+
+    async def _capture_region_facts(
+        self, page: Page, regions: List[Dict[str, Any]], *, timeout_s: float
+    ) -> Dict[str, Dict[str, Any]]:
+        if not regions:
+            return {}
+        facts = await robustness.eval_budgeted(
+            page.evaluate(js.CAPTURE_REGION_FACTS_JS, regions[:64]),
+            timeout_s,
+            fallback=None,
+            label="breakpoint_region_facts",
+        )
+        if not isinstance(facts, dict):
+            raise CaptureInventoryError("breakpoint region facts unavailable")
+        return {
+            str(region_id): dict(value)
+            for region_id, value in list(facts.items())[:64]
+            if isinstance(value, dict)
+        }
+
+    async def _capture_source_interaction_states(
+        self,
+        page: Page,
+        url: str,
+        interactions: List[Dict[str, Any]],
+        opts: ExtractOptions,
+        *,
+        breakpoint: int,
+    ) -> List[InteractionStateCapture]:
+        """Replay required source interactions and retain post-trigger truth."""
+
+        states: List[InteractionStateCapture] = []
+        for interaction in interactions[:16]:
+            if interaction.get("required", True) is False:
+                continue
+            interaction_id = str(interaction.get("id") or "").strip()
+            target = str(interaction.get("target") or "").strip()
+            if not interaction_id or not target:
+                raise CaptureInventoryError("required interaction lacks id/target")
+            response = await page.goto(
+                url, wait_until="load", timeout=opts.nav_timeout_ms
+            )
+            status = response.status if response else None
+            if robustness.is_error_status(status):
+                raise BreakpointReloadError(
+                    f"interaction source state {interaction_id} returned HTTP {status}"
+                )
+            await asyncio.sleep(opts.settle_ms / 1000)
+            before = await self._interaction_snapshot(page, interaction)
+            try:
+                await page.locator(target).first.click(timeout=5_000)
+            except Exception as exc:  # noqa: BLE001
+                raise CaptureInventoryError(
+                    f"required interaction {interaction_id} could not replay: "
+                    f"{str(exc)[:256]}"
+                ) from exc
+            await asyncio.sleep(0.2)
+            after = await self._interaction_snapshot(page, interaction)
+            if before == after:
+                raise CaptureInventoryError(
+                    f"required interaction {interaction_id} produced no observable source change"
+                )
+            inventory = await self._capture_inventory(
+                page,
+                timeout_s=opts.eval_timeout_ms / 1000,
+                label=f"interaction_inventory_{breakpoint}_{interaction_id}",
+            )
+            regions = self._regions(inventory)
+            facts = await self._capture_region_facts(
+                page, regions, timeout_s=opts.eval_timeout_ms / 1000
+            )
+            behavior = {
+                "id": interaction_id,
+                "passed": True,
+                "before": before,
+                "after": after,
+            }
+            for fact in facts.values():
+                fact["behavior"] = [behavior]
+            screenshot = await self._screenshot(page, full_page=False)
+            scroll_y = float(await page.evaluate("window.scrollY"))
+            states.append(
+                InteractionStateCapture(
+                    id=f"i_{int(breakpoint)}_{interaction_id}",
+                    interaction_id=interaction_id,
+                    scroll_y=scroll_y,
+                    screenshot_b64=screenshot,
+                    regions=regions,
+                    facts=facts,
+                )
+            )
+        return states
+
+    async def _interaction_snapshot(
+        self, page: Page, interaction: Dict[str, Any]
+    ) -> Dict[str, Any]:
+        """Return a bounded DOM-owned transition fingerprint.
+
+        Menus and accordions expose direct attributes; tabs and carousels often
+        change a sibling's selected/current class instead.  Looking only at the
+        clicked element therefore rejected real, working source interactions.
+        This compact fingerprint covers both forms without screenshot/frame
+        comparison (which would be unstable around video).
+        """
+
+        result = await page.evaluate(
+            """({target, controlled}) => {
+              const safe = selector => {
+                try { return selector ? document.querySelector(selector) : null; }
+                catch (_) { return null; }
+              };
+              const t = safe(target);
+              const c = safe(controlled);
+              const visible = el => !!el && getComputedStyle(el).display !== 'none' &&
+                getComputedStyle(el).visibility !== 'hidden' &&
+                el.getBoundingClientRect().width > 0 &&
+                el.getBoundingClientRect().height > 0;
+              const text = el => (el && (el.innerText || el.textContent) || '')
+                .replace(/\\s+/g, ' ').trim().slice(0, 120);
+              const stateful = Array.from(document.querySelectorAll(
+                '[aria-selected],[aria-current],[aria-expanded],details,' +
+                '[class*="active" i],[class*="selected" i],[class*="current" i]'
+              )).slice(0, 16).map(el => ({
+                tag: el.tagName.toLowerCase(),
+                id: (el.id || '').slice(0, 80),
+                selected: el.getAttribute('aria-selected'),
+                current: el.getAttribute('aria-current'),
+                expanded: el.getAttribute('aria-expanded'),
+                open: el.tagName === 'DETAILS' ? !!el.open : null,
+                className: String(el.className || '').slice(0, 120),
+                visible: visible(el),
+                text: text(el).slice(0, 80)
+              }));
+              return {
+                target: {
+                  expanded: t && t.getAttribute('aria-expanded'),
+                  selected: t && t.getAttribute('aria-selected'),
+                  current: t && t.getAttribute('aria-current'),
+                  open: t && t.closest('details') && !!t.closest('details').open,
+                  className: t ? String(t.className || '').slice(0, 120) : '',
+                  text: text(t)
+                },
+                controlled: {
+                  visible: visible(c),
+                  className: c ? String(c.className || '').slice(0, 120) : '',
+                  text: text(c)
+                },
+                stateful
+              };
+            }""",
+            {
+                "target": str(interaction.get("target") or "")[:256],
+                "controlled": str(interaction.get("controlled") or "")[:256],
+            },
+        )
+        return dict(result) if isinstance(result, dict) else {}
+
+    async def _capture_breakpoint(
+        self,
+        page: Page,
+        url: str,
+        opts: ExtractOptions,
+        *,
+        width: int,
+        height: int,
+        load_ms: int,
+        reload_source: bool = False,
+    ) -> BreakpointCapture:
+        """Capture one responsive viewport after the canonical desktop pass.
+
+        This deliberately records only browser-owned visual/scroll evidence.
+        Desktop DOM/CSS/resource extraction remains canonical; the clone agent
+        receives the mobile rasters and manifest states needed to implement and
+        replay the responsive branch without duplicating its token-heavy DOM.
+        """
+        await page.set_viewport_size({"width": int(width), "height": int(height)})
+        # A desktop rest-state bake deliberately mutates inline styles to make
+        # a static clone stable.  Mobile evidence must never inherit that
+        # derivative desktop layout: reload the authorised source first.
+        if reload_source:
+            response = await page.reload(wait_until="load", timeout=opts.nav_timeout_ms)
+            status = response.status if response else None
+            if robustness.is_error_status(status):
+                raise BreakpointReloadError(
+                    f"responsive breakpoint {width} reload returned HTTP {status}; "
+                    "error-page evidence was rejected"
+                )
+        await asyncio.sleep(opts.settle_ms / 1000)
+        await self._scroll_to_load_lazy(page)
+        try:
+            await page.evaluate(js.DISMISS_OVERLAYS_JS)
+            await robustness.eval_budgeted(
+                page.evaluate(js.FORCE_LOAD_IMAGES_JS),
+                8.0,
+                fallback=None,
+                label=f"force_imgs_{width}",
+            )
+            await asyncio.sleep(0.4)
+        except Exception as exc:  # noqa: BLE001 — visual prep is best effort.
+            logger.warning("breakpoint %s prep failed: %s", width, exc)
+
+        inventory = await self._capture_inventory(
+            page,
+            timeout_s=opts.eval_timeout_ms / 1000,
+            label=f"breakpoint_inventory_{width}",
+        )
+        interactions = list(inventory["interactions"])
+        regions = self._regions(inventory)
+        region_facts = await self._capture_region_facts(
+            page, regions, timeout_s=opts.eval_timeout_ms / 1000
+        )
+        metadata = await self._extract_metadata(page, url, load_ms)
+        screenshot_b64 = (
+            await self._screenshot(page, full_page=False) if opts.include_screenshot else None
+        )
+        full_b64 = (
+            await self._screenshot(page, full_page=True)
+            if opts.full_page_screenshot
+            else None
+        )
+        if full_b64:
+            try:
+                raster_h = png_css_height_b64(full_b64, metadata.page_width)
+                if raster_h and raster_h > metadata.page_height:
+                    metadata.page_height = int(raster_h)
+            except Exception as exc:  # noqa: BLE001 — evidence metadata only.
+                logger.warning("breakpoint %s raster height read failed: %s", width, exc)
+
+        scroll_states: List[ScrollStateCapture] = []
+        if self._should_capture_scroll_states(
+            opts.full_page_screenshot,
+            metadata.page_height,
+            metadata.viewport_height,
+        ):
+            scroll_states = await self._capture_scroll_state_evidence(
+                page,
+                metadata.page_height,
+                metadata.viewport_height,
+                timeout_s=opts.eval_timeout_ms / 1000,
+                breakpoint=int(width),
+            )
+
+        interaction_states = await self._capture_source_interaction_states(
+            page,
+            url,
+            interactions,
+            opts,
+            breakpoint=int(width),
+        )
+
+        return BreakpointCapture(
+            breakpoint=int(width),
+            viewport={"width": metadata.viewport_width, "height": metadata.viewport_height},
+            page_width=metadata.page_width,
+            page_height=metadata.page_height,
+            screenshot_b64=screenshot_b64,
+            full_b64=full_b64,
+            scroll_states=scroll_states,
+            interactions=interactions,
+            critical_regions=self._critical_regions(inventory),
+            regions=regions,
+            region_facts=region_facts,
+            interaction_states=interaction_states,
+            page=dict(inventory.get("page") or {}),
         )
 
     async def _extract_dom_tree(
@@ -749,6 +1165,69 @@ class ExtractorService:
             except Exception:  # noqa: BLE001
                 pass
         return shots
+
+    async def _capture_scroll_state_evidence(
+        self,
+        page: Page,
+        page_height: float,
+        viewport_height: float,
+        *,
+        timeout_s: float,
+        breakpoint: int,
+        n: int = 5,
+    ) -> List[ScrollStateCapture]:
+        """Capture state-local raster, inventory, and facts at every scroll stop.
+
+        Fixed and sticky elements cannot be projected faithfully from their
+        initial document rectangle: their document-space ``y`` changes with
+        scroll and sticky insets/container boundaries are runtime state.  This
+        evidence therefore measures the source again at each required stop.
+        """
+
+        states: List[ScrollStateCapture] = []
+        positions = scroll_capture.scroll_capture_positions(
+            page_height, viewport_height, n
+        )
+        try:
+            for requested_y in positions:
+                await page.evaluate(f"window.scrollTo(0, {requested_y})")
+                await asyncio.sleep(0.5)
+                actual_y = float(await page.evaluate("window.scrollY"))
+                if abs(actual_y - float(requested_y)) > 2.0:
+                    raise CaptureInventoryError(
+                        f"source scroll state expected {requested_y} but reached "
+                        f"{actual_y:.1f}"
+                    )
+                inventory = await self._capture_inventory(
+                    page,
+                    timeout_s=timeout_s,
+                    label=f"scroll_inventory_{breakpoint}_{requested_y}",
+                )
+                regions = self._regions(inventory)
+                facts = await self._capture_region_facts(
+                    page, regions, timeout_s=timeout_s
+                )
+                screenshot = await self._screenshot(page, full_page=False)
+                states.append(
+                    ScrollStateCapture(
+                        id=f"s_{int(breakpoint)}_scroll_{int(round(actual_y))}",
+                        scroll_y=actual_y,
+                        regions=regions,
+                        facts=facts,
+                        screenshot_b64=screenshot,
+                    )
+                )
+        finally:
+            try:
+                await page.evaluate("window.scrollTo(0, 0)")
+                await asyncio.sleep(0.1)
+            except Exception:  # noqa: BLE001
+                pass
+        if len(states) != len(positions):
+            raise CaptureInventoryError(
+                f"source scroll evidence incomplete for breakpoint {breakpoint}"
+            )
+        return states
 
     async def _capture_embeds(self, page: Page, base_url: str) -> list:
         """Screenshot each cross-origin widget iframe while it renders.

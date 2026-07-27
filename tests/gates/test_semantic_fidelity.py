@@ -214,11 +214,47 @@ def test_static_image_pixels_remain_strict(tmp_path):
         ],
     }
 
-    report = evaluate_contract(ref, cand, contract, {}, {})
+    bounds = contract["regions"][0]["bounds"]
+    report = evaluate_contract(
+        ref, cand, contract, {"hero": {"bounds": bounds}}, {"hero": {"bounds": bounds}}
+    )
 
     assert report["ok"] is False
     assert report["regions"][0]["score"] < 0.1
     assert report["regions"][0]["failed_invariants"] == ["pixels"]
+
+
+def test_static_pixels_always_enforce_bounds_even_when_contract_only_names_pixels(
+    tmp_path,
+):
+    ref = _save(tmp_path / "ref.png", "white")
+    cand = _save(tmp_path / "cand.png", "white")
+    bounds = {"x": 0, "y": 0, "width": 120, "height": 100}
+    contract = {
+        "schema": 1,
+        "regions": [
+            {
+                "id": "hero",
+                "owner": "hero",
+                "importance": "critical",
+                "mode": "static_pixels",
+                "bounds": bounds,
+                "compare": ["pixels"],
+            }
+        ],
+    }
+
+    report = evaluate_contract(
+        ref,
+        cand,
+        contract,
+        {"hero": {"bounds": bounds}},
+        {"hero": {"bounds": {**bounds, "x": 12}}},
+    )
+
+    assert report["ok"] is False
+    assert report["regions"][0]["score"] == 1.0
+    assert report["regions"][0]["failed_invariants"] == ["bounds"]
 
 
 def test_static_pixels_also_enforce_declared_geometry(tmp_path):
@@ -286,3 +322,44 @@ def test_missing_candidate_facts_fail_layout_region(tmp_path):
 
     assert report["ok"] is False
     assert report["regions"][0]["reason"] == "missing candidate facts"
+
+
+def test_dynamic_measurements_are_bounded_before_returning(tmp_path):
+    ref = _save(tmp_path / "ref.png", "white")
+    cand = _save(tmp_path / "cand.png", "white")
+    contract = {
+        "schema": 1,
+        "regions": [
+            {
+                "id": "player",
+                "owner": "player",
+                "importance": "important",
+                "mode": "layout_behavior",
+                "bounds": {"x": 0, "y": 0, "width": 100, "height": 100},
+                "compare": [
+                    "bounds",
+                    "aspect_ratio",
+                    "container_style",
+                    "controls",
+                ],
+                "reason": "runtime video frames vary",
+                "ignore_observations": ["media_frame_pixels"],
+            }
+        ],
+    }
+    facts = {
+        "player": {
+            "bounds": {"x": 0, "y": 0, "width": 100, "height": 100},
+            "style": {"display": "block"},
+            "controls": [
+                f"control-{index}-" + "x" * 300
+                for index in range(40)
+            ],
+        }
+    }
+
+    result = evaluate_contract(str(ref), str(cand), contract, facts, facts)
+    measured = result["regions"][0]["measurements"]["candidate"]["controls"]
+
+    assert len(measured) == 16
+    assert all(len(value) <= 160 for value in measured)

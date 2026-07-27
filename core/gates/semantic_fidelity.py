@@ -13,6 +13,31 @@ from core.gates.fidelity import DEFAULT_THRESHOLD, _ssim_images
 _CANVAS = (256, 256)
 _GEOMETRY_TOLERANCE = 2.0
 _ASPECT_TOLERANCE = 0.005
+_MAX_FACT_ITEMS = 16
+_MAX_FACT_STRING = 160
+_MAX_FACT_DEPTH = 4
+
+
+def _compact_fact(value: Any, *, depth: int = 0) -> Any:
+    """Bound browser facts before they enter reports, ledgers, or Agent context."""
+
+    if depth >= _MAX_FACT_DEPTH:
+        return "<truncated>"
+    if isinstance(value, dict):
+        return {
+            str(key)[:80]: _compact_fact(item, depth=depth + 1)
+            for key, item in list(value.items())[:_MAX_FACT_ITEMS]
+        }
+    if isinstance(value, (list, tuple)):
+        return [
+            _compact_fact(item, depth=depth + 1)
+            for item in list(value)[:_MAX_FACT_ITEMS]
+        ]
+    if isinstance(value, str):
+        return value[:_MAX_FACT_STRING]
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    return str(value)[:_MAX_FACT_STRING]
 
 
 def _gray(image: Image.Image) -> np.ndarray:
@@ -89,6 +114,15 @@ def masked_ssim_2d(
 
 
 def _bounds_match(ref: dict, cand: dict) -> bool:
+    if not all(key in ref and key in cand for key in ("x", "y", "width", "height")):
+        return False
+    try:
+        if float(ref["width"]) <= 0 or float(ref["height"]) <= 0:
+            return False
+        if float(cand["width"]) <= 0 or float(cand["height"]) <= 0:
+            return False
+    except (TypeError, ValueError):
+        return False
     return all(
         abs(float(ref.get(key, 0)) - float(cand.get(key, 0)))
         <= _GEOMETRY_TOLERANCE
@@ -104,6 +138,10 @@ def _aspect_ratio(bounds: dict) -> float:
 def _style_match(ref: dict, cand: dict) -> bool:
     ref_style = ref.get("style") or {}
     cand_style = cand.get("style") or {}
+    if not isinstance(ref_style, dict) or not ref_style:
+        return False
+    if not isinstance(cand_style, dict) or not cand_style:
+        return False
     return all(cand_style.get(key) == value for key, value in ref_style.items())
 
 
@@ -209,18 +247,20 @@ def evaluate_contract(
                 row["failed_invariants"] = failed
                 row["status"] = "fail" if failed else "pass"
                 row["measurements"] = {
-                    "reference": ref_region_facts,
-                    "candidate": cand_region_facts,
+                    "reference": _compact_fact(ref_region_facts),
+                    "candidate": _compact_fact(cand_region_facts),
                 }
             rows.append(row)
             continue
 
         ref_bounds = region["bounds"]
-        cand_bounds = (cand_facts.get(region_id) or {}).get(
-            "bounds", ref_bounds
-        )
+        cand_region_facts = cand_facts.get(region_id)
+        cand_bounds = (cand_region_facts or {}).get("bounds") or {}
         ref_crop = crop_box(ref_image, ref_bounds, ref_page_size)
-        cand_crop = crop_box(cand_image, cand_bounds, cand_page_size)
+        # The source rectangle is authoritative for pixel comparison.  A
+        # displaced clone must not crop its own displaced box and pass merely
+        # because the pixels inside that box are identical.
+        cand_crop = crop_box(cand_image, ref_bounds, cand_page_size)
         exclusions = list(region.get("excluded_bounds") or [])
         pixel_report = (
             masked_ssim_2d(ref_crop, cand_crop, exclusions)
@@ -233,6 +273,8 @@ def evaluate_contract(
         )
         score = float(pixel_report["score"])
         failed = [] if score >= threshold else ["pixels"]
+        if not cand_region_facts or not _bounds_match(ref_bounds, cand_bounds):
+            failed.append("bounds")
         replacement_invariants = [
             invariant
             for invariant in list(region.get("compare") or [])
@@ -241,7 +283,6 @@ def evaluate_contract(
         ref_region_facts = ref_facts.get(region_id) or {
             "bounds": ref_bounds
         }
-        cand_region_facts = cand_facts.get(region_id)
         if replacement_invariants:
             if not cand_region_facts:
                 failed.extend(replacement_invariants)
@@ -257,6 +298,7 @@ def evaluate_contract(
                         ],
                     )
                 )
+        failed = list(dict.fromkeys(failed))
         row.update(
             status="pass" if not failed else "fail",
             score=score,
@@ -265,8 +307,8 @@ def evaluate_contract(
         )
         if replacement_invariants:
             row["measurements"] = {
-                "reference": ref_region_facts,
-                "candidate": cand_region_facts,
+                "reference": _compact_fact(ref_region_facts),
+                "candidate": _compact_fact(cand_region_facts),
             }
         weight = float(ref_bounds["width"]) * float(ref_bounds["height"])
         static_weighted.append((score, weight))

@@ -84,6 +84,7 @@ from mcp_server.tools import (
     build_deploy,
     extraction,
     pipeline,
+    runtime_audit,
     sandbox,
     token_accounting,
     verify,
@@ -171,13 +172,23 @@ def register_tools(server: FastMCP) -> list[str]:
         verify.score_semantic_fidelity,
         verify.build_semantic_repair_packet,
         verify.record_semantic_attempt,
+        verify.get_harness_run_state,
+        verify.finalize_run,
         verify.generate_manifest,
         verify.verify_manifest,
     ):
         server.tool()(fn)
         registered.append(fn.__name__)
 
-    # 6) v4 pipeline — IR build / recognizers / codegen + the R1/R3/R4/R5 gates.
+    # 6) Runtime/responsive gate and composite post-edit verification.
+    for fn in (
+        runtime_audit.audit_runtime,
+        runtime_audit.verify_harness_candidate,
+    ):
+        server.tool()(fn)
+        registered.append(fn.__name__)
+
+    # 7) v4 pipeline — IR build / recognizers / codegen + the R1/R3/R4/R5 gates.
     pipeline_tools = (
         pipeline.build_ir,
         pipeline.run_recognizers,

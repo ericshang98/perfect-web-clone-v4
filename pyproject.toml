@@ -17,17 +17,17 @@ dependencies = [
     "lxml>=5.2.0",
     "scikit-image>=0.22.0",
     "numpy>=1.26.0",
-    "pytest>=8.0.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0.0",
+    "pyyaml>=6.0.0",
     "ruff>=0.4.0",
 ]
 
 [project.scripts]
-pwc3-mcp = "mcp_server.server:main"
+pwc4-mcp = "mcp_server.server:main"
 
 [build-system]
 requires = ["hatchling"]

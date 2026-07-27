@@ -26,6 +26,18 @@ _BEHAVIOR_ASSERTIONS = {
     "attribute_equals",
     "text_contains",
 }
+_VALID_INVARIANTS = {
+    "pixels",
+    "bounds",
+    "aspect_ratio",
+    "container_style",
+    "controls",
+    "interaction",
+    "behavior",
+}
+_MAX_CONTRACT_BYTES = 131_072
+_MAX_TOTAL_BEHAVIORS = 64
+_MAX_TOTAL_PREREQUISITES = 256
 
 
 def _valid_bounds(bounds: Any) -> bool:
@@ -50,14 +62,33 @@ def validate_contract(contract: dict) -> list[str]:
     errors: list[str] = []
     if not isinstance(contract, dict):
         return ["contract must be an object"]
+    try:
+        serialized_bytes = len(
+            json.dumps(
+                contract,
+                ensure_ascii=False,
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode("utf-8")
+        )
+    except (TypeError, ValueError):
+        return ["contract must be JSON serializable"]
+    if serialized_bytes > _MAX_CONTRACT_BYTES:
+        errors.append(
+            f"contract exceeds {_MAX_CONTRACT_BYTES} serialized bytes"
+        )
     if contract.get("schema") != SCHEMA_VERSION:
         errors.append(f"schema must equal {SCHEMA_VERSION}")
     regions = contract.get("regions")
     if not isinstance(regions, list) or not regions:
         errors.append("regions must be a non-empty list")
         return errors
+    if len(regions) > 64:
+        errors.append("regions supports at most 64 entries")
 
     seen: set[str] = set()
+    total_behaviors = 0
+    total_prerequisites = 0
     for index, region in enumerate(regions):
         prefix = f"regions[{index}]"
         if not isinstance(region, dict):
@@ -66,6 +97,8 @@ def validate_contract(contract: dict) -> list[str]:
         region_id = str(region.get("id") or "").strip()
         if not region_id:
             errors.append(f"{prefix} missing id")
+        elif len(region_id) > 120:
+            errors.append(f"{prefix} id exceeds 120 characters")
         elif region_id in seen:
             errors.append(f"duplicate region id {region_id!r}")
         seen.add(region_id)
@@ -73,6 +106,8 @@ def validate_contract(contract: dict) -> list[str]:
         owner = str(region.get("owner") or "").strip()
         if not owner:
             errors.append(f"{prefix} missing owner")
+        elif len(owner) > 120:
+            errors.append(f"{prefix} owner exceeds 120 characters")
         if not _valid_bounds(region.get("bounds")):
             errors.append(f"{prefix} needs positive numeric bounds")
 
@@ -87,22 +122,56 @@ def validate_contract(contract: dict) -> list[str]:
         compare = region.get("compare")
         if mode != "residual" and (not isinstance(compare, list) or not compare):
             errors.append(f"{prefix} needs at least one replacement invariant")
-        if mode == "static_pixels" and "pixels" not in (compare or []):
-            errors.append(f"{prefix} static_pixels needs pixels comparison")
+        if isinstance(compare, list):
+            if len(compare) > 8:
+                errors.append(f"{prefix} supports at most 8 comparison invariants")
+            unknown = [
+                item
+                for item in compare
+                if not isinstance(item, str) or item not in _VALID_INVARIANTS
+            ]
+            if unknown:
+                errors.append(f"{prefix} contains unknown comparison invariants")
+        if mode in {"static_pixels", "stateful_pixels"} and "pixels" not in (
+            compare or []
+        ):
+            errors.append(f"{prefix} {mode} needs pixels comparison")
         if mode == "stateful_pixels" and not region.get("state"):
             errors.append(f"{prefix} stateful_pixels needs a named state")
 
         if mode in _NON_STATIC_MODES:
             if not str(region.get("reason") or "").strip():
                 errors.append(f"{prefix} non-static comparison needs reason")
+            elif len(str(region.get("reason"))) > 320:
+                errors.append(f"{prefix} reason exceeds 320 characters")
             ignored = region.get("ignore_observations")
             if not isinstance(ignored, list) or not ignored:
                 errors.append(
                     f"{prefix} non-static comparison needs ignore_observations"
                 )
+            elif (
+                len(ignored) > 16
+                or any(
+                    not isinstance(item, str) or not item.strip() or len(item) > 160
+                    for item in ignored
+                )
+            ):
+                errors.append(
+                    f"{prefix} ignore_observations must contain at most "
+                    "16 strings of 160 characters"
+                )
             replacement = [item for item in (compare or []) if item != "pixels"]
             if not replacement:
                 errors.append(f"{prefix} needs a replacement invariant")
+            required_layout = {"bounds", "aspect_ratio", "container_style"}
+            if not required_layout.issubset(set(compare or [])):
+                errors.append(
+                    f"{prefix} {mode} needs bounds, aspect_ratio, container_style"
+                )
+            if mode == "layout_behavior" and not (
+                {"controls", "behavior"} & set(compare or [])
+            ):
+                errors.append(f"{prefix} layout_behavior needs controls or behavior")
 
         if "behavior" in (compare or []):
             behaviors = region.get("behaviors")
@@ -111,6 +180,7 @@ def validate_contract(contract: dict) -> list[str]:
             else:
                 if len(behaviors) > 16:
                     errors.append(f"{prefix} supports at most 16 behaviors")
+                total_behaviors += len(behaviors)
                 seen_behaviors: set[str] = set()
                 for behavior_index, behavior in enumerate(behaviors):
                     behavior_prefix = (
@@ -122,6 +192,8 @@ def validate_contract(contract: dict) -> list[str]:
                     behavior_id = str(behavior.get("id") or "").strip()
                     if not behavior_id:
                         errors.append(f"{behavior_prefix} missing id")
+                    elif len(behavior_id) > 120:
+                        errors.append(f"{behavior_prefix} id exceeds 120 characters")
                     elif behavior_id in seen_behaviors:
                         errors.append(
                             f"{prefix} duplicate behavior id {behavior_id!r}"
@@ -129,12 +201,21 @@ def validate_contract(contract: dict) -> list[str]:
                     seen_behaviors.add(behavior_id)
                     if not str(behavior.get("trigger") or "").strip():
                         errors.append(f"{behavior_prefix} missing trigger")
+                    elif len(str(behavior.get("trigger"))) > 512:
+                        errors.append(f"{behavior_prefix} trigger exceeds 512 characters")
+                    target = behavior.get("target")
+                    if target is not None and len(str(target)) > 512:
+                        errors.append(f"{behavior_prefix} target exceeds 512 characters")
                     before = behavior.get("before")
+                    if isinstance(before, list):
+                        total_prerequisites += len(before)
                     if before is not None and (
                         not isinstance(before, list)
                         or len(before) > 8
                         or any(
-                            not isinstance(selector, str) or not selector.strip()
+                            not isinstance(selector, str)
+                            or not selector.strip()
+                            or len(selector) > 512
                             for selector in before
                         )
                     ):
@@ -153,6 +234,8 @@ def validate_contract(contract: dict) -> list[str]:
                         errors.append(
                             f"{behavior_prefix} {assertion} needs value"
                         )
+                    if "value" in behavior and len(str(behavior.get("value"))) > 320:
+                        errors.append(f"{behavior_prefix} value exceeds 320 characters")
                     if assertion == "attribute_equals" and not str(
                         behavior.get("attribute") or ""
                     ).strip():
@@ -163,9 +246,20 @@ def validate_contract(contract: dict) -> list[str]:
         if mode == "residual":
             if not str(region.get("reason") or "").strip():
                 errors.append(f"{prefix} residual needs reason")
+            elif len(str(region.get("reason"))) > 320:
+                errors.append(f"{prefix} reason exceeds 320 characters")
             if importance == "critical":
                 errors.append(f"{prefix} critical residual is a hard failure")
 
+    if total_behaviors > _MAX_TOTAL_BEHAVIORS:
+        errors.append(
+            f"contract supports at most {_MAX_TOTAL_BEHAVIORS} total behaviors"
+        )
+    if total_prerequisites > _MAX_TOTAL_PREREQUISITES:
+        errors.append(
+            "contract supports at most "
+            f"{_MAX_TOTAL_PREREQUISITES} total prerequisite selectors"
+        )
     return errors
 
 

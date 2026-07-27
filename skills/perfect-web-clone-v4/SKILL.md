@@ -102,9 +102,11 @@ Call `pwc4 extract_page(url, options)`.
 
 ### 3. Understand change and author the comparison contract
 
-Call `pwc4 get_comparison_evidence(source_id)` once. Review its bounded section,
-critical-region, interaction, and volatility records alongside the source
-raster. A volatility mode is only a hint; the current Agent makes the decision.
+Call `pwc4 get_comparison_evidence(source_id)` once. Review its bounded
+`source_regions` union, section, critical-region, interaction, and volatility
+records alongside the source raster. Every returned source region must appear
+in the contract; `critical` controls priority, not whether content may be
+omitted. A volatility mode is only a hint; the current Agent makes the decision.
 
 For every important region ask: **could this observation change while the real
 page's design and behavior remained correct after a natural refresh?**
@@ -211,26 +213,36 @@ Never run acceptance scoring against a broken or stale build.
 ### 7. Verify in gate order
 
 Start the local preview with `pwc4 start_preview()` and retain its URL for user
-review. Verify at the captured breakpoints and observable states.
+review. Use only the sandbox-owned URL returned by that tool; verification
+rejects a source-site or unrelated URL. Verify at every captured breakpoint and
+observable state.
 
 Run:
 
 1. Source integrity from extraction.
-2. Critical structure through `pwc4 score_clone_sections(source_id, url)`.
-3. Required interaction replay through
-   `pwc4 verify_manifest(source_id, url)`.
-4. Build cleanliness through `pwc4 check_fingerprints(dist_dir)`.
-5. Code/asset weight through `pwc4 check_weight(dist_dir, budget_kb)`.
-6. Contract-aware visual and invariant comparison through
+2. `pwc4 verify_harness_candidate(source_id, url)` to rebuild and atomically
+   refresh critical structure, required interactions, fingerprints, weight,
+   runtime/resource integrity, and responsive evidence for the current
+   verification epoch. Never substitute an Agent-supplied `dist/`.
+3. Contract-aware visual and invariant comparison through
    `pwc4 score_semantic_fidelity(source_id, url)`, plus per-state results from
    `verify_manifest`; use
    `pwc4 score_fidelity(...)` only for additional localization.
-7. `pwc4 compare_to_baseline(...)` when a valid same-source baseline exists.
+4. `pwc4 get_harness_run_state(source_id)` and follow its `next_action`
+   exactly.
+5. `pwc4 compare_to_baseline(...)` when a valid same-source baseline exists.
 
 Whole-page SSIM is diagnostic, not a CSS verdict when legitimate live
 observations differ. Do not treat one aggregate SSIM number as acceptance.
 Structure, interaction, every contract region, and each required
 breakpoint/state remain individually visible in the result.
+
+The visual gate must report exact `required_view_ids` and `measured_view_ids`
+for every checklist breakpoint/state. Static and named stable-state regions use
+pixels. Video, clocks, personalization, and other justified live observations
+use their declared bounds/style/controls/behavior invariants; their raw frame
+score is diagnostic only. A missing view or incomplete mobile critical-region
+coverage fails closed.
 
 ### 8. Repair automatically
 
@@ -244,13 +256,18 @@ While a required gate is red and budget remains:
 3. Read only additional source evidence proven necessary for that target.
 4. Make one evidence-based repair to that component or shared token when the
    evidence proves the error is global.
-5. Rebuild and replay every affected structural, behavioral, and visual gate.
-6. Call `pwc4 record_semantic_attempt(...)` with the before/after measurement
-   and any hard-gate regressions. Keep an improving candidate only when no hard
-   gate regresses; otherwise restore the returned best candidate.
-7. Update `.pwc/run.json` with packet bytes, the accepted/rejected attempt,
+5. Run `pwc4 verify_harness_candidate(source_id, url)`. A repair creates a new
+   verification epoch, so every affected hard gate is pending until this
+   composite verifier reruns it.
+6. Run `pwc4 score_semantic_fidelity(source_id, url)` for fresh contract-aware
+   visual/invariant evidence.
+7. Call `pwc4 record_semantic_attempt(...)`. Its before/after values and hard
+   gate status come from persisted measured evidence, not caller assertions.
+   Keep an improving candidate only when no hard gate regresses; otherwise the
+   Harness restores the complete pre-edit project snapshot.
+8. Update `.pwc/run.json` with packet bytes, the accepted/rejected attempt,
    measurement delta, and evidence paths.
-8. Call pwc4 `checkpoint_token_accounting` with the repair packet byte/Token
+9. Call pwc4 `checkpoint_token_accounting` with the repair packet byte/Token
    estimate and the same before/after/accepted quality evidence.
 
 Use at most five repair attempts per breakpoint × state. Stop early after one
@@ -274,19 +291,22 @@ efficiency remain separately visible.
 
 ### 9. Hand off honestly
 
-Set `ready_for_user_review` only when:
+Call `pwc4 finalize_run(source_id, "ready_for_user_review")`; the reducer
+rejects it unless:
 
 - capture integrity passed;
 - all planned sections and critical anchors exist materially;
 - all required common interactions replay successfully;
 - the production build passed;
 - fingerprints and required budgets passed;
-- required visual breakpoint/state gates passed; and
+- required visual breakpoint/state gates passed;
+- runtime and responsive gates passed at the current epoch; and
 - every claimed result has an evidence path or tool output.
 
-Otherwise set `failed_with_residuals` and list every residual with its gate,
-section/state, expected value, measured value, evidence, attempts, and reason for
-stopping.
+`failed_with_residuals` is permitted only after the Harness records an
+evidence-bound authorized stop (plateau, attempt exhaustion, hard Token stop, or
+proven technical ceiling). List every residual with its gate, section/state,
+expected value, measured value, evidence, attempts, and exact stop reason.
 
 Return the local review URL, source project path, `dist/` path, evidence/report
 paths, gate summary, and residuals. Say “ready for your review,” never “accepted”
@@ -309,8 +329,9 @@ usage.
 | Author and inspect | `assemble_project`, `sandbox_write_file`, `sandbox_read_file`, `sandbox_list_files` |
 | Build and diagnose | `build_project`, `get_build_errors`, `diagnose` |
 | Preview | `start_preview`, `preview_status`, `preview_screenshot` |
-| Verify | `score_clone_sections`, `score_semantic_fidelity`, `verify_manifest`, `check_fingerprints`, `check_weight`, `compare_to_baseline` |
+| Enforced verification | `verify_harness_candidate`, `audit_runtime`, `score_semantic_fidelity`, `get_harness_run_state` |
 | Targeted repair | `build_semantic_repair_packet`, `record_semantic_attempt` |
+| Terminalize | `finalize_run` |
 | Optional delivery | `deploy` only after an explicit user request |
 
 The IR tools (`build_ir`, `run_recognizers`, `generate_code`) remain

@@ -312,6 +312,73 @@ class ThemedData(BaseModel):
     full_b64: Optional[str] = Field(default=None, exclude=True)
 
 
+class InteractionStateCapture(BaseModel):
+    """Source-browser-owned evidence after one required interaction replay."""
+
+    id: str
+    interaction_id: str
+    scroll_y: float = 0.0
+    regions: List[Dict[str, Any]] = Field(default_factory=list)
+    facts: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    screenshot_path: Optional[str] = None
+    screenshot_digest: Optional[str] = None
+    facts_path: Optional[str] = None
+    facts_digest: Optional[str] = None
+    screenshot_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+
+
+class ScrollStateCapture(BaseModel):
+    """Source-browser-owned evidence at one actual scroll position."""
+
+    id: str
+    scroll_y: float
+    regions: List[Dict[str, Any]] = Field(default_factory=list)
+    facts: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    screenshot_path: Optional[str] = None
+    screenshot_digest: Optional[str] = None
+    facts_path: Optional[str] = None
+    facts_digest: Optional[str] = None
+    screenshot_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+
+
+class BreakpointCapture(BaseModel):
+    """Immutable raster evidence for one rendered responsive breakpoint.
+
+    The desktop capture remains available through the historical ``primary``
+    paths, but every declared viewport also gets a namespaced evidence bundle.
+    Base64 fields are service-to-storage carriers only and never enter the
+    extraction manifest.
+    """
+
+    breakpoint: int
+    viewport: Dict[str, int]
+    # The extractor creates Playwright pages without a device scale override.
+    # Evidence is therefore always CSS-pixel DPR1; non-DPR1 is rejected rather
+    # than inferred from mismatched rasters.
+    device_scale_factor: int = 1
+    page_width: int = 0
+    page_height: int = 0
+    screenshot_path: Optional[str] = None
+    full_page_screenshot_path: Optional[str] = None
+    scroll_state_paths: List[str] = Field(default_factory=list)
+    # Interaction discovery is viewport-dependent: mobile navigation, drawers,
+    # and compact carousels may not exist in the desktop render at all.
+    interactions: List[Dict[str, Any]] = Field(default_factory=list)
+    # Bounded responsive structure fingerprint, used to cover mobile-only
+    # static regions without persisting another full DOM.
+    critical_regions: List[Dict[str, Any]] = Field(default_factory=list)
+    regions: List[Dict[str, Any]] = Field(default_factory=list)
+    region_facts: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
+    scroll_states: List[ScrollStateCapture] = Field(default_factory=list)
+    interaction_states: List[InteractionStateCapture] = Field(default_factory=list)
+    page: Dict[str, Any] = Field(default_factory=dict)
+    interaction_evidence_path: Optional[str] = None
+
+    screenshot_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+    full_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
+    scroll_state_b64s: List[str] = Field(default_factory=list, exclude=True, repr=False)
+
+
 # ==================== Top-level result ====================
 
 
@@ -333,6 +400,11 @@ class ExtractionResult(BaseModel):
     raw_full_page_screenshot_path: Optional[str] = None
     # Persisted per-scroll-state raster paths (scroll-choreographed sites only).
     scroll_state_paths: List[str] = Field(default_factory=list)
+
+    # Desktop and mobile evidence.  This deliberately duplicates the primary
+    # desktop raster namespace so downstream agents can reason about every
+    # required breakpoint without special-casing the historical paths.
+    breakpoint_captures: List[BreakpointCapture] = Field(default_factory=list)
 
     # Transient base64 carriers (service -> api). Excluded from the manifest.
     screenshot_b64: Optional[str] = Field(default=None, exclude=True, repr=False)
@@ -429,6 +501,10 @@ class SourceSummary(BaseModel):
     viewport: Dict[str, int] = Field(default_factory=dict)
     page_width: int = 0
     page_height: int = 0
+    # Compact, path-only responsive evidence.  The primary desktop fields
+    # above are retained for old callers; this list is the canonical hand-off
+    # for manifest seeding and multi-breakpoint replay.
+    breakpoints: List[Dict[str, Any]] = Field(default_factory=list)
     total_elements: int = 0
     max_depth: int = 0
 

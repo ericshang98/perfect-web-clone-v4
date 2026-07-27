@@ -738,8 +738,13 @@ CAPTURE_INVENTORY_JS = r"""() => {
     }
     volatileCandidates.push({
       id,
+      fingerprint: id,
+      selector: selectorFor(el),
+      kind: hint,
+      critical: false,
       tag,
       bounds: rectFor(el),
+      rect: rectFor(el),
       hint,
       signature
     });
@@ -756,6 +761,48 @@ CAPTURE_INVENTORY_JS = r"""() => {
     interactions,
     volatile_candidates: volatileCandidates.slice(0, 64)
   };
+}"""
+
+
+# Compact browser-owned facts keyed by immutable source region fingerprint.
+# These facts are persisted outside the Agent-authored semantic contract so an
+# Agent cannot forge its own reference geometry/style/control baseline.
+CAPTURE_REGION_FACTS_JS = r"""(regions) => {
+  const result = {};
+  const unique = values => [...new Set(values.filter(Boolean))].sort().slice(0, 16);
+  for (const region of (regions || []).slice(0, 64)) {
+    const id = String(region.fingerprint || region.id || '');
+    if (!id || !region.selector) continue;
+    let el = null;
+    try { el = document.querySelector(region.selector); } catch (_) {}
+    if (!el) continue;
+    const r = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    const controls = [];
+    if (el.matches('video[controls]')) controls.push('video');
+    el.querySelectorAll('button,[role="button"],input,select,textarea,video[controls],summary')
+      .forEach(control => {
+        const label = (
+          control.getAttribute('aria-label') || control.getAttribute('name') ||
+          control.getAttribute('type') || control.getAttribute('role') ||
+          control.textContent || control.tagName
+        ).replace(/\s+/g, ' ').trim().toLowerCase().slice(0, 96);
+        if (label) controls.push(label);
+      });
+    result[id] = {
+      bounds: {x:r.x, y:r.top + window.scrollY, width:r.width, height:r.height},
+      style: {
+        display: style.display,
+        position: style.position,
+        overflow: style.overflow,
+        borderRadius: style.borderRadius,
+        backgroundColor: style.backgroundColor,
+        color: style.color
+      },
+      controls: unique(controls)
+    };
+  }
+  return result;
 }"""
 
 

@@ -57,16 +57,26 @@ v4 is a Python MCP server (built on the official `mcp` package, `FastMCP`, expos
    it with the normalized derivative, discovers common interactions, and
    retries structural inconsistencies up to three times. The canonical raster
    preserves the authored default theme, including named dark themes; generated
-   light/dark variants never replace it.
+   light/dark variants never replace it. Every required scroll stop is measured
+   again in the source browser with its own raster, actual `scrollY`, complete
+   bounded region inventory, and computed facts, so fixed/sticky geometry is
+   state evidence rather than an inferred offset.
 2. **Understand** — `get_comparison_evidence(source_id)` returns bounded
-   volatility, critical-region, and interaction evidence; the Agent persists a
-   fail-closed region contract.
+   volatility, complete source-region union, critical-region, and interaction
+   evidence; the Agent persists a fail-closed region contract.
 3. **Section plan** — `get_section_plan(source_id)` returns the deterministic chunking plan.
 4. **Single-agent reproduction** — one owning agent keeps whole-page context while writing each isolated `sections/{namespace}/` component. Sections are repair units; delegation is opt-in.
 5. **Assemble** — `assemble_project(source_id)` deterministically wires up `App.jsx` / routes / `index.css`.
-6. **Preview and compare** — `score_semantic_fidelity` measures static pixels
-   and replays declared dynamic invariants without treating a random runtime
-   frame as CSS.
+6. **Preview and compare** — `verify_harness_candidate` rebuilds and refreshes
+   structure, interaction, runtime/resource, fingerprint, weight, and responsive
+   evidence; `score_semantic_fidelity` measures static pixels and declared
+   dynamic invariants across every required breakpoint/state without treating a
+   random runtime frame as CSS. Schema 4 persists exact required/measured view
+   coverage, so a desktop pass cannot hide a mobile failure. Menu, accordion,
+   tab, and carousel states use source-browser post-trigger rasters and facts
+   with SHA-256 integrity checks. Static regions always verify geometry as well
+   as pixels; dynamic regions may exempt only changing frame pixels and must
+   still match bounds, aspect ratio, container style, controls, and behavior.
 7. **Targeted repair** — a worst-region packet stays under 16 KiB; only strict
    improvements with no hard-gate regression replace the best candidate.
 8. **Production self-check** — `npm run build` must pass; re-screenshot the build output.
@@ -120,40 +130,45 @@ pip install -e .
 playwright install chromium
 ```
 
-## Connecting from Claude Code via `.mcp.json`
+## Install as an Agent plugin
 
-v3 ships an example `.mcp.json` at the repo root that registers a stdio MCP server named **`pwc4`**:
+The repository root is a version-bound Codex/Claude plugin. Its Skill and
+`pwc4` MCP server resolve from the same checkout, including Git worktrees.
+Install dependencies once:
+
+```bash
+uv sync --extra dev
+uv run playwright install chromium
+```
+
+The checked-in relative `.mcp.json` is:
 
 ```json
 {
   "mcpServers": {
     "pwc4": {
-      "command": "python",
-      "args": ["-m", "mcp_server.server"],
-      "cwd": "/absolute/path/to/perfect-web-clone-v4",
-      "env": {
-        "PYTHONPATH": "/absolute/path/to/perfect-web-clone-v4"
-      }
+      "command": "uv",
+      "args": ["run", "--project", ".", "pwc4-mcp"],
+      "cwd": "."
     }
   }
 }
 ```
 
-Steps:
-
-1. Copy `.mcp.json` into your project (or merge it into an existing one) and adjust `cwd` /
-   `PYTHONPATH` to the absolute path of this repo (or run from inside it).
-2. Make sure the `.venv` is active or `python` resolves to an interpreter with the deps installed.
-3. Start Claude Code in that directory. It launches the `pwc4` server over stdio and the
-   `extract_page`, `get_section_plan`, `sandbox_*`, `start_preview`, `build_project`, etc. tools
-   become available.
-4. Invoke the Skill (`skill/SKILL.md`) to run the continuous clone playbook.
+Codex discovers `.codex-plugin/plugin.json`; Claude-compatible hosts discover
+`.claude-plugin/plugin.json`. The canonical workflow lives at
+`skills/perfect-web-clone-v4/SKILL.md`. Once the plugin is enabled, give the
+Agent one request such as `复刻 https://example.com`; there is no separate
+end-user command-line cloning workflow.
 
 ## Repository layout
 
 ```
 perfect-web-clone-v4/
-├─ skill/                 # SKILL.md — the seven-phase clone playbook (the soul of v3)
+├─ .codex-plugin/         # Codex plugin manifest
+├─ .claude-plugin/        # Claude plugin manifest
+├─ skills/
+│  └─ perfect-web-clone-v4/ # canonical Agent workflow
 ├─ mcp_server/            # MCP server entry + tools (deterministic, no LLM)
 │  └─ tools/
 ├─ core/                  # LLM-decoupled assets ported from v2
@@ -162,6 +177,6 @@ perfect-web-clone-v4/
 ├─ templates/             # base Vite + React + Tailwind project template
 │  └─ base-project/
 ├─ pyproject.toml
-├─ .mcp.json              # example Claude Code MCP config (server: pwc4)
+├─ .mcp.json              # checkout-relative MCP config (server: pwc4)
 └─ README.md
 ```

@@ -142,9 +142,17 @@ def baseline_states(page_height: float, viewport: tuple[int, int],
 
 
 def interaction_states(
-    interactions: List[Dict[str, Any]], breakpoint: int
+    interactions: List[Dict[str, Any]],
+    breakpoint: int,
+    viewport: tuple[int, int] | None = None,
 ) -> List[Dict[str, Any]]:
-    """Convert discovered common controls into required replay states."""
+    """Convert discovered common controls into required replay states.
+
+    ``viewport`` fixes replay geometry for interaction-only states, which do
+    not carry a visual reference raster.  Without it the replay gate used a
+    hard-coded 900px height and silently tested a 390x900 page instead of the
+    captured 390x844 mobile state.
+    """
 
     states: List[Dict[str, Any]] = []
     used: set[str] = set()
@@ -161,6 +169,23 @@ def interaction_states(
             suffix += 1
         used.add(sid)
         expect = dict(contract.get("expect") or {})
+        source_state = contract.get("source_state")
+        if isinstance(source_state, dict):
+            expect["ref"] = source_state.get("ref")
+            expect["source_facts_path"] = source_state.get("facts_path")
+            expect["source_facts_digest"] = source_state.get("facts_digest")
+            expect["source_ref_digest"] = source_state.get("ref_digest")
+            expect["source_scroll_y"] = float(source_state.get("scroll_y") or 0)
+            expect["source_region_ids"] = list(source_state.get("region_ids") or [])
+            expect.setdefault("ssim", 0.97)
+        if viewport is not None:
+            width, height = viewport
+            expect["bounds"] = {
+                "x": 0,
+                "y": 0,
+                "width": int(width),
+                "height": int(height),
+            }
         clone_target = contract.get("clone_target") or (
             f"[data-pwc-interaction={json.dumps(base)}]"
         )

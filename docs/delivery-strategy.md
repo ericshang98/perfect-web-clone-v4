@@ -48,7 +48,7 @@ Layer 0–3 与所有门禁是**纯 Python，从不调模型**：抓取、分段
 ## 第 1 层 · 交付契约（项目周期内稳定）
 
 **交付载体**：用户在自己的 Claude Code / Codex 里当 **skill** 跑（最佳质量、成本仅订阅费）。
-交付物 = **skill（`skill/SKILL.md`）+ `pwc4` MCP 服务器 + 非程序员可照做的安装/使用说明**。
+交付物 = **plugin skill（`skills/perfect-web-clone-v4/SKILL.md`）+ `pwc4` MCP 服务器 + 非程序员可照做的安装/使用说明**。
 不是逐页代做。**产出** = 粘贴 URL → 干净 standalone 的 Vite+React+Tailwind 项目（本地 `dist/`，
 **默认不部署**）。
 

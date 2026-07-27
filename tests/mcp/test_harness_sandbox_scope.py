@@ -82,7 +82,7 @@ def test_assembly_ledger_has_the_agent_harness_contract_fields():
     )
 
     assert json.loads(json.dumps(ledger)) == ledger
-    assert ledger["schema"] == 2
+    assert ledger["schema"] == 4
     assert ledger["run_id"]
     assert ledger["source_id"] == "source-a"
     assert ledger["url"] == "https://example.com/"
@@ -98,7 +98,11 @@ def test_assembly_ledger_has_the_agent_harness_contract_fields():
         "fingerprints",
         "weight",
         "visual",
+        "runtime",
+        "responsive",
     }
+    assert ledger["verification_epoch"] == 0
+    assert {"runtime", "responsive"} <= set(ledger["required_gates"])
     assert ledger["residuals"] == []
     usage = ledger["token_usage"]
     assert usage["measurement_status"] == "estimated"
