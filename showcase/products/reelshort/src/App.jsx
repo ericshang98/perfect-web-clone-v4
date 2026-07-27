@@ -579,13 +579,14 @@ function Shelf({ shelf, shelfIndex }) {
   );
 }
 
-function FauxQr() {
+function DownloadQr({ footer = false }) {
   return (
-    <div className="qr" role="img" aria-label="Código QR para descargar ReelShort">
-      <i className="finder finder-one" />
-      <i className="finder finder-two" />
-      <i className="finder finder-three" />
-      <b>R</b>
+    <div
+      className={`qr${footer ? " footer-qr" : ""}`}
+      role="img"
+      aria-label="Código QR para descargar ReelShort"
+    >
+      <img src="/assets/footer-qr.png" alt="" />
     </div>
   );
 }
@@ -605,28 +606,30 @@ function Footer() {
           />
           <p>© 2026 Crazy Maple Studio™, Inc. Todos los derechos reservados.</p>
           <div className="socials" aria-label="Redes sociales">
-            <a href="https://www.facebook.com/ReelShortTV/" aria-label="Facebook">f</a>
-            <a href="https://www.youtube.com/@reelshortapp" aria-label="YouTube">▶</a>
-            <a href="https://www.instagram.com/reelshortapp/" aria-label="Instagram">◎</a>
-            <a href="https://www.tiktok.com/@reelshortapp" aria-label="TikTok">♪</a>
+            <a href="https://www.facebook.com/ReelShortTV/" aria-label="Facebook"><img src="/assets/social-facebook.png" alt="" /></a>
+            <a href="https://www.youtube.com/@reelshortapp" aria-label="YouTube"><img src="/assets/social-youtube.png" alt="" /></a>
+            <a href="https://www.instagram.com/reelshortapp/" aria-label="Instagram"><img src="/assets/social-instagram.png" alt="" /></a>
+            <a href="https://www.tiktok.com/@reelshortapp" aria-label="TikTok"><img src="/assets/social-tiktok.png" alt="" /></a>
           </div>
         </div>
-        <div className="footer-column">
-          <h3>SOBRE</h3>
-          <a href="https://www.reelshort.com/youtube-api-terms.html">Condiciones de Servicio</a>
-          <a href="https://www.reelshort.com/youtube-api-privacy.html">Política de Privacidad</a>
-          <a href="mailto:reelshort.support@crazymaplestudio.com">Contáctenos</a>
-          <small>Horas de Servicio: Lunes a Domingo, de 12 a.m. a 8 a.m. (Hora del Este)</small>
-        </div>
-        <div className="footer-column support">
-          <h3>SOPORTE</h3>
-          <span>Comentarios</span>
-          <a href="mailto:rachelbencosme@crazymaplestudio.com">Medios y Relaciones<br />Públicas</a>
-        </div>
-        <div className="download-column">
-          <h3>Descargar</h3>
-          <FauxQr />
-          <p>Desbloquea episodios<br />gratis solo en la app</p>
+        <div className="footer-list">
+          <div className="footer-column">
+            <h3>SOBRE</h3>
+            <a href="https://www.reelshort.com/youtube-api-terms.html">Condiciones de Servicio</a>
+            <a href="https://www.reelshort.com/youtube-api-privacy.html">Política de Privacidad</a>
+            <a href="mailto:reelshort.support@crazymaplestudio.com">Contáctenos</a>
+            <small>Horas de Servicio: Lunes a Domingo, de 12 a.m. a 8 a.m. (Hora del Este)</small>
+          </div>
+          <div className="footer-column support">
+            <h3>SOPORTE</h3>
+            <span>Comentarios</span>
+            <a href="mailto:rachelbencosme@crazymaplestudio.com">Medios y Relaciones<br />Públicas</a>
+          </div>
+          <div className="download-column">
+            <h3>Descargar</h3>
+            <DownloadQr footer />
+            <p>Desbloquea episodios<br />gratis solo en la app</p>
+          </div>
         </div>
       </div>
     </footer>
@@ -663,7 +666,7 @@ export default function App() {
             ×
           </button>
           <h3>Descargar</h3>
-          <FauxQr />
+          <DownloadQr />
           <p>Desbloquea episodios<br />gratis solo en la app</p>
         </aside>
       )}

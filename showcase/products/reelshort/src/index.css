@@ -113,9 +113,10 @@ button {
   position: sticky;
   z-index: 100;
   top: 0;
+  display: flex;
   height: 66px;
-  background: rgba(0, 0, 0, 0.86);
-  backdrop-filter: blur(3px);
+  background: transparent;
+  color: #f5f5f5;
 }
 
 .nav-shell {
@@ -284,7 +285,7 @@ button {
   position: relative;
   z-index: 2;
   width: 100%;
-  height: min(33.333vw, 484px);
+  height: min(33.612vw, 484px);
   min-height: 360px;
   margin-top: -66px;
   overflow: hidden;
@@ -423,7 +424,7 @@ button {
 main {
   position: relative;
   z-index: 1;
-  padding: 0 0 86px;
+  padding: 0 0 97.4px;
 }
 
 .shelf {
@@ -574,29 +575,36 @@ main {
 
 .site-footer {
   height: 352px;
-  border-top: 1px solid #282828;
+  padding-top: 64px;
+  border-top: 1px solid #252525;
   background: #0d0d0d;
 }
 
 .footer-main {
   display: grid;
-  width: calc(100% - 116px);
-  max-width: 1324px;
-  height: 100%;
+  width: calc(100% - 115.2px);
+  max-width: 1324.8px;
+  height: 223px;
   margin: 0 auto;
-  grid-template-columns: 2.75fr 0.92fr 0.92fr 1.1fr;
-  gap: 68px;
-  padding-top: 59px;
+  grid-template-columns: 1fr 1fr;
+}
+
+.footer-list {
+  display: grid;
+  height: 223px;
+  grid-template-columns: repeat(3, 196.8px);
+  gap: 24px;
 }
 
 .footer-brand img {
-  width: 239px;
+  display: block;
+  width: 240px;
   height: 36px;
   object-fit: contain;
 }
 
 .footer-brand p {
-  margin: 19px 0 0;
+  margin: 20px 0 0;
   color: rgba(255, 255, 255, 0.5);
   font-size: 14px;
 }
@@ -604,30 +612,31 @@ main {
 .socials {
   display: flex;
   gap: 12px;
-  margin-top: 105px;
+  margin-top: 108px;
 }
 
 .socials a {
-  display: flex;
+  display: block;
   width: 40px;
   height: 40px;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #303030;
-  border-radius: 50%;
-  color: #aaa;
-  font-size: 20px;
-  font-weight: 700;
+}
+
+.socials img {
+  display: block;
+  width: 40px;
+  height: 40px;
 }
 
 .footer-main h3 {
-  margin: 0 0 17px;
-  font-size: 18px;
-  font-weight: 700;
+  margin: 0;
+  font-size: 20px;
+  font-weight: 500;
+  line-height: 1.35;
 }
 
 .footer-column {
   display: flex;
+  height: 223px;
   flex-direction: column;
   align-items: flex-start;
   color: rgba(255, 255, 255, 0.5);
@@ -640,8 +649,8 @@ main {
 }
 
 .footer-column small {
-  width: 158px;
-  margin-top: -11px;
+  width: 196.8px;
+  margin-top: -16px;
   color: rgba(255, 255, 255, 0.5);
   font-size: 12px;
   line-height: 1.4;
@@ -656,14 +665,15 @@ main {
 }
 
 .download-column h3 {
-  margin-bottom: 13px;
+  margin-bottom: 12px;
 }
 
 .download-column p {
-  margin: 12px 0 0 -6px;
+  width: 196.8px;
+  margin: 12px 0 0;
   color: rgba(255, 255, 255, 0.5);
   font-size: 16px;
-  line-height: 1.4;
+  line-height: normal;
   text-align: center;
 }
 
@@ -672,53 +682,14 @@ main {
   width: 150px;
   height: 150px;
   overflow: hidden;
-  border: 6px solid #fff;
   border-radius: 7px;
-  background:
-    repeating-linear-gradient(90deg, #111 0 3px, transparent 3px 6px),
-    repeating-linear-gradient(0deg, transparent 0 4px, #111 4px 7px),
-    #fff;
-  background-blend-mode: multiply;
 }
 
-.qr .finder {
-  position: absolute;
-  width: 31px;
-  height: 31px;
-  border: 6px solid #000;
-  background: #fff;
-  box-shadow: inset 0 0 0 6px #000;
-}
-
-.finder-one {
-  top: 3px;
-  left: 3px;
-}
-
-.finder-two {
-  top: 3px;
-  right: 3px;
-}
-
-.finder-three {
-  bottom: 3px;
-  left: 3px;
-}
-
-.qr b {
-  position: absolute;
-  top: 56px;
-  left: 56px;
-  display: flex;
-  width: 27px;
-  height: 27px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 5px;
-  background: #ff2865;
-  color: #fff;
-  font-size: 18px;
-  font-style: italic;
+.qr img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .download-fab {

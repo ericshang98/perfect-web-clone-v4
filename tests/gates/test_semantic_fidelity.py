@@ -221,6 +221,39 @@ def test_static_image_pixels_remain_strict(tmp_path):
     assert report["regions"][0]["failed_invariants"] == ["pixels"]
 
 
+def test_static_pixels_also_enforce_declared_geometry(tmp_path):
+    ref = _save(tmp_path / "ref.png", "white")
+    cand = _save(tmp_path / "cand.png", "white")
+    contract = {
+        "schema": 1,
+        "regions": [
+            {
+                "id": "hero",
+                "owner": "hero",
+                "importance": "critical",
+                "mode": "static_pixels",
+                "bounds": {"x": 0, "y": 0, "width": 200, "height": 120},
+                "compare": ["pixels", "bounds", "aspect_ratio"],
+            }
+        ],
+    }
+
+    report = evaluate_contract(
+        ref,
+        cand,
+        contract,
+        {"hero": {"bounds": contract["regions"][0]["bounds"]}},
+        {"hero": {"bounds": {"x": 0, "y": 0, "width": 180, "height": 120}}},
+    )
+
+    assert report["ok"] is False
+    assert report["regions"][0]["score"] == 1.0
+    assert report["regions"][0]["failed_invariants"] == [
+        "bounds",
+        "aspect_ratio",
+    ]
+
+
 def test_two_dimensional_exclusion_ignores_only_declared_rectangle(tmp_path):
     ref_image = Image.new("RGB", (200, 100), "white")
     cand_image = ref_image.copy()

@@ -136,6 +136,34 @@ def test_capture_clone_measures_bounds_and_full_page_raster(tmp_path):
 
 
 @live
+def test_capture_clone_keeps_raster_at_requested_viewport_width(tmp_path):
+    from PIL import Image
+
+    from core.clone_capture import capture_clone
+
+    page = tmp_path / "horizontal-overflow.html"
+    page.write_text(
+        """<!doctype html><style>
+        body{margin:0}
+        main{width:1100px;height:1200px;background:#ace}
+        </style><main data-pwc-section="content">CONTENT</main>""",
+        encoding="utf-8",
+    )
+    out_png = str(tmp_path / "viewport-width.png")
+
+    result = capture_clone(
+        f"file://{page}",
+        out_png,
+        viewport=(800, 600),
+    )
+
+    image = Image.open(out_png)
+    assert result["page_width"] == 800
+    assert image.width == 800
+    assert abs(image.height - 1200) <= 4
+
+
+@live
 def test_capture_clone_collects_contract_geometry_controls_and_interactions(tmp_path):
     from core.clone_capture import capture_clone
 

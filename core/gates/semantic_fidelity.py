@@ -233,12 +233,41 @@ def evaluate_contract(
         )
         score = float(pixel_report["score"])
         failed = [] if score >= threshold else ["pixels"]
+        replacement_invariants = [
+            invariant
+            for invariant in list(region.get("compare") or [])
+            if invariant != "pixels"
+        ]
+        ref_region_facts = ref_facts.get(region_id) or {
+            "bounds": ref_bounds
+        }
+        cand_region_facts = cand_facts.get(region_id)
+        if replacement_invariants:
+            if not cand_region_facts:
+                failed.extend(replacement_invariants)
+            else:
+                failed.extend(
+                    _invariant_failures(
+                        replacement_invariants,
+                        ref_region_facts,
+                        cand_region_facts,
+                        [
+                            str(behavior["id"])
+                            for behavior in region.get("behaviors") or []
+                        ],
+                    )
+                )
         row.update(
             status="pass" if not failed else "fail",
             score=score,
             failed_invariants=failed,
             pixel_report=pixel_report,
         )
+        if replacement_invariants:
+            row["measurements"] = {
+                "reference": ref_region_facts,
+                "candidate": cand_region_facts,
+            }
         weight = float(ref_bounds["width"]) * float(ref_bounds["height"])
         static_weighted.append((score, weight))
         rows.append(row)

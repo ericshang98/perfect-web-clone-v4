@@ -278,6 +278,9 @@ def capture_clone(
 
     Returns ``{png, page_height, bounds: {name: {x, y, width, height}}}``.
     """
+    from io import BytesIO
+
+    from PIL import Image
     from playwright.sync_api import sync_playwright
     from core.extractor.dom_scripts import FORCE_LOAD_IMAGES_JS
 
@@ -303,7 +306,17 @@ def capture_clone(
             _MEASURE_COMPARISON_FACTS,
             request,
         )
-        page.screenshot(path=out_png, full_page=True)
+        # A full-page screenshot otherwise expands to the document's
+        # horizontal scroll width. That silently changes the requested
+        # breakpoint when a child overflows on the x-axis and makes the
+        # fidelity gate compare a horizontally rescaled candidate against the
+        # reference viewport. Keep the raster at the requested CSS width while
+        # still capturing the complete document height.
+        screenshot = page.screenshot(full_page=True)
+        with Image.open(BytesIO(screenshot)) as raster:
+            raster.crop(
+                (0, 0, min(viewport[0], raster.width), raster.height)
+            ).save(out_png)
         behavior_facts = _capture_behavior_facts(page, url, request, settle_ms)
         for region_id, rows in behavior_facts.items():
             comparison_facts.setdefault(region_id, {})["behavior"] = rows
@@ -311,7 +324,8 @@ def capture_clone(
 
     return {
         "png": out_png,
-        "page_width": float(measured["page_width"]),
+        "page_width": float(viewport[0]),
+        "document_width": float(measured["page_width"]),
         "page_height": float(measured["page_height"]),
         "bounds": measured["bounds"],
         "critical_bounds": measured["critical_bounds"],
