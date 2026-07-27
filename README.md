@@ -86,7 +86,10 @@ v4 is a Python MCP server (built on the official `mcp` package, `FastMCP`, expos
    500K hard non-cached-input-plus-output budget stops low-value iteration
    without waiving red gates.
 10. **Review handoff** — produce a deploy-grade `dist/` and report
-   `ready_for_user_review`; the user makes the acceptance decision.
+   `ready_for_user_review`; the user makes the acceptance decision. Local
+   review URLs are started by the persisted preview supervisor and must return
+   HTTP 200 immediately before handoff; transient shell-owned preview commands
+   are never delivered.
 
 ### The iron rule
 

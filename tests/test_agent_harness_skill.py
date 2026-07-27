@@ -114,6 +114,14 @@ def test_harness_persists_progress_and_resumes_the_same_run():
         assert field in contract
 
 
+def test_review_localhost_must_be_persistent_and_healthy_before_handoff():
+    text = _skill()
+    assert "Never hand off a localhost URL from an ad-hoc shell process" in text
+    assert "`preview_status`" in text
+    assert "HTTP 200" in text
+    assert "persisted preview supervisor" in text
+
+
 def test_skill_metadata_supports_implicit_agent_invocation():
     assert OPENAI_YAML.is_file()
     metadata = OPENAI_YAML.read_text(encoding="utf-8")

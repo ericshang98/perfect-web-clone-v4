@@ -217,6 +217,14 @@ review. Use only the sandbox-owned URL returned by that tool; verification
 rejects a source-site or unrelated URL. Verify at every captured breakpoint and
 observable state.
 
+Never hand off a localhost URL from an ad-hoc shell process such as a raw
+`npm run dev` or `npm run preview` command. The review server must be owned by
+the Harness persisted preview supervisor so it survives the current Agent tool
+session. Immediately before handoff, call `preview_status`, confirm its URL is
+still running, and make a real HTTP request that returns HTTP 200. If any check
+fails, restart it with `pwc4 start_preview()` and verify again before showing
+the URL to the user.
+
 Run:
 
 1. Source integrity from extraction.
@@ -311,7 +319,8 @@ expected value, measured value, evidence, attempts, and exact stop reason.
 Return the local review URL, source project path, `dist/` path, evidence/report
 paths, gate summary, and residuals. Say “ready for your review,” never “accepted”
 or “pixel-perfect.” The user's visual and functional review is the final
-decision.
+decision. Do not return a localhost link merely because it worked earlier in
+the task; the final persisted-supervisor and HTTP-health checks are mandatory.
 
 Before returning, call pwc4 `finalize_token_accounting(source_id)` and then
 `get_token_report(source_id)`. Include its compact totals, measurement
