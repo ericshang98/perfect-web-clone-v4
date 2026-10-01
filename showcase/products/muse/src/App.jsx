@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const features = [
   { title: 'Designed to feel like a conversation', body: 'Chat with your Muse in the same way you message with other people, using the Muse app on mobile, Mac, or directly in WhatsApp. It’s simple, just tell Muse what you want to get done.', art: 'chat' },
@@ -49,6 +49,17 @@ export default function App() {
   const [story, setStory] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [openFaq, setOpenFaq] = useState(null);
+  const actionVideoRef = useRef(null);
+
+  useEffect(() => {
+    const video = actionVideoRef.current;
+    if (!video) return;
+    if (playing) {
+      video.play().catch(() => {});
+    } else {
+      video.pause();
+    }
+  }, [playing]);
 
   const nextStory = () => setStory((story + 1) % stories.length);
   const prevStory = () => setStory((story - 1 + stories.length) % stories.length);
@@ -90,7 +101,7 @@ export default function App() {
       </section>
 
       <section className="action section-pad" id="action"><div className="section-label">MUSE IN ACTION</div><div className="split-heading"><h2>See how Muse works for you</h2><p>From email and calendar management to saving money, improving your health, and shopping smarter. Muse handles it all.</p></div><Pill href="#try-muse">Try Muse</Pill>
-        <div className="video-card action-video"><video className="action-video-media" autoPlay muted loop playsInline poster={`${assetBase}hero-desktop.webp`} data-original-source={originalHeroVideo}><source src={`${assetBase}hero.mp4`} type="video/mp4" /></video><div className="video-glow"></div><div className="video-ui"><span>MUSE / 01</span><PlayButton playing={playing} onClick={() => setPlaying(!playing)} /></div><div className="video-title">A little more time<br/><i>for what matters.</i></div><div className="video-progress"><span></span></div></div>
+        <div className="video-card action-video"><video ref={actionVideoRef} className="action-video-media" muted loop playsInline poster={`${assetBase}hero-desktop.webp`} data-original-source={originalHeroVideo}><source src={`${assetBase}hero.mp4`} type="video/mp4" /></video><div className="video-glow"></div><div className="video-ui"><span>MUSE / 01</span><PlayButton playing={playing} onClick={() => setPlaying((value) => !value)} /></div><div className="video-title">A little more time<br/><i>for what matters.</i></div><div className="video-progress"><span></span></div></div>
       </section>
 
       <section className="stories section-pad"><div className="section-label">CREATOR STORIES</div><h2>Get inspired</h2><div className="split-heading"><p>Muse is helping people manage and achieve their goals and everyday tasks.</p><div className="carousel-controls"><button onClick={prevStory} aria-label="Previous story">←</button><span>{String(story + 1).padStart(2, '0')} / 04</span><button onClick={nextStory} aria-label="Next story">→</button></div></div>
